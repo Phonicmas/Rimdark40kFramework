@@ -165,9 +165,10 @@ public class CompMultiColor : CompGraphicParent
     {
         recacheSingleGraphics = false;
         var path = onlyDefaultGraphic ? thingDef.graphicData.texPath : currentAlternateBaseForm?.drawnTextureIconPath ?? thingDef.graphicData.texPath;
+        var drawSize = currentAlternateBaseForm?.newDrawSize ?? thingDef.graphicData.drawSize;
         var shader = Core40kDefOf.BEWH_CutoutThreeColor.Shader;
         var drawMult = isApparel ? 0.9f : 1f;
-        var graphic = MultiColorUtils.GetGraphic<Graphic_Single>(path, shader, thingDef.graphicData.drawSize*drawMult, DrawColor, DrawColorTwo, DrawColorThree, null, maskDef?.maskPath);
+        var graphic = MultiColorUtils.GetGraphic<Graphic_Single>(path, shader, drawSize*drawMult, DrawColor, DrawColorTwo, DrawColorThree, null, maskDef?.maskPath);
         if (onlyDefaultGraphic)
         {
             cachedDefaultGraphic = new Graphic_RandomRotated(graphic, 35f);

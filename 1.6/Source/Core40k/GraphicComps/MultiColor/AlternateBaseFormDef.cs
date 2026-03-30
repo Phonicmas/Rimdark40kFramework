@@ -12,4 +12,6 @@ public class AlternateBaseFormDef : DecorationDef
     public Color? newPrimaryColor;
     public Color? newSecondaryColor;
     public Color? newTertiaryColor;
+
+    public Vector2? newDrawSize;
 }

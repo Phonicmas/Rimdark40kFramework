@@ -58,11 +58,12 @@ public static class ApparelMultiColorPatch
         
         var shader = Core40kDefOf.BEWH_CutoutThreeColor.Shader;
         var maskPath = multiColor.MaskDef?.maskPath;
+        var drawSize = multiColor.CurrentAlternateBaseForm?.newDrawSize ?? apparel.def.graphicData.drawSize;
         if (multiColor.MaskDef != null && multiColor.MaskDef.useBodyTypes)
         {
             maskPath += "_" + bodyType.defName;
         }
-        var graphic = MultiColorUtils.GetGraphic<Graphic_Multi>(path, shader, apparel.def.graphicData.drawSize, multiColor.DrawColor, multiColor.DrawColorTwo, multiColor.DrawColorThree, null, maskPath);
+        var graphic = MultiColorUtils.GetGraphic<Graphic_Multi>(path, shader, drawSize, multiColor.DrawColor, multiColor.DrawColorTwo, multiColor.DrawColorThree, null, maskPath);
         return graphic;
     }
 }
