@@ -71,6 +71,60 @@ public class DecorationDef : Def
     public List<StatModifier> statFactors = new List<StatModifier>();
     
     public List<ConditionalStatAffecter> conditionalStatAffecters = new List<ConditionalStatAffecter>();
+
+    public string TooltipDescription()
+    {
+        var stringbuilder = new StringBuilder();
+        stringbuilder.AppendLine(label);
+
+        if (!statOffsets.NullOrEmpty())
+        {
+            stringbuilder.AppendLine();
+            stringbuilder.AppendLine("BEWH.Framework.CommonKeyword.StatOffset".Translate());
+            foreach (var statOffset in statOffsets)
+            {
+                stringbuilder.AppendLine(statOffset.stat.label.CapitalizeFirst() + ": " + statOffset.ValueToStringAsOffset);
+            }
+        }
+        
+        if (!statFactors.NullOrEmpty())
+        {
+            stringbuilder.AppendLine();
+            stringbuilder.AppendLine("BEWH.Framework.CommonKeyword.StatFactor".Translate());
+            foreach (var statFactor in statFactors)
+            {
+                stringbuilder.AppendLine(statFactor.stat.label.CapitalizeFirst() + ": x" + statFactor.ValueToStringAsOffset);
+            }
+        }
+
+        if (!conditionalStatAffecters.NullOrEmpty())
+        {
+            foreach (var conditionalStatAffecter in conditionalStatAffecters)
+            {
+                if (!conditionalStatAffecter.statOffsets.NullOrEmpty())
+                {
+                    stringbuilder.AppendLine();
+                    stringbuilder.AppendLine("BEWH.Framework.CommonKeyword.StatOffset".Translate());
+                    foreach (var statOffset in conditionalStatAffecter.statOffsets)
+                    {
+                        stringbuilder.AppendLine(statOffset.stat.label.CapitalizeFirst() + ": " + statOffset.ValueToStringAsOffset);
+                    }
+                }
+        
+                if (!conditionalStatAffecter.statFactors.NullOrEmpty())
+                {
+                    stringbuilder.AppendLine();
+                    stringbuilder.AppendLine("BEWH.Framework.CommonKeyword.StatFactor".Translate());
+                    foreach (var statFactor in conditionalStatAffecter.statFactors)
+                    {
+                        stringbuilder.AppendLine(statFactor.stat.label.CapitalizeFirst() + ": x" + statFactor.ValueToStringAsOffset);
+                    }
+                }
+            }
+        }
+        
+        return stringbuilder.ToString();
+    }
     
     public virtual bool HasRequirements(Pawn pawn, out string lockedReason)
     {

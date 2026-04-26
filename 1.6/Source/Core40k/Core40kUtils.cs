@@ -219,4 +219,9 @@ public static class Core40kUtils
             comp.InitialSet = true;
         }
     }
+
+    public static int CountBuildingColonistOfDef(this ListerBuildings listerBuildings, ThingDef def)
+    {
+        return listerBuildings.AllBuildingsColonistOfDef(def).Count;
+    }
 }

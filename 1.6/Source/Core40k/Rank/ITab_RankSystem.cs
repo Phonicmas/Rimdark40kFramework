@@ -49,8 +49,8 @@ public class ITab_RankSystem : ITab
                 return false;
             }
             
-            var defaultRes = ModSettings.alwaysShowRankTab;
-            if (!(Find.Selector.SingleSelectedThing is Pawn p) || !p.HasComp<CompRankInfo>() || p.Faction == null || !p.Faction.IsPlayer || p.IsSlaveOfColony || p.IsPrisonerOfColony)
+            var defaultRes = ModSettings?.alwaysShowRankTab ?? false;
+            if (Find.Selector.SingleSelectedThing is not Pawn p || !p.HasComp<CompRankInfo>() || p.Faction == null || !p.Faction.IsPlayer || p.IsSlaveOfColony || p.IsPrisonerOfColony)
             {
                 return defaultRes;
             }

@@ -119,6 +119,7 @@
     <Compile Include="DefModExtensions\DefModExtension_BoostQualityCreatedByPawn.cs" />
     <Compile Include="DefModExtensions\DefModExtension_ChanceToAddEachGene.cs" />
     <Compile Include="DefModExtensions\DefModExtension_CriticalHit.cs" />
+    <Compile Include="DefModExtensions\DefModExtension_ExclusiveApparel.cs" />
     <Compile Include="DefModExtensions\DefModExtension_GeneDisabledBy.cs" />
     <Compile Include="DefModExtensions\DefModExtension_GeneExtension.cs" />
     <Compile Include="DefModExtensions\DefModExtension_DontPlaceProduct.cs" />
@@ -194,6 +195,7 @@
     <Compile Include="GraphicComps\MultiColor\HarmonyPatch_SetupDefaultColorsForFaction.cs" />
     <Compile Include="GraphicComps\MultiColor\HarmonyPatch_ThingWithCompsMultiColorGraphicOverride.cs" />
     <Compile Include="GraphicComps\MultiColor\PawnRenderNodePropertiesMultiColor.cs" />
+    <Compile Include="GraphicComps\MultiColor\PawnRenderNodeWorker_AlternateFormCompatible.cs" />
     <Compile Include="GraphicComps\MultiColor\PawnRenderNode_AttachmentApparelMultiColor.cs" />
     <Compile Include="GraphicComps\MultiColor\WeaponColoringTab.cs" />
     <Compile Include="GraphicComps\MultiColor\WeaponMultiColor.cs" />
@@ -203,6 +205,7 @@
     <Compile Include="HarmonyPatches\HarmonyPatch_BeheadingCutWorkerNormalPatch.cs" />
     <Compile Include="HarmonyPatches\HarmonyPatch_CriticalHitPatch.cs" />
     <Compile Include="HarmonyPatches\HarmonyPatch_DontPlaceProductPatch.cs" />
+    <Compile Include="HarmonyPatches\HarmonyPatch_ExclusiveApparelCanEquipPatch.cs" />
     <Compile Include="HarmonyPatches\HarmonyPatch_InitialGoodwillPatch.cs" />
     <Compile Include="HarmonyPatches\HarmonyPatch_LockedByResearch.cs" />
     <Compile Include="HarmonyPatches\HarmonyPatch_QualityCreatedBoostFromGenePatch.cs" />
@@ -211,17 +214,16 @@
     <Compile Include="HarmonyPatches\HarmonyPatch_StopDeterioation.cs" />
     <Compile Include="HarmonyPatch_GetExplanationUnfinalizedFromVariousPatch.cs" />
     <Compile Include="HarmonyPatch_GetValueUnfinalizedFromVariousPatch.cs" />
+    <Compile Include="HarmonyPatch_PopulateMutableStatsWithStatsPatch.cs" />
     <Compile Include="MultiColorUtils.cs" />
     <Compile Include="PlaceWorkers\PlaceWorker_OnlyOnePerMap.cs" />
     <Compile Include="Rank\CompProperties_RankInfo.cs" />
     <Compile Include="Rank\CompRankInfo.cs" />
     <Compile Include="Rank\GameComponent_RankInfo.cs" />
-    <Content Include="Rank\RankCategoryDefNEWTEMP.txt" />
     <Compile Include="Rank\HarmonyPatch_RecreationFromSkill.cs" />
     <Compile Include="Rank\RankCategorySpecificData.cs" />
     <Compile Include="Rank\HarmonyPatch_CalculateAllowedRankLimitOnArrestPatch.cs" />
     <Compile Include="Rank\HarmonyPatch_CalculateAllowedRankLimitOnRecruitPatch.cs" />
-    <Compile Include="Rank\HarmonyPatch_PopulateMutableStatsWithRankStatsPatch.cs" />
     <Compile Include="Rank\HarmonyPatch_RankLimitResurrectionReAdd.cs" />
     <Compile Include="Rank\ITab_RankSystem.cs" />
     <Compile Include="Rank\RankCategoryDef.cs" />

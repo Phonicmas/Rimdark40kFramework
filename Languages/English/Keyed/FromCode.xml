@@ -10,6 +10,8 @@
 
   <!--=== Common Keywords ===-->
   <BEWH.Framework.CommonKeyword.None>None</BEWH.Framework.CommonKeyword.None>
+  <BEWH.Framework.CommonKeyword.StatOffset>Stat Offset</BEWH.Framework.CommonKeyword.StatOffset>
+  <BEWH.Framework.CommonKeyword.StatFactor>Stat Factor</BEWH.Framework.CommonKeyword.StatFactor>
   <BEWH.Framework.CommonKeyword.Default>Default</BEWH.Framework.CommonKeyword.Default>
   <BEWH.Framework.CommonKeywords.ModSettings>mod settings</BEWH.Framework.CommonKeywords.ModSettings>
 
@@ -132,6 +134,9 @@
   <BEWH.Framework.Unbreakable.CannotRecruitLetter>Unbreakable Loyalty</BEWH.Framework.Unbreakable.CannotRecruitLetter>
   <BEWH.Framework.Unbreakable.CannotRecruitMessage>{1} tried to recruit {0}, but {0}'s unbreakable loyalty to their faction made them resist all attempts.\n\n{0} cannot be recruited.</BEWH.Framework.Unbreakable.CannotRecruitMessage>
   <BEWH.Framework.Unbreakable.CannotEnslaveMessage>{1} tried to enslave {0}, but {0}'s unbreakable loyalty to their faction made them resist all attempts.\n\n{0} cannot be enslaved.</BEWH.Framework.Unbreakable.CannotEnslaveMessage>
+
+  <!-- Exclusive Wear -->
+  <BEWH.Framework.ExclusiveWear.MissingGene>Does not have the {0} gene.</BEWH.Framework.ExclusiveWear.MissingGene>
 
   <!-- Placement Limit -->
   <BEWH.Framework.PlacementLimit.OnlyOneBuildingAllowedPerMap>You may only place one {0} per map.</BEWH.Framework.PlacementLimit.OnlyOneBuildingAllowedPerMap>

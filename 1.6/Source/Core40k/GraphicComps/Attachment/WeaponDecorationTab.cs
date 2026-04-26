@@ -197,7 +197,7 @@ public class WeaponDecorationTab : CustomizerTabDrawer
                                             && weaponDecoration.Value[i].isIncompatibleWithBaseTexture);
                 
                 var color = Color.white;
-                var tipTooltip = weaponDecoration.Value[i].label;
+                var tipTooltip = weaponDecoration.Value[i].TooltipDescription();
                 if (Mouse.IsOver(iconRect))
                 {
                     color = GenUI.MouseoverColor;

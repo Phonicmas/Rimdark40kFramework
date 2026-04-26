@@ -272,7 +272,7 @@ public class ExtraDecorationTab : CustomizerTabDrawer
                                         && extraDecorationDefs[i].isIncompatibleWithBaseTexture);
                 
             var color = Color.white;
-            var tipTooltip = extraDecorationDefs[i].label;
+            var tipTooltip = extraDecorationDefs[i].TooltipDescription();
             if (Mouse.IsOver(iconRect))
             {
                 color = GenUI.MouseoverColor;
@@ -305,7 +305,7 @@ public class ExtraDecorationTab : CustomizerTabDrawer
             TooltipHandler.TipRegion(iconRect, tipTooltip);
             if (hasReq && !incompatibleDeco)
             {
-                TooltipHandler.TipRegion(iconRect, extraDecorationDefs[i].label);
+                TooltipHandler.TipRegion(iconRect, extraDecorationDefs[i].TooltipDescription());
             
                 if (Widgets.ButtonInvisible(iconRect))
                 {
