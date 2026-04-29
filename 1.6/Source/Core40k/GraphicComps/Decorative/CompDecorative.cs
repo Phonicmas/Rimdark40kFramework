@@ -49,12 +49,15 @@ public class CompDecorative : CompGraphicParent
         Notify_GraphicChanged();
     }
 
-    public void SetDefaultColors(ExtraDecorationDef decoration)
+    public void SetDefaultColors(ExtraDecorationDef decoration, bool resetMaskDef = true)
     {
         extraDecorations[decoration].Color = decoration.defaultColour ?? (decoration.useArmorColourAsDefault ? MultiColor.DrawColor : Color.white);
         extraDecorations[decoration].ColorTwo = decoration.defaultColourTwo ?? (decoration.useArmorColourAsDefault ? MultiColor.DrawColorTwo : Color.white);
         extraDecorations[decoration].ColorThree = decoration.defaultColourThree ?? (decoration.useArmorColourAsDefault ? MultiColor.DrawColorThree : Color.white);
-        extraDecorations[decoration].maskDef = decoration.defaultMask;
+        if (resetMaskDef)
+        {
+            extraDecorations[decoration].maskDef = decoration.defaultMask;
+        }
         Notify_GraphicChanged();
     }
     

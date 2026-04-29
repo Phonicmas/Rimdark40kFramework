@@ -593,7 +593,7 @@ public class ExtraDecorationTab : CustomizerTabDrawer
         
         var menuOptionDefault = new FloatMenuOption("BEWH.Framework.Customization.SetDefaultColor".Translate(), delegate
         {
-            decorativeComp.SetDefaultColors(extraDecoration);
+            decorativeComp.SetDefaultColors(extraDecoration, false);
         }, Core40kUtils.ThreeColourPreview(col1, col2, col3, colorAmount), Color.white);
         list.Add(menuOptionDefault);
                 
