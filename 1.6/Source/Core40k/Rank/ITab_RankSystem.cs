@@ -344,6 +344,10 @@ public class ITab_RankSystem : ITab
             
             foreach (var rankReq in rankData)
             {
+                if (!rankPos.ContainsKey(rankReq.rankDef) || !rankPos.ContainsKey(rank.rankDef))
+                {
+                    continue;
+                }
                 var startPos = new Vector2(rankPos[rank.rankDef].x + rankIconRectSize/2, rankPos[rank.rankDef].y + rankIconRectSize/2);
                 var endPos = new Vector2(rankPos[rankReq.rankDef].x + rankIconRectSize/2, rankPos[rankReq.rankDef].y + rankIconRectSize/2);
                     
