@@ -80,7 +80,7 @@ public class CompRankInfo : ThingComp
             
         if (rank.rankTier > HighestRank())
         {
-            ParentPawn.story.Title = rank.titleGained == string.Empty ? rank.label : rank.titleGained;
+            ParentPawn.story.Title = rank.newPawnCardTitle == string.Empty ? rank.label : rank.newPawnCardTitle;
         }
             
         UnlockedRanks.Add(rank);

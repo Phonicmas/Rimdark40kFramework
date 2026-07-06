@@ -47,7 +47,7 @@ public class RankDef : Def
         
     public bool specialistRank = false;
 
-    public string titleGained = string.Empty;
+    public string newPawnCardTitle = string.Empty;
         
     [Unsaved]
     private Texture2D rankIcon;
