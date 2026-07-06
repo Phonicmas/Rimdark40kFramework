@@ -46,6 +46,8 @@ public class RankDef : Def
     public int rankTier = 0;
         
     public bool specialistRank = false;
+
+    public string titleGained = string.Empty;
         
     [Unsaved]
     private Texture2D rankIcon;
