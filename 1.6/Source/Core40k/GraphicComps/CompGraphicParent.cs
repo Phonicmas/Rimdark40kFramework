@@ -10,9 +10,9 @@ public class CompGraphicParent : ThingComp
     protected static GameComponent_CoreUtils CoreUtils => coreUtils ??= Current.Game.GetComponent<GameComponent_CoreUtils>();
     
     protected Dictionary<StatDef, float> cachedStatOffset = new();
-    public Dictionary<StatDef, float> CachedStatOffset => cachedStatOffset;
+    public Dictionary<StatDef, float> CachedStatOffset => cachedStatOffset ??= new Dictionary<StatDef, float>();
     protected Dictionary<StatDef, float> cachedStatFactor = new();
-    public Dictionary<StatDef, float> CachedStatFactor => cachedStatFactor;
+    public Dictionary<StatDef, float> CachedStatFactor => cachedStatFactor ??= new Dictionary<StatDef, float>();
     
     protected ThingDef ThingDef => parent.def;
     protected Thing Thing => parent;
