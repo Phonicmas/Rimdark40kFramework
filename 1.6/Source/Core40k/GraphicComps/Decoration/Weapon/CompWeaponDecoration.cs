@@ -30,7 +30,7 @@ public class CompWeaponDecoration : CompDecorativeBase
     
     public bool recacheGraphics = true;
     private Dictionary<DecorationDef, Graphic> cachedGraphics = [];
-    public Dictionary<DecorationDef, Graphic> Graphics => cachedGraphics;
+    public Dictionary<DecorationDef, Graphic> Graphics => cachedGraphics ??= new Dictionary<DecorationDef, Graphic>();
     public void RecacheGraphics()
     {
         recacheGraphics = false;

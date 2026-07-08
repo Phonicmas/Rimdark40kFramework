@@ -7,12 +7,12 @@ namespace Core40k;
 [HarmonyPatch(typeof(StatWorker), "StatOffsetFromGear")]
 public static class GetOffsetFromGearPatch
 {
-    private static GameComponent_CoreUtils coreUtils;
-
-    private static GameComponent_CoreUtils CoreUtils => coreUtils ??= Current.Game.GetComponent<GameComponent_CoreUtils>();
-
     public static void Postfix(ref float __result, Thing gear, StatDef stat)
     {
+        if (gear == null)
+        {
+            return;
+        }
         var decoComp = gear.TryGetComp<CompGraphicParent>();
         var colorComp = gear.TryGetComp<CompMultiColor>();
         if (decoComp != null)

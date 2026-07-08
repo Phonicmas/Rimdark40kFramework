@@ -17,7 +17,7 @@ public class CompDecorativeBase : CompGraphicParent
     protected Dictionary<DecorationDef, DecorationSettings> originalDecorations = new ();
     protected Dictionary<DecorationDef, DecorationSettings> decorations = new ();
     
-    public Dictionary<DecorationDef, DecorationSettings> Decorations => decorations;
+    public Dictionary<DecorationDef, DecorationSettings> Decorations => decorations ??= new Dictionary<DecorationDef, DecorationSettings>();
     
     //Add
     public virtual void ApplyDecorationsFromList(List<DecorationDef> list)
@@ -374,6 +374,10 @@ public class CompDecorativeBase : CompGraphicParent
     public override float GetStatOffset(StatDef stat)
     {
         var num = 0f;
+        if (CachedStatOffset == null || stat == null)
+        {
+            return num;
+        }
         if (CachedStatOffset.TryGetValue(stat, out var cachedStatOffsetOut))
         {
             num += cachedStatOffsetOut;
@@ -381,25 +385,29 @@ public class CompDecorativeBase : CompGraphicParent
         else
         {
             var resNum = 0f;
-            
             foreach (var decoration in Decorations)
             {
+                if (decoration.Key?.statOffsets == null)
+                {   
+                    continue;
+                }
                 if (!decoration.Key.statOffsets.NullOrEmpty())
                 {
                     resNum += decoration.Key.statOffsets.GetStatOffsetFromList(stat);
                 }
             }
-
             CachedStatOffset.Add(stat, resNum);
             num += resNum;
         }
-        
         return num;
     }
     public override float GetStatFactor(StatDef stat)
     {
         var num = 1f;
-        
+        if (CachedStatFactor == null || stat == null)
+        {
+            return num;
+        }
         if (CachedStatFactor.TryGetValue(stat, out var cachedStatFactorOut))
         {
             num *= cachedStatFactorOut;
@@ -410,6 +418,10 @@ public class CompDecorativeBase : CompGraphicParent
                     
             foreach (var decoration in Decorations)
             {
+                if (decoration.Key?.statFactors == null)
+                {
+                    continue;
+                }
                 if (!decoration.Key.statFactors.NullOrEmpty())
                 {
                     resNum *= decoration.Key.statFactors.GetStatFactorFromList(stat);
