@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using RimWorld;
@@ -53,14 +54,13 @@ public class DecorationDef : Def
     
     public bool flipable = false;
     
+    [Obsolete]
     public bool useMask = false;
     public MaskDef defaultMask;
     
     public DecorationTypeDef decorationType;
     
     public List<DecorationColourPresetDef> availablePresets = [];
-    
-    public List<DecorationFlag> decorationFlags = [];
     
     public bool isIncompatibleWithBaseTexture = false;
     public List<DecorationDef> incompatibleDecorations = [];
@@ -195,15 +195,10 @@ public class DecorationDef : Def
         shaderType ??= Core40kDefOf.BEWH_CutoutThreeColor;
         defaultMask ??= Core40kDefOf.BEWH_DefaultMask;
         decorationType ??= Core40kDefOf.BEWH_UndefinedType;
+        if (useMask)
+        {
+            Log.Warning(defName + "has useMask set, this field is no longer needed and should be removed.");
+        }
         base.ResolveReferences();
     }
-}
-
-public class DecorationFlag
-{
-    public string flag;
-    public string newTexPath;
-    public string maskPathAddition;
-    public ShaderTypeDef shaderType = null;
-    public int priority = 0;
 }

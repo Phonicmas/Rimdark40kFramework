@@ -153,7 +153,6 @@
     <Compile Include="GraphicComps\Decoration\Armor\CompArmorDecorative.cs" />
     <Compile Include="GraphicComps\Decoration\Armor\CompProperties_ArmorDecorative.cs" />
     <Compile Include="GraphicComps\Decoration\Armor\DecorationColourPresetDef.cs" />
-    <Compile Include="GraphicComps\Decoration\Armor\DefModExtension_DecorationFlags.cs" />
     <Compile Include="GraphicComps\Decoration\Armor\Dialog_ConfirmDecorationPresetOverride.cs" />
     <Compile Include="GraphicComps\Decoration\Armor\Dialog_EditExtraDecorationPresets.cs" />
     <Compile Include="GraphicComps\Decoration\Armor\Dialog_ExtraDecorationMaskSelection.cs" />

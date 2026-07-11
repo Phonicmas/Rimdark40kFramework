@@ -436,6 +436,8 @@ public class DecorationBaseTab : CustomizerTabDrawer
                 colour = decoration.Value.Color,
                 colourTwo = decoration.Value.ColorTwo,
                 colourThree = decoration.Value.ColorThree,
+                flipped = decoration.Value.Flipped,
+                maskDef = decoration.Value.maskDef,
             };
                 
             extraDecorationPresetParts.Add(presetPart);
@@ -743,9 +745,9 @@ public class DecorationBaseTab : CustomizerTabDrawer
                 var path = decoDef.drawnTextureIconPath;
                 var shader = mask?.shaderType?.Shader ?? decoDef.shaderType.Shader;
                 Graphic_Multi graphic;
-                if (!decoDef.useMask)
+                if (decoDef.colorAmount < 3)
                 {
-                    graphic = (Graphic_Multi)GraphicDatabase.Get<Graphic_Multi>(path, decoDef.shaderType.Shader, Vector2.one, decorativeComp.Decorations[decoDef].Color);
+                    graphic = (Graphic_Multi)GraphicDatabase.Get<Graphic_Multi>(path, decoDef.shaderType.Shader, Vector2.one, decorativeComp.Decorations[decoDef].Color, decorativeComp.Decorations[decoDef].ColorTwo);
                 }
                 else
                 {
@@ -810,7 +812,7 @@ public class DecorationBaseTab : CustomizerTabDrawer
 
         if (decoDef.hasParentColourPaletteOption)
         {
-            var menuOptionMatch = new FloatMenuOption("BEWH.Framework.Customization.UseArmourColour".Translate(), delegate
+            var menuOptionMatch = new FloatMenuOption("BEWH.Framework.Customization.UseParentColor".Translate(), delegate
             {
                 decorativeComp.SetDecorationToParentColors(decoDef);
             }, Core40kUtils.ThreeColourPreview(armorCol1,armorCol2, armorCol3, colorAmount), Color.white);

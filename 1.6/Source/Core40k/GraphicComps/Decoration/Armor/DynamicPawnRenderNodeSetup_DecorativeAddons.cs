@@ -31,7 +31,7 @@ public class DynamicPawnRenderNodeSetup_DecorativeAddons : DynamicPawnRenderNode
             }
             foreach (var decoration in decorativeComp.Decorations)
             {
-                if (decoration.Key is not ExtraDecorationDef extraDecoration)
+                if (decoration.Key is not ExtraDecorationDef decorationDef)
                 {
                     continue;
                 }
@@ -40,13 +40,13 @@ public class DynamicPawnRenderNodeSetup_DecorativeAddons : DynamicPawnRenderNode
                 switch (decorativeComp.Props.decorativeType)
                 {
                     case DecorativeType.Head:
-                        pawnRenderNodeProperty = MakeHeadProps(extraDecoration, decoration.Value, decorativeComp);
+                        pawnRenderNodeProperty = MakeHeadProps(decorationDef, decoration.Value, decorativeComp);
                         node = (tree.TryGetNodeByTag(PawnRenderNodeTagDefOf.ApparelHead, out node) ? node : null) ??
                                               (tree.TryGetNodeByTag(PawnRenderNodeTagDefOf.Head, out node) ? node : null);
                         break;
                     case DecorativeType.Body:
-                        pawnRenderNodeProperty = MakeBodyProps(extraDecoration, decoration.Value, decorativeComp, pawnBodyType);
-                        if (extraDecoration.drawInHeadSpace)
+                        pawnRenderNodeProperty = MakeBodyProps(decorationDef, decoration.Value, decorativeComp, pawnBodyType);
+                        if (decorationDef.drawInHeadSpace)
                         {
                             node = (tree.TryGetNodeByTag(PawnRenderNodeTagDefOf.ApparelHead, out node) ? node : null) ??
                                    (tree.TryGetNodeByTag(PawnRenderNodeTagDefOf.Head, out node) ? node : null);
@@ -105,8 +105,6 @@ public class DynamicPawnRenderNodeSetup_DecorativeAddons : DynamicPawnRenderNode
             colorTwo = decorationSettings.ColorTwo,
             colorThree = decorationSettings.ColorThree,
             maskDef = decorationSettings.maskDef,
-            useMask = decorationDef.useMask,
-            decorationFlags = decorationDef.decorationFlags,
         };
 
         return pawnRenderNodeProperty;

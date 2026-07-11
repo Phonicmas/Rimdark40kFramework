@@ -24,14 +24,14 @@ public class CompWeaponDecoration : CompDecorativeBase
     
     public override void Notify_GraphicChanged()
     {
-        RecacheGraphics();
+        RecacheDecorationGraphics();
         base.Notify_GraphicChanged();
     }
     
     public bool recacheGraphics = true;
     private Dictionary<DecorationDef, Graphic> cachedGraphics = [];
     public Dictionary<DecorationDef, Graphic> Graphics => cachedGraphics ??= new Dictionary<DecorationDef, Graphic>();
-    public void RecacheGraphics()
+    public void RecacheDecorationGraphics()
     {
         recacheGraphics = false;
         cachedGraphics = [];
@@ -53,7 +53,7 @@ public class CompWeaponDecoration : CompDecorativeBase
                     decorations[weaponDecoration].ColorTwo, 
                     decorations[weaponDecoration].ColorThree, 
                     null,
-                    weaponDecoration.useMask ? weaponDecoration.defaultMask.maskPath : null);
+                    weaponDecoration.defaultMask.maskPath == string.Empty ? weaponDecoration.defaultMask.maskPath  : null);
             }
             else
             {
@@ -64,7 +64,7 @@ public class CompWeaponDecoration : CompDecorativeBase
                     decorations[weaponDecoration].Color, 
                     decorations[weaponDecoration].ColorTwo, 
                     null,
-                    weaponDecoration.useMask ? weaponDecoration.defaultMask.maskPath : null);
+                    weaponDecoration.defaultMask.maskPath == string.Empty ? weaponDecoration.defaultMask.maskPath  : null);
             }
             
             cachedGraphics.Add(weaponDecoration, graphic);

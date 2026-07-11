@@ -52,7 +52,7 @@ public static class RenderWeaponAttachments
         
         if (decoComp.recacheGraphics)
         {
-            decoComp.RecacheGraphics();
+            decoComp.RecacheDecorationGraphics();
         }
         
         foreach (var decoCompGraphic in decoComp.Graphics)

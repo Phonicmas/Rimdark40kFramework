@@ -8,11 +8,11 @@
         <generalDescription>Unlock RimDark technologies.</generalDescription>
     </ResearchTabDef>
 
-    <ResearchTabDef>
+    <!--<ResearchTabDef>
         <defName>BEWH_WH40kAdditionsTab</defName>
         <label>RimDark Additions 40k</label>
         <generalTitle>RimDark Additions research projects</generalTitle>
         <generalDescription>Unlock RimDark Additions technologies.</generalDescription>
-    </ResearchTabDef>
+    </ResearchTabDef>-->
 
 </Defs>

@@ -42,11 +42,12 @@ public class CompDecorativeBase : CompGraphicParent
         }
         else
         {
-            AddDecoration(decoration);
+            AddDecoration(decoration, setDefaultColors: true);
         }
         Notify_GraphicChanged();
     }
-    protected virtual void AddDecoration(DecorationDef decoration, DecorationSettings decorationSettings = null)
+
+    protected virtual void AddDecoration(DecorationDef decoration, DecorationSettings decorationSettings = null, bool setDefaultColors = false)
     {
         if (!decorations.ContainsKey(decoration))
         {
@@ -58,7 +59,11 @@ public class CompDecorativeBase : CompGraphicParent
         {
             drawDatas.Add(decoration, new DecorationDrawData());
         }
-        SetDefaultColors(decoration);
+
+        if (setDefaultColors)
+        {
+            SetDefaultColors(decoration);
+        }
     }
     
     //Remove
@@ -171,12 +176,13 @@ public class CompDecorativeBase : CompGraphicParent
             {
                 continue;
             }
+            var multiColComp = parent.GetComp<CompMultiColor>();
             var extraDecorationsSetting = new DecorationSettings()
             {
                 Flipped = presetPart.flipped,
-                Color = presetPart.colour ?? (presetPart.decorationDef.useParentColourAsDefault ? parent.DrawColor : Color.white),
-                ColorTwo = presetPart.colourTwo ?? Color.white,
-                ColorThree = presetPart.colourThree ?? Color.white,
+                Color = presetPart.colour ?? (presetPart.decorationDef.useParentColourAsDefault ? multiColComp?.DrawColor ?? parent.DrawColor : Color.white),
+                ColorTwo = presetPart.colourTwo ?? (presetPart.decorationDef.useParentColourAsDefault ? multiColComp?.DrawColorTwo ?? parent.DrawColorTwo : Color.white),
+                ColorThree = presetPart.colourThree ?? (presetPart.decorationDef.useParentColourAsDefault ? multiColComp?.DrawColorThree ?? parent.DrawColorTwo : Color.white),
                 maskDef = presetPart.maskDef ?? Core40kDefOf.BEWH_DefaultMask,
             };
             
