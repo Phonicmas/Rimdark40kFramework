@@ -20,7 +20,7 @@ public class Gizmo_AmmoChanger : Command
     public override GizmoResult GizmoOnGUI(Vector2 topLeft, float maxWidth, GizmoRenderParms parms)
     {
         var rect = new Rect(topLeft.x, topLeft.y, GetWidth(maxWidth), 75f);
-        TooltipHandler.TipRegion(rect, "BEWH.Framework.AmmoChanger.GizmoInfo".Translate(compAmmoChanger.CurrentlySelectedProjectile.LabelCap));
+        TooltipHandler.TipRegion(rect, "BEWH.Framework.AmmoChanger.GizmoInfo".Translate(compAmmoChanger.CurrentlySelectedProjectile.LabelCap, compAmmoChanger.CurrentlySelectedProjectile.description.CapitalizeFirst()));
         Widgets.DrawWindowBackground(rect);
         
         var color = Color.white;

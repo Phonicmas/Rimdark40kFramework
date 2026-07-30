@@ -142,7 +142,7 @@
   <BEWH.Framework.RankSystem.RankTooHigh>{0} rank is too high to reset</BEWH.Framework.RankSystem.RankTooHigh>
 
   <!--=== Changeable Ammo ===-->
-  <BEWH.Framework.AmmoChanger.GizmoInfo>Ammo type: {0}\nClick to change.</BEWH.Framework.AmmoChanger.GizmoInfo>
+  <BEWH.Framework.AmmoChanger.GizmoInfo>Change the selected ammo type. \nCurrently selected: {0} : {1}.</BEWH.Framework.AmmoChanger.GizmoInfo>
   <BEWH.Framework.AmmoChanger.CurrentlyEquipped>Currently equipped.</BEWH.Framework.AmmoChanger.CurrentlyEquipped>
 
   <!--=== Misc ===-->
