@@ -74,7 +74,11 @@ public static class ApparelGraphicPatch
                    && extension is not { isUnifiedApparel: true }
                     ? usedPath + "_" + bodyType.defName : usedPath;
         
-        var shader = multiColor.Props.colorMaskAmount == 3 ? Core40kDefOf.BEWH_CutoutThreeColor.Shader : apparel.def.graphicData.shaderType.Shader;
+        //multiColor is explicitly allowed to be null here - apparel can carry CompAlternateTexture
+        //on its own. apparel.def.graphicData.shaderType is also optional in XML.
+        var shader = multiColor?.Props?.colorMaskAmount == 3
+            ? Core40kDefOf.BEWH_CutoutThreeColor.Shader
+            : apparel.def.graphicData?.shaderType?.Shader ?? ShaderDatabase.Cutout;
         var maskPath = multiColor?.MaskDef?.maskPath;
         var drawSize = alternateTexture?.CurrentAlternateBaseForm?.newDrawSize ?? apparel.def.graphicData.drawSize;
         if (multiColor?.MaskDef != null && multiColor.MaskDef.useBodyTypes)

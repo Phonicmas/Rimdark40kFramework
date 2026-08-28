@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using HarmonyLib;
 using UnityEngine;
 using Verse;
@@ -34,6 +34,22 @@ public static class MultiColorUtils
             shaderParameter3
         };
         
-        return GraphicDatabase.Get(typeof(T), path, shader, drawSize, colorOne, colorTwo, data, shaderParameters, maskPath) as T;
+        var graphic = GraphicDatabase.Get(typeof(T), path, shader, drawSize, colorOne, colorTwo, data, shaderParameters, maskPath) as T;
+
+        if (graphic != null)
+        {
+            return graphic;
+        }
+
+        //GraphicDatabase.Get swallows exceptions and hands back BaseContent.BadGraphic, which is a
+        //Graphic_Single - so the cast above silently yields null when T is Graphic_Multi. Returning
+        //null from here poisons ApparelGraphicRecord and NREs deep inside the pawn render tree,
+        //so build a graphic of the right type instead.
+        Log.ErrorOnce(
+            $"[Core40k] Failed to build {typeof(T).Name} at '{path}' (mask '{maskPath ?? "none"}'). Using fallback graphic.",
+            ("Core40kGraphicFail" + path + maskPath).GetHashCode());
+
+        return GraphicDatabase.Get(typeof(T), path, shader, drawSize, colorOne, colorTwo, data, null, maskPath) as T
+               ?? GraphicDatabase.Get(typeof(T), BaseContent.BadTexPath, ShaderDatabase.Cutout, drawSize, colorOne, colorTwo, null, null) as T;
     }
 }
