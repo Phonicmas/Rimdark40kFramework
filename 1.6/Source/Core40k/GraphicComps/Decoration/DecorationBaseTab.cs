@@ -743,7 +743,7 @@ public class DecorationBaseTab : CustomizerTabDrawer
                 }
 
                 var path = decoDef.drawnTextureIconPath;
-                var shader = mask?.shaderType?.Shader ?? decoDef.shaderType.Shader;
+                var shader = mask.setsNull ? Core40kDefOf.BEWH_CutoutThreeColor.Shader : mask.shaderType?.Shader ?? decoDef.shaderType.Shader;
                 var graphic = MultiColorUtils.GetGraphic<Graphic_Multi>(path, shader, Vector2.one, decorativeComp.Decorations[decoDef].Color, decorativeComp.Decorations[decoDef].ColorTwo, decorativeComp.Decorations[decoDef].ColorThree, null, mask?.maskPath ?? path + "_mask");
                 var material = graphic.MatSouth;
                 cachedMaterials.Add((decoDef, mask), material);
