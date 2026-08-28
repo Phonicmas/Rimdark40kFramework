@@ -744,15 +744,7 @@ public class DecorationBaseTab : CustomizerTabDrawer
 
                 var path = decoDef.drawnTextureIconPath;
                 var shader = mask?.shaderType?.Shader ?? decoDef.shaderType.Shader;
-                Graphic_Multi graphic;
-                if (decoDef.colorAmount < 3)
-                {
-                    graphic = (Graphic_Multi)GraphicDatabase.Get<Graphic_Multi>(path, decoDef.shaderType.Shader, Vector2.one, decorativeComp.Decorations[decoDef].Color, decorativeComp.Decorations[decoDef].ColorTwo);
-                }
-                else
-                {
-                    graphic = MultiColorUtils.GetGraphic<Graphic_Multi>(path, shader, Vector2.one, decorativeComp.Decorations[decoDef].Color, decorativeComp.Decorations[decoDef].ColorTwo, decorativeComp.Decorations[decoDef].ColorThree, null, mask?.maskPath ?? path + "_mask");
-                }
+                var graphic = MultiColorUtils.GetGraphic<Graphic_Multi>(path, shader, Vector2.one, decorativeComp.Decorations[decoDef].Color, decorativeComp.Decorations[decoDef].ColorTwo, decorativeComp.Decorations[decoDef].ColorThree, null, mask?.maskPath ?? path + "_mask");
                 var material = graphic.MatSouth;
                 cachedMaterials.Add((decoDef, mask), material);
                 recache = false;
