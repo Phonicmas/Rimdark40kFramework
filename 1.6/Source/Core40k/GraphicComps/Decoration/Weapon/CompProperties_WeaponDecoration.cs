@@ -1,5 +1,3 @@
-using System;
-
 namespace Core40k;
 
 public class CompProperties_WeaponDecoration : CompProperties_DecorationBase

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using ColourPicker;
 using RimWorld;
@@ -298,7 +297,9 @@ public class DecorationBaseTab : CustomizerTabDrawer
 
         var goBackButton = precisionRect.TakeBottomPart(precisionRect.height/12);
 
-        var acceptButton = goBackButton.TakeRightPart(goBackButton.width / 2);
+        var widthTake = Prefs.DevMode ? 3 : 2;
+        
+        var acceptButton = goBackButton.TakeRightPart(goBackButton.width / widthTake);
         
         Widgets.DrawMenuSection(precisionRect);
         var rotsToDraw = new List<Rot4>();
@@ -330,11 +331,30 @@ public class DecorationBaseTab : CustomizerTabDrawer
             PrecisionReset();
         }
         
+        if (Prefs.DevMode)
+        {
+            var debugCopy = goBackButton.TakeRightPart(goBackButton.width / 2);
+            if (Widgets.ButtonText(debugCopy, "BEWH.Framework.Customization.DebugCopy".Translate()))
+            {
+                ClipboardCopyData(drawData);
+            }
+        }
+        
         if (Widgets.ButtonText(goBackButton, "BEWH.Framework.Customization.Exit".Translate()))
         {
             selectedPrecisionComp.ResetDrawData(selectedPrecisionDef);
             PrecisionReset();
         }
+    }
+
+    private void ClipboardCopyData(DecorationDrawData drawData)
+    {
+        var drawDataText = drawData.GetDataForXml();
+                
+        var toClipboard = $"<weaponSpecificDrawData><li><key>{selectedPrecisionDef.defName}</key><value>{drawDataText}</value></li></weaponSpecificDrawData>";
+                
+        GUIUtility.systemCopyBuffer = toClipboard;
+        Messages.Message("Copied draw data to clipboard.", MessageTypeDefOf.TaskCompletion, false);
     }
 
     private void PrecisionReset()

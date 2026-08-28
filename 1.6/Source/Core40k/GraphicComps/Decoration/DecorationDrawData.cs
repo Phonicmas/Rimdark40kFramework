@@ -37,6 +37,34 @@ public class DecorationDrawData : IExposable
         return ref defaultData;
     }
 
+    public string GetDataForXml()
+    {
+        var text = string.Empty;
+        
+        if (defaultData.DifferentFromDefault(out var dText))
+        {
+            text += $"<defaultData>{dText}</defaultData>";
+        }
+        if (dataNorth.DifferentFromDefault(out var nText))
+        {
+            text += $"<dataNorth>{nText}</dataNorth>";
+        }
+        if (dataSouth.DifferentFromDefault(out var sText))
+        {
+            text += $"<dataSouth>{sText}</dataSouth>";
+        }
+        if (dataEast.DifferentFromDefault(out var eText))
+        {
+            text += $"<dataEast>{eText}</dataEast>";
+        }
+        if (dataWest.DifferentFromDefault(out var wText))
+        {
+            text += $"<dataWest>{wText}</dataWest>";
+        }
+
+        return text;
+    }
+
     public void CopyFrom(DecorationDrawData data)
     {
         InternalCopy(ref defaultData, data.defaultData);
@@ -93,6 +121,28 @@ public class DecorationDrawData : IExposable
             };
 
             return data;
+        }
+
+        public bool DifferentFromDefault(out string text)
+        {
+            text = string.Empty;
+            if (offset != Vector3.zero)
+            {
+                text += $"<offset>{offset}</offset>";
+                return true;
+            }
+            if (layer != 0)
+            {
+                text += $"<layer>{layer}</layer>";
+                return true;
+            }
+            if (!Mathf.Approximately(scale, 1f))
+            {
+                text += $"<scale>{scale}</scale>";
+                return true;
+            }
+            
+            return false;
         }
         
         public void ExposeData()

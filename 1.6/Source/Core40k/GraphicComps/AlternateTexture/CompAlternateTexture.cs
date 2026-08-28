@@ -3,7 +3,6 @@ using System.Linq;
 using System.Text;
 using RimWorld;
 using UnityEngine;
-using VEF.Abilities;
 using Verse;
 
 namespace Core40k;

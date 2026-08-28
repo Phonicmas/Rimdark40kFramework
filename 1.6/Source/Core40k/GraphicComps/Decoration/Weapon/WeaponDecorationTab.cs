@@ -1,6 +1,4 @@
-﻿using RimWorld;
-
-namespace Core40k;
+﻿namespace Core40k;
 
 public class WeaponDecorationTab : DecorationBaseTab
 {

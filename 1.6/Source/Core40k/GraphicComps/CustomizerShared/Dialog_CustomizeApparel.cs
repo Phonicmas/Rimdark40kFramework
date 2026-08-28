@@ -1,9 +1,7 @@
 ﻿using System;
 using RimWorld;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using ColourPicker;
 using UnityEngine;
 using Verse;
 using Verse.Sound;

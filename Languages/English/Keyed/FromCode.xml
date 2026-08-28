@@ -44,6 +44,7 @@
   <BEWH.Framework.Customization.Precision>Advanced</BEWH.Framework.Customization.Precision>
   <BEWH.Framework.Customization.Exit>Exit</BEWH.Framework.Customization.Exit>
   <BEWH.Framework.Customization.Accept>Accept</BEWH.Framework.Customization.Accept>
+  <BEWH.Framework.Customization.DebugCopy>Debug Copy</BEWH.Framework.Customization.DebugCopy>
 
   <BEWH.Framework.Customization.ColorPreset>Color Preset</BEWH.Framework.Customization.ColorPreset>
   <BEWH.Framework.Customization.EditPreset>Edit Presets</BEWH.Framework.Customization.EditPreset>
