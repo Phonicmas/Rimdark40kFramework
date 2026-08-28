@@ -1,5 +1,6 @@
 ﻿using HarmonyLib;
 using RimWorld;
+using UnityEngine;
 using VEF.Apparels;
 using Verse;
 using ApparelLayerDefOf = RimWorld.ApparelLayerDefOf;
@@ -28,7 +29,16 @@ public static class ApparelGraphicPatch
         if ((multiColor != null && multiColor.RecacheMultiGraphics) || (alternateTexture != null && alternateTexture.RecacheMultiGraphics))
         {
             var graphic = TryGetGraphicApparel(apparel, multiColor, alternateTexture, bodyType);
-            
+
+            if (graphic == null)
+            {
+                //Never hand a null graphic to the render tree - let vanilla take this one.
+                Log.ErrorOnce(
+                    $"[Core40k] Could not build a graphic for {apparel.def.defName} (bodytype {bodyType?.defName ?? "null"}); falling back to vanilla.",
+                    ("Core40kApparelGraphic" + apparel.def.defName).GetHashCode());
+                return true;
+            }
+
             if (multiColor != null)
             {
                 multiColor.CachedGraphicMulti = graphic;
@@ -47,12 +57,17 @@ public static class ApparelGraphicPatch
         {
             rec = alternateTexture.ApparelGraphicRecord;
         }
-        
+
+        if (rec.graphic == null)
+        {
+            return true;
+        }
+
         __result = true;
         return false;
     }
 
-    private static Graphic_Multi TryGetGraphicApparel(Apparel apparel, CompMultiColor multiColor, CompAlternateTexture alternateTexture, BodyTypeDef bodyType)
+    internal static Graphic_Multi TryGetGraphicApparel(Apparel apparel, CompMultiColor multiColor, CompAlternateTexture alternateTexture, BodyTypeDef bodyType, Vector2? drawSizeOverride = null)
     {
         if (bodyType == null)
         {
@@ -66,13 +81,14 @@ public static class ApparelGraphicPatch
         var alternatePath = alternateTexture?.CurrentAlternateBaseForm?.drawnTextureIconPath;
         var usedPath = alternatePath.NullOrEmpty() ? apparel.WornGraphicPath : alternatePath;
         
-        var path = apparel.def.apparel.LastLayer != ApparelLayerDefOf.Overhead 
-                   && apparel.def.apparel.LastLayer != ApparelLayerDefOf.EyeCover 
-                   && !apparel.RenderAsPack() 
-                   && usedPath != BaseContent.PlaceholderImagePath 
-                   && usedPath != BaseContent.PlaceholderGearImagePath 
-                   && extension is not { isUnifiedApparel: true }
-                    ? usedPath + "_" + bodyType.defName : usedPath;
+        var useBodyType = apparel.def.apparel.LastLayer != ApparelLayerDefOf.Overhead
+                          && apparel.def.apparel.LastLayer != ApparelLayerDefOf.EyeCover
+                          && !apparel.RenderAsPack()
+                          && usedPath != BaseContent.PlaceholderImagePath
+                          && usedPath != BaseContent.PlaceholderGearImagePath
+                          && extension is not { isUnifiedApparel: true };
+
+        var path = useBodyType ? BodyTypeUtils.BodyTypedPath(usedPath, bodyType) : usedPath;
         
         //multiColor is explicitly allowed to be null here - apparel can carry CompAlternateTexture
         //on its own. apparel.def.graphicData.shaderType is also optional in XML.
@@ -80,10 +96,10 @@ public static class ApparelGraphicPatch
             ? Core40kDefOf.BEWH_CutoutThreeColor.Shader
             : apparel.def.graphicData?.shaderType?.Shader ?? ShaderDatabase.Cutout;
         var maskPath = multiColor?.MaskDef?.maskPath;
-        var drawSize = alternateTexture?.CurrentAlternateBaseForm?.newDrawSize ?? apparel.def.graphicData.drawSize;
+        var drawSize = drawSizeOverride ?? alternateTexture?.CurrentAlternateBaseForm?.newDrawSize ?? apparel.def.graphicData.drawSize;
         if (multiColor?.MaskDef != null && multiColor.MaskDef.useBodyTypes)
         {
-            maskPath += "_" + bodyType.defName;
+            maskPath = BodyTypeUtils.BodyTypedMaskPath(maskPath, bodyType);
         }
         var graphic = MultiColorUtils.GetGraphic<Graphic_Multi>(path, shader, drawSize, multiColor?.DrawColor ?? apparel.DrawColor, multiColor?.DrawColorTwo ?? apparel.DrawColorTwo, multiColor?.DrawColorThree ?? apparel.DrawColorTwo, null, maskPath);
         return graphic;

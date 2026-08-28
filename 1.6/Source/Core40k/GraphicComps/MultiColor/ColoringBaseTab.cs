@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using ColourPicker;
@@ -279,7 +279,8 @@ public class ColoringBaseTab : CustomizerTabDrawer
                         {
                             cachedMaterials = new Dictionary<(ThingDef, MaskDef), Material>();
                         }
-                        var bodyType = item.def.GetModExtension<DefModExtension_ForcesBodyType>()?.forcedBodyType ?? pawn.story.bodyType;
+                        var bodyType = BodyTypeUtils.SafeBodyType(
+                            pawn, item.def.GetModExtension<DefModExtension_ForcesBodyType>()?.forcedBodyType);
                         
                         var alternatePath = alternateTexture?.CurrentAlternateBaseForm?.drawnTextureIconPath;
 
@@ -289,12 +290,12 @@ public class ColoringBaseTab : CustomizerTabDrawer
                         {
                             usedPath = alternatePath.NullOrEmpty() ? apparel.WornGraphicPath : alternatePath;
                         
-                            usedPath = apparel.def.apparel.LastLayer != ApparelLayerDefOf.Overhead 
-                                       && apparel.def.apparel.LastLayer != ApparelLayerDefOf.EyeCover 
-                                       && !apparel.RenderAsPack() 
-                                       && usedPath != BaseContent.PlaceholderImagePath 
-                                       && usedPath != BaseContent.PlaceholderGearImagePath 
-                                        ? usedPath + "_" + bodyType.defName : usedPath;
+                            usedPath = apparel.def.apparel.LastLayer != ApparelLayerDefOf.Overhead
+                                       && apparel.def.apparel.LastLayer != ApparelLayerDefOf.EyeCover
+                                       && !apparel.RenderAsPack()
+                                       && usedPath != BaseContent.PlaceholderImagePath
+                                       && usedPath != BaseContent.PlaceholderGearImagePath
+                                ? BodyTypeUtils.BodyTypedPath(usedPath, bodyType) : usedPath;
                         }
                         else
                         {
@@ -305,10 +306,10 @@ public class ColoringBaseTab : CustomizerTabDrawer
                         var maskPath = curPageMasks[i]?.maskPath;
                         if (curPageMasks[i] != null && curPageMasks[i].useBodyTypes)
                         {
-                            maskPath += "_" + bodyType.defName;
+                            maskPath = BodyTypeUtils.BodyTypedMaskPath(maskPath, bodyType);
                         }
                         var graphic = MultiColorUtils.GetGraphic<Graphic_Multi>(usedPath, shader, item.def.graphicData.drawSize, multiColor.DrawColor, multiColor.DrawColorTwo, multiColor.DrawColorThree, null, maskPath);
-                        var material = graphic.MatSouth;
+                        var material = graphic?.MatSouth ?? BaseContent.BadMat;
                         cachedMaterials.Add((item.def, curPageMasks[i]), material);
                         recache = false;
                     }

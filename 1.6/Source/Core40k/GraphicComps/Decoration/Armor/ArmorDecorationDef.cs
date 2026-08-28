@@ -32,8 +32,9 @@ public class ExtraDecorationDef : DecorationDef
         var reason = new StringBuilder();
         reason.AppendLine(lockedReason);
         
-        var pawnBodyType = bodyApparel.def?.GetModExtension<DefModExtension_ForcesBodyType>()?.forcedBodyType ?? pawn.story.bodyType;
-        if (!appliesToBodyTypes.Contains(pawnBodyType))
+        var pawnBodyType = BodyTypeUtils.SafeBodyType(
+            pawn, bodyApparel.def?.GetModExtension<DefModExtension_ForcesBodyType>()?.forcedBodyType);
+        if (!BodyTypeUtils.MatchesAny(pawnBodyType, appliesToBodyTypes, out _))
         {
             reason.AppendLine("BEWH.Framework.Customization.InvalidBodytype".Translate());
             lockedReason = reason.ToString();

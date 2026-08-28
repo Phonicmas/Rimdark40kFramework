@@ -19,16 +19,15 @@ public class DynamicPawnRenderNodeSetup_DecorativeAddons : DynamicPawnRenderNode
 
         var decorativeApparels = pawn.apparel.WornApparel.Where(apparel => apparel.HasComp<CompDecorative>()).ToList();
         
-        var pawnBodyType = pawn.story.bodyType;
-        
+        var baseBodyType = BodyTypeUtils.SafeBodyType(pawn);
+
         foreach (var decorativeApparel in decorativeApparels)
         {
             var decorativeComp = decorativeApparel.GetComp<CompDecorative>();
-            
-            if (decorativeApparel.def.HasModExtension<DefModExtension_ForcesBodyType>())
-            {
-                pawnBodyType = decorativeApparel.def.GetModExtension<DefModExtension_ForcesBodyType>().forcedBodyType ?? pawnBodyType;
-            }
+
+            //Scoped to this apparel - a forced bodytype must not leak into the next iteration.
+            var pawnBodyType = decorativeApparel.def.GetModExtension<DefModExtension_ForcesBodyType>()?.forcedBodyType
+                               ?? baseBodyType;
             foreach (var decoration in decorativeComp.Decorations)
             {
                 if (decoration.Key is not ExtraDecorationDef decorationDef)
@@ -76,8 +75,11 @@ public class DynamicPawnRenderNodeSetup_DecorativeAddons : DynamicPawnRenderNode
         var pawnRenderNodeProperty = MakeBaseProps(decorationDef, decorationSettings, decorativeComp);
         pawnRenderNodeProperty.parentTagDef = decorationDef.drawInHeadSpace ? PawnRenderNodeTagDefOf.Head : PawnRenderNodeTagDefOf.Body;
         pawnRenderNodeProperty.workerClass = typeof(PawnRenderNodeWorker_AttachmentExtraDecorationBody);
-        pawnRenderNodeProperty.bodyType = pawnBodyType;
-        pawnRenderNodeProperty.useBodyType = decorationDef.appliesToBodyTypes.Contains(pawnBodyType);
+        //A modded bodytype will never be in appliesToBodyTypes literally; accept it when any
+        //bodytype it falls back to is listed, and render with that one's textures.
+        pawnRenderNodeProperty.useBodyType =
+            BodyTypeUtils.MatchesAny(pawnBodyType, decorationDef.appliesToBodyTypes, out var matched);
+        pawnRenderNodeProperty.bodyType = matched ?? pawnBodyType;
 
         return pawnRenderNodeProperty;
     }

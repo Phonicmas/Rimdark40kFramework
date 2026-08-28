@@ -7,6 +7,19 @@ namespace Core40k;
 
 public static class MultiColorUtils
 {
+    private static readonly HashSet<Graphic> ownGraphics = [];
+
+    /// <summary>
+    /// True if this graphic was built here and therefore already carries the
+    /// _DrawColor/_DrawColorTwo/_DrawColorThree shader parameters. Body-rescaling mods rebuild
+    /// graphics through a GraphicDatabase.Get overload that drops those parameters; this is how we
+    /// tell one of ours apart from one of theirs.
+    /// </summary>
+    public static bool IsOwnGraphic(Graphic graphic)
+    {
+        return graphic != null && ownGraphics.Contains(graphic);
+    }
+
     public static T GetGraphic<T>(string path, Shader shader, Vector2 drawSize, Color colorOne, Color colorTwo, Color colorThree, GraphicData data, string maskPath = null) where T : Graphic
     {
         var shaderParameter1 = new ShaderParameter();
@@ -38,6 +51,8 @@ public static class MultiColorUtils
 
         if (graphic != null)
         {
+            //GraphicDatabase holds these forever anyway, so tracking them leaks nothing.
+            ownGraphics.Add(graphic);
             return graphic;
         }
 

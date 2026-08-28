@@ -61,7 +61,7 @@ public class Dialog_ExtraDecorationMaskSelection : Window
                 var path = decorationDef.drawnTextureIconPath;
                 var shader = Core40kDefOf.BEWH_CutoutThreeColor.Shader;
                 var graphic = MultiColorUtils.GetGraphic<Graphic_Multi>(path, shader, Vector2.one, decorationSettings.Color, decorationSettings.ColorTwo, decorationSettings.ColorThree, null, curPageMasks[i]?.maskPath ?? decorationDef.drawnTextureIconPath + "_mask");
-                var material = graphic.MatSouth;
+                var material = graphic?.MatSouth ?? BaseContent.BadMat;
                 cachedMaterials.Add(curPageMasks[i], material);
                 recache = false;
             }

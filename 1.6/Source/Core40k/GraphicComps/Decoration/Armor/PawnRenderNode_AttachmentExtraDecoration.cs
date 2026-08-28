@@ -20,26 +20,29 @@ public class PawnRenderNode_AttachmentExtraDecoration : PawnRenderNode
         var shader = propsMulti.shaderTypeDef;
         var maskPath = propsMulti.maskDef?.maskPath ?? string.Empty;
         
-        if (propsMulti.useBodyType)
+        var bodyType = propsMulti.bodyType ?? pawn?.story?.bodyType;
+        var useBodyType = propsMulti.useBodyType && bodyType != null;
+
+        if (useBodyType)
         {
-            texPath += "_" + propsMulti.bodyType.defName;
+            texPath = BodyTypeUtils.BodyTypedPath(texPath, bodyType);
         }
 
         var additionalMaskPath = string.Empty;
         if (maskPath != string.Empty)
         {
             maskPath += additionalMaskPath;
-            if (propsMulti.useBodyType)
+            if (useBodyType)
             {
-                maskPath += "_" + propsMulti.bodyType.defName;
+                maskPath = BodyTypeUtils.BodyTypedMaskPath(maskPath, bodyType) ?? maskPath;
             }
         }
         else
         {
-            maskPath = propsMulti.texPath + additionalMaskPath;;
-            if (propsMulti.useBodyType)
+            maskPath = propsMulti.texPath + additionalMaskPath;
+            if (useBodyType)
             {
-                maskPath += "_" + propsMulti.bodyType.defName;
+                maskPath = BodyTypeUtils.BodyTypedMaskPath(maskPath, bodyType) ?? maskPath;
             }
             maskPath += "_mask";
         }

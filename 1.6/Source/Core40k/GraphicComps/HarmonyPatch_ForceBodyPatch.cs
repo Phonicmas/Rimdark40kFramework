@@ -54,7 +54,15 @@ public static class ForceBodyPatch
             rec = new ApparelGraphicRecord(null, null);
             return false;
         }
-        var path = ((apparel.def.apparel.LastLayer != ApparelLayerDefOf.Overhead && apparel.def.apparel.LastLayer != ApparelLayerDefOf.EyeCover && !apparel.RenderAsPack() && !(apparel.WornGraphicPath == BaseContent.PlaceholderImagePath) && !(apparel.WornGraphicPath == BaseContent.PlaceholderGearImagePath)) ? (apparel.WornGraphicPath + "_" + bodyType.defName) : apparel.WornGraphicPath);
+        var useBodyType = apparel.def.apparel.LastLayer != ApparelLayerDefOf.Overhead
+                          && apparel.def.apparel.LastLayer != ApparelLayerDefOf.EyeCover
+                          && !apparel.RenderAsPack()
+                          && apparel.WornGraphicPath != BaseContent.PlaceholderImagePath
+                          && apparel.WornGraphicPath != BaseContent.PlaceholderGearImagePath;
+
+        var path = useBodyType
+            ? BodyTypeUtils.BodyTypedPath(apparel.WornGraphicPath, bodyType)
+            : apparel.WornGraphicPath;
         var shader = ShaderDatabase.Cutout;
         if (!forStatue)
         {

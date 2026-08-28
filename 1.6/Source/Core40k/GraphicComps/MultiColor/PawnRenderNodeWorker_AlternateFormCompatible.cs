@@ -8,13 +8,8 @@ public class PawnRenderNodeWorker_AlternateFormCompatible : PawnRenderNodeWorker
 {
     public override Vector3 OffsetFor(PawnRenderNode node, PawnDrawParms parms, out Vector3 pivot)
     {
-        if (!node.apparel.HasComp<CompMultiColor>())
-        {
-            return base.OffsetFor(node, parms, out pivot);
-        }
-        
-        var alternateTexture =  node.apparel.GetComp<CompAlternateTexture>();
-        if (alternateTexture.CurrentAlternateBaseForm == null)
+        var alternateTexture = node.apparel?.GetComp<CompAlternateTexture>();
+        if (alternateTexture?.CurrentAlternateBaseForm == null)
         {
             return base.OffsetFor(node, parms, out pivot);
         }
@@ -41,7 +36,7 @@ public class PawnRenderNodeWorker_AlternateFormCompatible : PawnRenderNodeWorker
                 }
             }
             var vector = curAltForm.drawData.OffsetForRot(parms.facing);
-            if (curAltForm.drawData.scaleOffsetByBodySize && parms.pawn.story != null)
+            if (curAltForm.drawData.scaleOffsetByBodySize && parms.pawn?.story?.bodyType != null)
             {
                 var bodyGraphicScale = parms.pawn.story.bodyType.bodyGraphicScale;
                 var num = (bodyGraphicScale.x + bodyGraphicScale.y) / 2f;
@@ -59,13 +54,8 @@ public class PawnRenderNodeWorker_AlternateFormCompatible : PawnRenderNodeWorker
     
     protected override Vector3 PivotFor(PawnRenderNode node, PawnDrawParms parms)
     {
-        if (!node.apparel.HasComp<CompMultiColor>())
-        {
-            return base.PivotFor(node, parms);
-        }
-        
-        var alternateTexture =  node.apparel.GetComp<CompAlternateTexture>();
-        if (alternateTexture.CurrentAlternateBaseForm == null)
+        var alternateTexture = node.apparel?.GetComp<CompAlternateTexture>();
+        if (alternateTexture?.CurrentAlternateBaseForm == null)
         {
             return base.PivotFor(node, parms);
         }
@@ -73,7 +63,7 @@ public class PawnRenderNodeWorker_AlternateFormCompatible : PawnRenderNodeWorker
         var curAltForm = alternateTexture.CurrentAlternateBaseForm;
         
         var result = Vector3.zero;
-        if (node.Props.drawData != null)
+        if (curAltForm.drawData != null)
         {
             result -= (curAltForm.drawData.PivotForRot(parms.facing) - DrawData.PivotCenter).ToVector3();
         }

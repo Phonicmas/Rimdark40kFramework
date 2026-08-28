@@ -196,6 +196,7 @@
     <Compile Include="GraphicComps\HarmonyPatch_HideApparelFromTextureFlags.cs" />
     <Compile Include="GraphicComps\HarmonyPatch_HideBodyPatch.cs" />
     <Compile Include="GraphicComps\HarmonyPatch_ApparelGraphicPatch.cs" />
+    <Compile Include="GraphicComps\HarmonyPatch_RestoreMultiColorAfterRescale.cs" />
     <Compile Include="GraphicComps\MultiColor\Armor\ArmorColoringTab.cs" />
     <Compile Include="GraphicComps\MultiColor\Armor\PawnRenderNodePropertiesMultiColor.cs" />
     <Compile Include="GraphicComps\MultiColor\ColoringBaseTab.cs" />
@@ -231,6 +232,7 @@
     <Compile Include="ModSettings\ModSettingTab_CoreCustomization.cs" />
     <Compile Include="ModSettings\ModSettingTab_CoreDebug.cs" />
     <Compile Include="ModSettings\ModSettingTab_CoreMain.cs" />
+    <Compile Include="BodyTypeUtils.cs" />
     <Compile Include="MultiColorUtils.cs" />
     <Compile Include="PlaceWorkers\PlaceWorker_OnlyOnePerMap.cs" />
     <Compile Include="Rank\CompProperties_RankInfo.cs" />
