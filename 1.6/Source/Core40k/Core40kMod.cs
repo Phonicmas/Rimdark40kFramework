@@ -17,6 +17,9 @@ public class Core40kMod : CoreMod
         CurrentVersion = content.ModMetaData.ModVersion;
         
         harmony.PatchAll();
+
+        // Optional integrations. These no-op when the mod they target is absent.
+        SaveOurShip2Compat.Apply(harmony);
     }
     
     private readonly ModSettingTab_CoreMain coreMainSettings = new();

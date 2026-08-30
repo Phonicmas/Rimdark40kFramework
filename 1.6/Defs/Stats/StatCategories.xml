@@ -31,4 +31,10 @@
     <displayAllByDefault>true</displayAllByDefault>
   </StatCategoryDef>
 
+  <StatCategoryDef>
+    <defName>BEWH_Voidfaring</defName>
+    <label>Voidfaring</label>
+    <displayOrder>84</displayOrder>
+  </StatCategoryDef>
+
 </Defs>

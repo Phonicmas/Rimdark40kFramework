@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+
+  <!-- ============================================================
+       Voidfaring stats.
+
+       These are defined unconditionally. Each one only does
+       something when the expansion or mod it hooks into is present;
+       with hideAtValue set, a pawn who was never granted the stat
+       never shows it on their stat card either way.
+
+       Gravship stats read the BEST value among the crew standing on
+       the gravship's substructure. They do not stack.
+       ============================================================ -->
+
+  <StatDef>
+    <defName>BEWH_GravshipFuelEfficiency</defName>
+    <label>gravship fuel efficiency</label>
+    <description>How much of a gravship's fuel burn this person saves while aboard it.\n\nOnly the most efficient crew member aboard counts - this does not stack. Adds to the savings already provided by the ship's own components, capped at 90% total.\n\nHas no effect without the Odyssey expansion.</description>
+    <category>BEWH_Voidfaring</category>
+    <toStringStyle>PercentZero</toStringStyle>
+    <defaultBaseValue>0</defaultBaseValue>
+    <hideAtValue>0</hideAtValue>
+    <minValue>0</minValue>
+    <maxValue>0.9</maxValue>
+    <showOnAnimals>false</showOnAnimals>
+    <showOnDrones>false</showOnDrones>
+    <displayPriorityInCategory>100</displayPriorityInCategory>
+  </StatDef>
+
+  <StatDef>
+    <defName>BEWH_GravEngineCooldownFactor</defName>
+    <label>grav engine recharge</label>
+    <description>A multiplier on how long a gravship's engine needs to recharge after this person helps bring it down. Lower is faster.\n\nOnly the best crew member aboard counts - this does not stack. It is applied on top of the cooldown the launch ritual's quality already earned.\n\nHas no effect without the Odyssey expansion.</description>
+    <category>BEWH_Voidfaring</category>
+    <toStringStyle>PercentZero</toStringStyle>
+    <defaultBaseValue>1</defaultBaseValue>
+    <hideAtValue>1</hideAtValue>
+    <minValue>0.05</minValue>
+    <showOnAnimals>false</showOnAnimals>
+    <showOnDrones>false</showOnDrones>
+    <displayPriorityInCategory>99</displayPriorityInCategory>
+  </StatDef>
+
+  <StatDef>
+    <defName>BEWH_GravshipRangeOffset</defName>
+    <label>gravship range bonus</label>
+    <description>How many extra tiles a gravship can reach while this person is aboard it.\n\nOnly the best crew member aboard counts - this does not stack.\n\nHas no effect without the Odyssey expansion.</description>
+    <category>BEWH_Voidfaring</category>
+    <toStringStyle>Integer</toStringStyle>
+    <roundValue>true</roundValue>
+    <defaultBaseValue>0</defaultBaseValue>
+    <hideAtValue>0</hideAtValue>
+    <showOnAnimals>false</showOnAnimals>
+    <showOnDrones>false</showOnDrones>
+    <displayPriorityInCategory>98</displayPriorityInCategory>
+  </StatDef>
+
+  <StatDef>
+    <defName>BEWH_ShipEvasionSkillOffset</defName>
+    <label>void evasion</label>
+    <description>How many effective levels of piloting skill this person adds to a spacefaring ship they are aboard, for the purpose of dodging incoming fire.\n\nOnly the best crew member aboard counts - this does not stack. Diminishing past the equivalent of level 20, and worth nothing at all past 22.\n\nHas no effect without Save Our Ship 2.</description>
+    <category>BEWH_Voidfaring</category>
+    <toStringStyle>Integer</toStringStyle>
+    <roundValue>true</roundValue>
+    <defaultBaseValue>0</defaultBaseValue>
+    <hideAtValue>0</hideAtValue>
+    <minValue>0</minValue>
+    <showOnAnimals>false</showOnAnimals>
+    <showOnDrones>false</showOnDrones>
+    <displayPriorityInCategory>97</displayPriorityInCategory>
+  </StatDef>
+
+  <StatDef>
+    <defName>BEWH_ShipGunnerySkillOffset</defName>
+    <label>void gunnery</label>
+    <description>How many effective levels of gunnery skill this person adds to a spacefaring ship they are aboard, for the purpose of landing hits on an enemy vessel.\n\nOnly the best crew member aboard counts - this does not stack. Worth nothing past the equivalent of level 20.\n\nHas no effect without Save Our Ship 2.</description>
+    <category>BEWH_Voidfaring</category>
+    <toStringStyle>Integer</toStringStyle>
+    <roundValue>true</roundValue>
+    <defaultBaseValue>0</defaultBaseValue>
+    <hideAtValue>0</hideAtValue>
+    <minValue>0</minValue>
+    <showOnAnimals>false</showOnAnimals>
+    <showOnDrones>false</showOnDrones>
+    <displayPriorityInCategory>96</displayPriorityInCategory>
+  </StatDef>
+
+</Defs>

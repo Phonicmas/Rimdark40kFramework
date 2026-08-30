@@ -270,6 +270,11 @@
     <Compile Include="Recipes\Recipe_InstallImplantRequiringHediff.cs" />
     <Compile Include="Recipes\Recipe_InstallImplantRequiringGene.cs" />
     <Compile Include="WeightedSelection.cs" />
+    <Compile Include="Voidfaring\VoidfaringUtility.cs" />
+    <Compile Include="Voidfaring\StatPart_GravshipCrewRange.cs" />
+    <Compile Include="Voidfaring\HarmonyPatch_GravshipFuelEfficiency.cs" />
+    <Compile Include="Voidfaring\HarmonyPatch_GravEngineCooldown.cs" />
+    <Compile Include="Voidfaring\SaveOurShip2Compat.cs" />
     <Compile Include="DefModExtensions\DefModExtension_UntradeablePawn.cs" />
     <Compile Include="HarmonyPatches\HarmonyPatch_NoSlavesPatch.cs" />
     <Compile Include="DamageWorkers\DamageWorker_WarpFlame.cs" />

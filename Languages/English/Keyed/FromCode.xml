@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <LanguageData>
 
   <!--=== Mod Setting related ===-->
@@ -176,5 +176,8 @@
   <BEWH.Framework.Comp.DeterioratingOutsideContainer>Deteriorates outside suitable container.</BEWH.Framework.Comp.DeterioratingOutsideContainer>
   <BEWH.Framework.Comp.SuitableContainers>Suitable containers:</BEWH.Framework.Comp.SuitableContainers>
   <BEWH.Framework.Comp.ItemDeterioratingNotInContainer>not in safe container</BEWH.Framework.Comp.ItemDeterioratingNotInContainer>
+
+    <!-- Voidfaring -->
+    <BEWH.Framework.Voidfaring.CrewRangeOffset>Crew aboard</BEWH.Framework.Voidfaring.CrewRangeOffset>
 
 </LanguageData>

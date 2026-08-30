@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Patch>
+
+  <!-- Lets BEWH_GravshipRangeOffset extend a gravship's reach, and gives it a named line in the
+       grav engine's stat report. This folder is only loaded when Odyssey is active, so the
+       StatDef this targets is guaranteed to exist. -->
+  <Operation Class="PatchOperationAdd">
+    <xpath>Defs/StatDef[defName="GravshipRange"]</xpath>
+    <value>
+      <parts>
+        <li Class="Core40k.StatPart_GravshipCrewRange" />
+      </parts>
+    </value>
+  </Operation>
+
+</Patch>

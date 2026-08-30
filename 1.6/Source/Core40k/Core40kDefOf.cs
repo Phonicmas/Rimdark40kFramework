@@ -19,11 +19,19 @@ public static class Core40kDefOf
     
     public static StatDef BEWH_ArtificialPartsAffinityFactor;
     public static StatDef BEWH_RankLearningFactor;
+
+    //Voidfaring stats. Always defined; each is inert unless its expansion or mod is loaded.
+    public static StatDef BEWH_GravshipFuelEfficiency;
+    public static StatDef BEWH_GravEngineCooldownFactor;
+    public static StatDef BEWH_GravshipRangeOffset;
+    public static StatDef BEWH_ShipEvasionSkillOffset;
+    public static StatDef BEWH_ShipGunnerySkillOffset;
     
     public static JoyKindDef BEWH_RecreationFromSkill;
     
     public static DecorationTypeDef BEWH_UndefinedType;
     
+    public static StatCategoryDef BEWH_Voidfaring;
     public static StatCategoryDef BEWH_DecorationOffsets;
     public static StatCategoryDef BEWH_DecorationFactors;
     public static StatCategoryDef BEWH_AlternateTextureOffsets;
