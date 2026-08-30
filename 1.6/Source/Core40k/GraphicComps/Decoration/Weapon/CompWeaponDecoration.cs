@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using RimWorld;
 using Verse;
 
@@ -19,8 +20,9 @@ public class CompWeaponDecoration : CompDecorativeBase
     {
         cachedGraphics = [];
         base.Reset();
+        InvalidateToolsAndVerbs();
     }
-    
+
     public override void Notify_GraphicChanged()
     {
         RecacheDecorationGraphics();
@@ -70,6 +72,206 @@ public class CompWeaponDecoration : CompDecorativeBase
         }
     }
 
+    //Tools and verbs granted by decorations
+    private List<Tool> cachedTools;
+    private List<VerbProperties> cachedVerbProperties;
+    private bool toolsAndVerbsCached;
+
+    //Both of these return null when no decoration touches the weapons tools or verbs, which
+    //tells the CompEquippable patch to leave the weapons own lists alone.
+    public List<Tool> DecoratedTools
+    {
+        get
+        {
+            RecacheToolsAndVerbs();
+            return cachedTools;
+        }
+    }
+
+    public List<VerbProperties> DecoratedVerbProperties
+    {
+        get
+        {
+            RecacheToolsAndVerbs();
+            return cachedVerbProperties;
+        }
+    }
+
+    public bool AnyDecorationChangesToolsOrVerbs => Decorations.Keys.OfType<WeaponDecorationDef>().Any(deco => deco.ChangesToolsOrVerbs);
+
+    public void InvalidateToolsAndVerbs()
+    {
+        toolsAndVerbsCached = false;
+        cachedTools = null;
+        cachedVerbProperties = null;
+        //Forces CompEquippable to build its verbs again the next time anything asks for them.
+        parent.GetComp<CompEquippable>()?.verbTracker?.VerbsNeedReinitOnLoad();
+    }
+
+    private void RecacheToolsAndVerbs()
+    {
+        if (toolsAndVerbsCached)
+        {
+            return;
+        }
+
+        toolsAndVerbsCached = true;
+        cachedTools = null;
+        cachedVerbProperties = null;
+
+        //Ordered by defName so verb load ids stay stable between saves.
+        var relevantDecorations = Decorations.Keys
+            .OfType<WeaponDecorationDef>()
+            .Where(deco => deco.ChangesToolsOrVerbs)
+            .OrderBy(deco => deco.defName)
+            .ToList();
+
+        if (relevantDecorations.NullOrEmpty())
+        {
+            return;
+        }
+
+        var disabledTools = new List<string>();
+        var disabledVerbs = new List<string>();
+        var disableAllTools = false;
+
+        foreach (var decoration in relevantDecorations)
+        {
+            disableAllTools |= decoration.disablesAllWeaponTools;
+            if (!decoration.disablesWeaponTools.NullOrEmpty())
+            {
+                disabledTools.AddRange(decoration.disablesWeaponTools);
+            }
+            if (!decoration.disablesWeaponVerbs.NullOrEmpty())
+            {
+                disabledVerbs.AddRange(decoration.disablesWeaponVerbs);
+            }
+        }
+
+        var tools = new List<Tool>();
+        if (!parent.def.tools.NullOrEmpty() && !disableAllTools)
+        {
+            foreach (var tool in parent.def.tools)
+            {
+                if (!tool.MatchesAny(disabledTools))
+                {
+                    tools.Add(tool);
+                }
+            }
+        }
+
+        var verbProperties = new List<VerbProperties>();
+        foreach (var verb in parent.def.Verbs)
+        {
+            if (!verb.MatchesAny(disabledVerbs))
+            {
+                verbProperties.Add(verb);
+            }
+        }
+
+        foreach (var decoration in relevantDecorations)
+        {
+            if (!decoration.tools.NullOrEmpty())
+            {
+                foreach (var tool in decoration.tools)
+                {
+                    //Copied per weapon, the def level Tool is shared by every weapon wearing
+                    //this decoration and Comp_ForceWeapon writes into the tools it is handed.
+                    tools.Add(WeaponDecorationVerbUtility.CopyTool(tool));
+                }
+            }
+            if (!decoration.verbs.NullOrEmpty())
+            {
+                verbProperties.AddRange(decoration.verbs);
+            }
+        }
+
+        cachedTools = tools;
+        cachedVerbProperties = verbProperties;
+    }
+
+    //Decoration changes
+    protected override void AddDecoration(DecorationDef decoration, DecorationSettings decorationSettings = null, bool setDefaultColors = false)
+    {
+        base.AddDecoration(decoration, decorationSettings, setDefaultColors);
+        InvalidateToolsAndVerbs();
+    }
+
+    protected override bool RemoveDecoration(DecorationDef decoration)
+    {
+        if (!base.RemoveDecoration(decoration))
+        {
+            return false;
+        }
+        InvalidateToolsAndVerbs();
+        return true;
+    }
+
+    public override void RemoveAllDecorations()
+    {
+        base.RemoveAllDecorations();
+        InvalidateToolsAndVerbs();
+    }
+
+    public override void RemoveInvalidDecorations(Pawn pawn)
+    {
+        var before = Decorations.Count;
+        base.RemoveInvalidDecorations(pawn);
+        if (Decorations.Count != before)
+        {
+            InvalidateToolsAndVerbs();
+        }
+    }
+
+    public override void RemoveDecorationsIncompatibleWithAlternate(AlternateBaseFormDef alternateBaseFormDef)
+    {
+        var before = Decorations.Count;
+        base.RemoveDecorationsIncompatibleWithAlternate(alternateBaseFormDef);
+        if (Decorations.Count != before)
+        {
+            InvalidateToolsAndVerbs();
+        }
+    }
+
+    public override IEnumerable<StatDrawEntry> SpecialDisplayStats()
+    {
+        foreach (var statDrawEntry in base.SpecialDisplayStats())
+        {
+            yield return statDrawEntry;
+        }
+
+        var addedTools = Decorations.Keys
+            .OfType<WeaponDecorationDef>()
+            .Where(deco => !deco.tools.NullOrEmpty())
+            .OrderBy(deco => deco.defName)
+            .ToList();
+
+        if (addedTools.NullOrEmpty())
+        {
+            yield break;
+        }
+
+        var report = new StringBuilder();
+        var count = 0;
+        foreach (var decoration in addedTools)
+        {
+            report.AppendLine(decoration.LabelCap + ":");
+            foreach (var tool in decoration.tools)
+            {
+                count++;
+                report.AppendLine("  " + WeaponDecorationVerbUtility.ToolSummary(tool));
+            }
+            report.AppendLine();
+        }
+
+        yield return new StatDrawEntry(
+            StatCategoryDefOf.Weapon_Melee,
+            "BEWH.Framework.Customization.AddedMeleeAttacks".Translate(),
+            count.ToString(),
+            report.ToString().TrimEndNewlines(),
+            5000);
+    }
+
     private float GetLayerForDeco(DecorationDef decoDef, Thing eq)
     {
         if (decoDef is not WeaponDecorationDef weaponDecoDef)
@@ -103,6 +305,13 @@ public class CompWeaponDecoration : CompDecorativeBase
             FixDecos();
         }
         base.PostExposeData();
+
+        //CompEquippable may well have rebuilt its verbs before this comp finished loading its
+        //decorations, so anything that grants tools or verbs gets a clean rebuild here.
+        if (Scribe.mode == LoadSaveMode.PostLoadInit && AnyDecorationChangesToolsOrVerbs)
+        {
+            InvalidateToolsAndVerbs();
+        }
     }
     
     [Obsolete]

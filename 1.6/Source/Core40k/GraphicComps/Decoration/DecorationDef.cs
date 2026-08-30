@@ -76,7 +76,7 @@ public class DecorationDef : Def
     public List<AbilityDef> givesAbilities = [];
     public List<VEF.Abilities.AbilityDef> givesVFEAbilities = [];
 
-    public string TooltipDescription()
+    public virtual string TooltipDescription()
     {
         var stringbuilder = new StringBuilder();
         stringbuilder.AppendLine(label);

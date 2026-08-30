@@ -189,6 +189,8 @@
     <Compile Include="GraphicComps\Decoration\Weapon\CompProperties_WeaponDecoration.cs" />
     <Compile Include="GraphicComps\Decoration\Weapon\CompWeaponDecoration.cs" />
     <Compile Include="GraphicComps\Decoration\Weapon\HarmonyPatch_RenderWeaponAttachments.cs" />
+    <Compile Include="GraphicComps\Decoration\Weapon\HarmonyPatch_WeaponDecorationToolsAndVerbs.cs" />
+    <Compile Include="GraphicComps\Decoration\Weapon\WeaponDecorationVerbUtility.cs" />
     <Compile Include="GraphicComps\Decoration\Weapon\VerbModifier.cs" />
     <Compile Include="GraphicComps\Decoration\Weapon\WeaponDecorationDef.cs" />
     <Compile Include="GraphicComps\Decoration\Weapon\WeaponDecorationTab.cs" />

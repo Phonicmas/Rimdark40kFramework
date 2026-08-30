@@ -22,6 +22,8 @@
   <BEWH.Framework.CommonKeyword.StatOffset>Stat Offset</BEWH.Framework.CommonKeyword.StatOffset>
   <BEWH.Framework.CommonKeyword.StatFactor>Stat Factor</BEWH.Framework.CommonKeyword.StatFactor>
   <BEWH.Framework.CommonKeyword.Default>Default</BEWH.Framework.CommonKeyword.Default>
+  <BEWH.Framework.CommonKeyword.Damage>damage</BEWH.Framework.CommonKeyword.Damage>
+  <BEWH.Framework.CommonKeyword.ArmorPenetration>armor penetration</BEWH.Framework.CommonKeyword.ArmorPenetration>
   <BEWH.Framework.CommonKeywords.ModSettings>mod settings</BEWH.Framework.CommonKeywords.ModSettings>
 
   <!--=== Common ===-->
@@ -84,6 +86,7 @@
   <BEWH.Framework.Customization.InvalidBodytype>Invalid bodytype</BEWH.Framework.Customization.InvalidBodytype>
 
   <BEWH.Framework.Customization.AppendedLabel>- {0}</BEWH.Framework.Customization.AppendedLabel>
+  <BEWH.Framework.Customization.AddedMeleeAttacks>Added melee attacks</BEWH.Framework.Customization.AddedMeleeAttacks>
 
   <BEWH.Framework.Customization.IncompatibleWithCurrentAltBase>Incompatible with currently selected texture</BEWH.Framework.Customization.IncompatibleWithCurrentAltBase>
   <BEWH.Framework.Customization.AlternativeBaseTexture>Alt. Textures</BEWH.Framework.Customization.AlternativeBaseTexture>
