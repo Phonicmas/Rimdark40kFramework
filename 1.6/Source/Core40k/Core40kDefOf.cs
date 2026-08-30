@@ -37,6 +37,8 @@ public static class Core40kDefOf
     public static StatCategoryDef BEWH_AlternateTextureOffsets;
     public static StatCategoryDef BEWH_AlternateTextureFactors;
     
+    public static BodyPartGroupDef UpperHead;
+    
     [Obsolete]
     public static CustomizationTabDef BEWH_ArmorColoring;
     [Obsolete]

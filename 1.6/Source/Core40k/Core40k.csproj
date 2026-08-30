@@ -238,6 +238,7 @@
     <Compile Include="ModSettings\ModSettingTab_CoreMain.cs" />
     <Compile Include="BodyTypeUtils.cs" />
     <Compile Include="MultiColorUtils.cs" />
+    <Compile Include="PawnRenderNodes\PawnRenderNodeWorker_HeadCovered.cs" />
     <Compile Include="PlaceWorkers\PlaceWorker_OnlyOnePerMap.cs" />
     <Compile Include="Rank\CompProperties_RankInfo.cs" />
     <Compile Include="Rank\CompRankInfo.cs" />
