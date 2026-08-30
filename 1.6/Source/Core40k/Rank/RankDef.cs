@@ -22,6 +22,9 @@ public class RankDef : Def
     public List<TraitData> requiredTraitsAll = [];
     public List<TraitData> requiredTraitsOneAmong = [];
         
+    public List<RoyalTitleRequirement> requiredTitlesAll = [];
+    public List<RoyalTitleRequirement> requiredTitlesOneAmong = [];
+        
     public List<StatModifier> statOffsets = [];
     public List<StatModifier> statFactors = [];
         
@@ -288,6 +291,51 @@ public class RankDef : Def
             }
         }
             
+        //Royal titles
+        //Without Royalty these can never be fulfilled, so they are ignored
+        //instead of soft locking the rank tree for players without the DLC.
+        var titlesAllRequirementsMet = true;
+        var titlesAtLeastOneRequirementsMet = requiredTitlesOneAmong.NullOrEmpty();
+        if (ModsConfig.RoyaltyActive)
+        {
+            //All
+            if (!requiredTitlesAll.NullOrEmpty())
+            {
+                stringBuilder.Append("\n");
+                stringBuilder.AppendLine("BEWH.Framework.RankSystem.RequirementsTitleAll".Translate());
+                foreach (var titleRequirement in requiredTitlesAll)
+                {
+                    var titlesAllRequirementMet = titleRequirement.MetBy(pawn);
+                    
+                    if (!titlesAllRequirementMet)
+                    {
+                        titlesAllRequirementsMet = false;
+                    }
+                    
+                    var requirementColour = titlesAllRequirementMet ? Core40kUtils.RequirementMetColour : Core40kUtils.RequirementNotMetColour;
+                    stringBuilder.AppendLine(("    " + titleRequirement.Label).Colorize(requirementColour));
+                }
+            }
+            //One Among
+            if (!titlesAtLeastOneRequirementsMet)
+            {
+                stringBuilder.Append("\n");
+                stringBuilder.AppendLine("BEWH.Framework.RankSystem.RequirementsTitleAtLeastOne".Translate());
+                foreach (var titleRequirement in requiredTitlesOneAmong)
+                {
+                    var titlesAtLeastOneRequirementMet = titleRequirement.MetBy(pawn);
+                    
+                    if (titlesAtLeastOneRequirementMet)
+                    {
+                        titlesAtLeastOneRequirementsMet = true;
+                    }
+                    
+                    var requirementColour = titlesAtLeastOneRequirementMet ? Core40kUtils.RequirementMetColour : Core40kUtils.RequirementNotMetColour;
+                    stringBuilder.AppendLine(("    " + titleRequirement.Label).Colorize(requirementColour));
+                }
+            }
+        }
+            
         //Genes
         var genesAllRequirementsMet = true;
         var genesAtLeastOneRequirementsMet = requiredGenesOneAmong.NullOrEmpty();
@@ -366,7 +414,9 @@ public class RankDef : Def
                               && traitsAllRequirementsMet 
                               && traitsAtLeastOneRequirementsMet 
                               && genesAllRequirementsMet 
-                              && genesAtLeastOneRequirementsMet;
+                              && genesAtLeastOneRequirementsMet
+                              && titlesAllRequirementsMet
+                              && titlesAtLeastOneRequirementsMet;
 
         reason = requirementText;
         return requirementsMet;

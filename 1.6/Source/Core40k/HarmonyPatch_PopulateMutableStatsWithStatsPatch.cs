@@ -34,5 +34,23 @@ public class PopulateMutableStatsWithRankStatsPatch
                 ___mutableStats.AddRange(decorationDef.statOffsets.Select(mod => mod.stat));
             }
         }
+        
+        foreach (var thingDef in DefDatabase<ThingDef>.AllDefsListForReading)
+        {
+            var ammoChangerExtension = thingDef.GetModExtension<DefModExtension_AmmoChanger>();
+            if (ammoChangerExtension == null)
+            {
+                continue;
+            }
+            
+            if (ammoChangerExtension.statFactors != null)
+            {
+                ___mutableStats.AddRange(ammoChangerExtension.statFactors.Select(mod => mod.stat));
+            }
+            if (ammoChangerExtension.statOffsets != null)
+            {
+                ___mutableStats.AddRange(ammoChangerExtension.statOffsets.Select(mod => mod.stat));
+            }
+        }
     }
 }

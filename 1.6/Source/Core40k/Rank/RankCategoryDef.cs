@@ -18,6 +18,8 @@ public class RankCategoryDef : Def
     public GeneDef lockedByGene;
     public HediffDef lockedByHediff;
     public TraitDef lockedByTrait;
+    public RoyalTitleRequirement unlockedByTitle;
+    public RoyalTitleRequirement lockedByTitle;
     public int unlockTraitDegree = 0;
     public int lockTraitDegree = 0;
     
@@ -84,6 +86,19 @@ public class RankCategoryDef : Def
             }
         }
 
+        if (ModsConfig.RoyaltyActive)
+        {
+            if (unlockedByTitle != null && !unlockedByTitle.MetBy(pawn))
+            {
+                return false;
+            }
+
+            if (lockedByTitle != null && lockedByTitle.MetBy(pawn))
+            {
+                return false;
+            }
+        }
+
         return true;
     }
     
@@ -106,6 +121,11 @@ public class RankCategoryDef : Def
         if (unlockedByTrait != null && !pawn.story.traits.HasTrait(unlockedByTrait, unlockTraitDegree))
         {
             allRequirementUnlock.Add("BEWH.Framework.RankSystem.CategoryRequiredTrait".Translate(unlockedByTrait.DataAtDegree(unlockTraitDegree).label.CapitalizeFirst()));
+        }
+            
+        if (ModsConfig.RoyaltyActive && unlockedByTitle != null && !unlockedByTitle.MetBy(pawn))
+        {
+            allRequirementUnlock.Add("BEWH.Framework.RankSystem.CategoryRequiredTitle".Translate(unlockedByTitle.Label));
         }
 
         if (allRequirementUnlock.Count > 0)
@@ -138,6 +158,11 @@ public class RankCategoryDef : Def
         if (lockedByTrait != null && pawn.story.traits.HasTrait(lockedByTrait, lockTraitDegree))
         {
             allRequirementLock.Add("BEWH.Framework.RankSystem.CategoryRequiredTrait".Translate(lockedByTrait.DataAtDegree(lockTraitDegree).label.CapitalizeFirst()));
+        }
+            
+        if (ModsConfig.RoyaltyActive && lockedByTitle != null && lockedByTitle.MetBy(pawn))
+        {
+            allRequirementLock.Add("BEWH.Framework.RankSystem.CategoryRequiredTitle".Translate(lockedByTitle.Label));
         }
         //locked by stuff here and then test
         

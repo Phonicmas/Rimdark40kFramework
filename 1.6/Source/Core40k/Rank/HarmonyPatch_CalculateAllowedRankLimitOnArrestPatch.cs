@@ -1,4 +1,5 @@
-﻿using HarmonyLib;
+﻿using System.Linq;
+using HarmonyLib;
 using RimWorld;
 using Verse;
 
@@ -20,6 +21,7 @@ public class CalculateAllowedRankLimitOnArrest
         }
 
         var comp = ___pawn.GetComp<CompRankInfo>();
-        Current.Game.GetComponent<GameComponent_RankInfo>().PawnResetRanks(comp.UnlockedRanks);
+        Current.Game.GetComponent<GameComponent_RankInfo>().PawnResetRanks(comp.LimitCountedRanks.ToList());
+        comp.LimitCountedRanks.Clear();
     }
 }

@@ -115,6 +115,7 @@
     <Compile Include="DataStructs\HediffData.cs" />
     <Compile Include="DataStructs\NamedExtraDamage.cs" />
     <Compile Include="DataStructs\PresetData.cs" />
+    <Compile Include="DataStructs\RoyalTitleRequirement.cs" />
     <Compile Include="DataStructs\TraitData.cs" />
     <Compile Include="DataStructs\WieghtedTraitData.cs" />
     <Compile Include="Debug\DebugActions.cs" />
@@ -132,6 +133,7 @@
     <Compile Include="DefModExtensions\DefModExtension_InheritableArchite.cs" />
     <Compile Include="DefModExtensions\DefModExtension_InitialGoodwill.cs" />
     <Compile Include="DefModExtensions\DefModExtension_LockedByResearch.cs" />
+    <Compile Include="DefModExtensions\DefModExtension_PawnKindRanks.cs" />
     <Compile Include="GameComponent_CoreUtils.cs" />
     <Compile Include="GeneClasses\Gene_AddRandomGeneAndOrTraitByWeight.cs" />
     <Compile Include="GeneClasses\Gene_ChanceToAddEachGene.cs" />
@@ -238,6 +240,7 @@
     <Compile Include="Rank\CompProperties_RankInfo.cs" />
     <Compile Include="Rank\CompRankInfo.cs" />
     <Compile Include="Rank\GameComponent_RankInfo.cs" />
+    <Compile Include="Rank\HarmonyPatch_PawnKindRanksPatch.cs" />
     <Compile Include="Rank\HarmonyPatch_RecreationFromSkill.cs" />
     <Compile Include="Rank\RankCategorySpecificData.cs" />
     <Compile Include="Rank\HarmonyPatch_CalculateAllowedRankLimitOnArrestPatch.cs" />
@@ -247,6 +250,8 @@
     <Compile Include="Rank\RankCategoryDef.cs" />
     <Compile Include="Rank\RankData.cs" />
     <Compile Include="Rank\RankDef.cs" />
+    <Compile Include="Rank\PawnKindRankData.cs" />
+    <Compile Include="Rank\RankUtils.cs" />
     <Compile Include="Recipes\Recipe_InstallImplantWithLevels.cs" />
     <Compile Include="HarmonyPatches\HarmonyPatch_LostHeartSurvivalPatch.cs" />
     <Compile Include="HarmonyPatches\HarmonyPatch_LostLungSurvivalPatch.cs" />
@@ -273,7 +278,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="packages.config" />
     <None Include="Properties\packages.config" />
   </ItemGroup>
 

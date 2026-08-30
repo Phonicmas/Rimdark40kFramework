@@ -17,6 +17,13 @@ public class CompRankInfo : ThingComp
 
     public List<RankDef> unlockedRanksAtDeath = [];
 
+    //Ranks that actually consumed a slot in GameComponent_RankInfo.rankLimits.
+    //Ranks granted to non player pawns on generation never take a slot,
+    //so they must not release one when the pawn dies or is destroyed either.
+    private HashSet<RankDef> limitCountedRanks = [];
+
+    public HashSet<RankDef> LimitCountedRanks => limitCountedRanks ??= [];
+
     public List<RankDef> UnlockedRanks
     {
         get
@@ -67,6 +74,11 @@ public class CompRankInfo : ThingComp
     
     public void UnlockRank(RankDef rank)
     {
+        UnlockRank(rank, true);
+    }
+
+    public void UnlockRank(RankDef rank, bool countTowardsLimit)
+    {
         if (UnlockedRanks.Contains(rank))
         {
             return;
@@ -77,7 +89,7 @@ public class CompRankInfo : ThingComp
             return;
         }
             
-        if (rank.rankTier > HighestRank())
+        if (rank.rankTier > HighestRank() && ParentPawn.story != null)
         {
             ParentPawn.story.Title = rank.newPawnCardTitle == string.Empty ? rank.label : rank.newPawnCardTitle;
         }
@@ -86,20 +98,15 @@ public class CompRankInfo : ThingComp
             
         if (!daysAsRank.ContainsKey(rank))
         {
-            daysAsRank.Add(rank, Find.TickManager.TicksGame);
+            daysAsRank.Add(rank, Find.TickManager?.TicksGame ?? 0);
         }
         
         rank.UnlockRank(this);
-            
-        var gameCompRankInfo = Current.Game.GetComponent<GameComponent_RankInfo>();
 
-        if (gameCompRankInfo.rankLimits.ContainsKey(rank))
+        if (countTowardsLimit)
         {
-            gameCompRankInfo.rankLimits[rank] += 1;
-        }
-        else
-        {
-            gameCompRankInfo.rankLimits.Add(rank, 1);
+            GameComponentRankInfo.PawnGainedRank(rank);
+            LimitCountedRanks.Add(rank);
         }
 
         cachedStatOffset = new Dictionary<StatDef, float>();
@@ -118,13 +125,15 @@ public class CompRankInfo : ThingComp
             
         rank.RemoveRank(this);
 
-        if (removeFromRankLimit)
+        var wasCountedTowardsLimit = LimitCountedRanks.Remove(rank);
+
+        if (removeFromRankLimit && wasCountedTowardsLimit)
         {
             GameComponentRankInfo.PawnLostRank(rank);
         }
 
         var newHighestRank = HighestRankDef(false);
-        if (newHighestRank != null)
+        if (newHighestRank != null && pawn.story != null)
         {
             pawn.story.Title = newHighestRank.label;
         }
@@ -282,13 +291,15 @@ public class CompRankInfo : ThingComp
         {
             rank.Notify_Killed(this, prevMap, dinfo);
         }
-        GameComponentRankInfo.PawnResetRanks(UnlockedRanks);
+        GameComponentRankInfo.PawnResetRanks(LimitCountedRanks.ToList());
+        LimitCountedRanks.Clear();
     }
 
     public override void PostDestroy(DestroyMode mode, Map previousMap)
     {
         base.PostDestroy(mode, previousMap);
-        GameComponentRankInfo.PawnResetRanks(UnlockedRanks);
+        GameComponentRankInfo.PawnResetRanks(LimitCountedRanks.ToList());
+        LimitCountedRanks.Clear();
     }
 
     public void IncreaseDaysForAllRank()
@@ -304,12 +315,19 @@ public class CompRankInfo : ThingComp
     {
         daysAsRank[rankDef] -= TicksPerDay;
     }
+
+    //Backdates the rank so the pawn counts as having held it for the given amount of days.
+    public void SetDaysAsRank(RankDef rankDef, float days)
+    {
+        daysAsRank[rankDef] = (Find.TickManager?.TicksGame ?? 0) - (int)(days * TicksPerDay);
+    }
         
     public override void PostExposeData()
     {
         base.PostExposeData();
         Scribe_Collections.Look(ref unlockedRanks, "unlockedRanks", LookMode.Def);
         Scribe_Collections.Look(ref unlockedRanksAtDeath, "unlockedRanksAtDeath", LookMode.Def);
+        Scribe_Collections.Look(ref limitCountedRanks, "limitCountedRanks", LookMode.Def);
         Scribe_Collections.Look(ref daysAsRank, "daysAsRank");
         Scribe_Defs.Look(ref lastOpenedRankCategory, "lastOpenedRankCategory");
 
@@ -319,6 +337,13 @@ public class CompRankInfo : ThingComp
         }
             
         daysAsRank ??= new Dictionary<RankDef, int>();
+        limitCountedRanks ??= [];
+
+        //Saves made before rank limit tracking existed counted every rank a colonist held.
+        if (limitCountedRanks.Count == 0 && !UnlockedRanks.NullOrEmpty() && ParentPawn?.Faction is { IsPlayer: true })
+        {
+            limitCountedRanks.AddRange(UnlockedRanks);
+        }
     }
     
     //StatOffset

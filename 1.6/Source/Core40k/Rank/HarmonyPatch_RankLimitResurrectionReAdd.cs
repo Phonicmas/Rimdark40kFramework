@@ -18,11 +18,17 @@ public class RankLimitResurrectionReAddPatch
         var comp = pawn.GetComp<CompRankInfo>();
         var gameComp = Current.Game.GetComponent<GameComponent_RankInfo>();
 
-        foreach (var rank in comp.UnlockedRanks.Where(rank => rank.colonyLimitOfRank.x > 0 || (rank.colonyLimitOfRank.x == 0 && rank.colonyLimitOfRank.y > 0)))
+        foreach (var rank in comp.UnlockedRanks.ToList().Where(RankUtils.IsLimited))
         {
+            if (comp.LimitCountedRanks.Contains(rank))
+            {
+                continue;
+            }
+
             if (gameComp.CanHaveMoreOfRank(rank))
             {
                 gameComp.PawnGainedRank(rank);
+                comp.LimitCountedRanks.Add(rank);
             }
             else
             {

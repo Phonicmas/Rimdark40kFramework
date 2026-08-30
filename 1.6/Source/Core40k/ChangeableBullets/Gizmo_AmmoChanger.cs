@@ -20,7 +20,7 @@ public class Gizmo_AmmoChanger : Command
     public override GizmoResult GizmoOnGUI(Vector2 topLeft, float maxWidth, GizmoRenderParms parms)
     {
         var rect = new Rect(topLeft.x, topLeft.y, GetWidth(maxWidth), 75f);
-        TooltipHandler.TipRegion(rect, "BEWH.Framework.AmmoChanger.GizmoInfo".Translate(compAmmoChanger.CurrentlySelectedProjectile.LabelCap, compAmmoChanger.CurrentlySelectedProjectile.description.CapitalizeFirst()));
+        TooltipHandler.TipRegion(rect, "BEWH.Framework.AmmoChanger.GizmoInfo".Translate(compAmmoChanger.CurrentlySelectedProjectile.LabelCap, AmmoDescription(compAmmoChanger.CurrentlySelectedProjectile)));
         Widgets.DrawWindowBackground(rect);
         
         var color = Color.white;
@@ -59,7 +59,7 @@ public class Gizmo_AmmoChanger : Command
                 }
                 else
                 {
-                    menuOption.tooltip = availableProjectile.description.CapitalizeFirst();
+                    menuOption.tooltip = AmmoDescription(availableProjectile);
                 }
                 list.Add(menuOption);
             }
@@ -90,5 +90,13 @@ public class Gizmo_AmmoChanger : Command
     public override float GetWidth(float maxWidth)
     {
         return Width;
+    }
+
+    private static string AmmoDescription(ThingDef projectile)
+    {
+        var description = projectile.description.CapitalizeFirst();
+        var statSummary = projectile.GetModExtension<DefModExtension_AmmoChanger>()?.StatSummary();
+
+        return statSummary.NullOrEmpty() ? description : description + "\n\n" + statSummary;
     }
 }

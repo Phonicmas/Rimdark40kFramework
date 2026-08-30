@@ -31,6 +31,7 @@
   <BEWH.Framework.StatReport.Rank>Ranks</BEWH.Framework.StatReport.Rank>
   <BEWH.Framework.StatReport.Decoration>Decorations</BEWH.Framework.StatReport.Decoration>
   <BEWH.Framework.StatReport.AlternateTexture>Alternate Base Form</BEWH.Framework.StatReport.AlternateTexture>
+  <BEWH.Framework.StatReport.Ammo>Loaded ammunition</BEWH.Framework.StatReport.Ammo>
 
   <!--=== Customization ===-->
   <BEWH.Framework.Customization.PrimaryColor>Primary</BEWH.Framework.Customization.PrimaryColor>
@@ -98,6 +99,7 @@
   <BEWH.Framework.RankSystem.CategoryRequiredGene>the {0} gene</BEWH.Framework.RankSystem.CategoryRequiredGene>
   <BEWH.Framework.RankSystem.CategoryRequiredHediff>the {0} hediff</BEWH.Framework.RankSystem.CategoryRequiredHediff>
   <BEWH.Framework.RankSystem.CategoryRequiredTrait>the {0} trait</BEWH.Framework.RankSystem.CategoryRequiredTrait>
+  <BEWH.Framework.RankSystem.CategoryRequiredTitle>the {0} title</BEWH.Framework.RankSystem.CategoryRequiredTitle>
   <BEWH.Framework.RankSystem.And> and </BEWH.Framework.RankSystem.And>
 
   <BEWH.Framework.RankSystem.NoRankSelected>No rank selected.</BEWH.Framework.RankSystem.NoRankSelected>
@@ -123,6 +125,11 @@
   <BEWH.Framework.RankSystem.RequirementsTraitAll>All of the following traits</BEWH.Framework.RankSystem.RequirementsTraitAll>
   <BEWH.Framework.RankSystem.RequirementsTraitAtLeastOne>At least one of the following traits</BEWH.Framework.RankSystem.RequirementsTraitAtLeastOne>
 
+  <BEWH.Framework.RankSystem.RequirementsTitleAll>All of the following titles</BEWH.Framework.RankSystem.RequirementsTitleAll>
+  <BEWH.Framework.RankSystem.RequirementsTitleAtLeastOne>At least one of the following titles</BEWH.Framework.RankSystem.RequirementsTitleAtLeastOne>
+  <BEWH.Framework.RankSystem.TitleOrHigher>{0} (or higher)</BEWH.Framework.RankSystem.TitleOrHigher>
+  <BEWH.Framework.RankSystem.TitleOfFaction>{0} of {1}</BEWH.Framework.RankSystem.TitleOfFaction>
+
   <BEWH.Framework.RankSystem.RequirementsGeneAll>All of the following genes</BEWH.Framework.RankSystem.RequirementsGeneAll>
   <BEWH.Framework.RankSystem.RequirementsGeneAtLeastOne>At least one of the following genes</BEWH.Framework.RankSystem.RequirementsGeneAtLeastOne>
 
@@ -145,6 +152,9 @@
   <!--=== Changeable Ammo ===-->
   <BEWH.Framework.AmmoChanger.GizmoInfo>Change the selected ammo type.\n\nCurrently selected: {0}\n\n{1}</BEWH.Framework.AmmoChanger.GizmoInfo>
   <BEWH.Framework.AmmoChanger.CurrentlyEquipped>Currently equipped.</BEWH.Framework.AmmoChanger.CurrentlyEquipped>
+  <BEWH.Framework.AmmoChanger.BurstCount>Shots per burst: {0}</BEWH.Framework.AmmoChanger.BurstCount>
+  <BEWH.Framework.AmmoChanger.Range>Range: {0}</BEWH.Framework.AmmoChanger.Range>
+  <BEWH.Framework.AmmoChanger.Warmup>Warmup: {0}s</BEWH.Framework.AmmoChanger.Warmup>
 
   <!--=== Misc ===-->
   <!-- Unbreakable -->
