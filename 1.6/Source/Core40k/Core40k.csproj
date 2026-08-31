@@ -257,6 +257,7 @@
     <Compile Include="Rank\RankDef.cs" />
     <Compile Include="Rank\PawnKindRankData.cs" />
     <Compile Include="Rank\RankUtils.cs" />
+    <Compile Include="Rank\RankEligibilityNotifier.cs" />
     <Compile Include="Recipes\Recipe_InstallImplantWithLevels.cs" />
     <Compile Include="HarmonyPatches\HarmonyPatch_LostHeartSurvivalPatch.cs" />
     <Compile Include="HarmonyPatches\HarmonyPatch_LostLungSurvivalPatch.cs" />

@@ -11,8 +11,43 @@ public class GameComponent_RankInfo : GameComponent
     //Counts rankDef limits, meaning that each time a rank is unlocked that is limited, it is counted here.
     public Dictionary<RankDef, int> rankLimits = new Dictionary<RankDef, int>();
 
+    //False on saves made before rank eligibility messages existed.
+    private bool eligibilityBaselineDone;
+
+    //Colonist count cached for the current tick. Never scribed, a fresh count on load is correct.
+    private int cachedColonistCount = -1;
+    private int cachedColonistCountTick = -1;
+
     public GameComponent_RankInfo(Game game)
     {
+    }
+
+    public override void GameComponentTick()
+    {
+        base.GameComponentTick();
+        RankEligibilityNotifier.Tick();
+    }
+
+    public override void StartedNewGame()
+    {
+        base.StartedNewGame();
+        //A new colony should be told about its starting eligibility, so nothing is seeded.
+        eligibilityBaselineDone = true;
+    }
+
+    public override void LoadedGame()
+    {
+        base.LoadedGame();
+
+        if (eligibilityBaselineDone)
+        {
+            return;
+        }
+
+        //Save predates the feature. Record what everyone is already eligible for
+        //so the player is not flooded on this one load.
+        RankEligibilityNotifier.SeedBaseline();
+        eligibilityBaselineDone = true;
     }
 
     public void PawnResetRanks(List<RankDef> unlockedRanks)
@@ -115,11 +150,51 @@ public class GameComponent_RankInfo : GameComponent
         return currentAmount;
     }
         
-    private static int GetColonistForCounting()
+    private int GetColonistForCounting()
     {
-        var playerPawnAmount = Find.Maps.Sum(map => map.mapPawns.ColonistCount);
-        var caravans = Find.WorldObjects.Caravans.Where(c => c.IsPlayerControlled);
-        playerPawnAmount += caravans.SelectMany<Caravan, Pawn>(caravan => caravan.pawns).Count(p => p.Faction != null && p.Faction.IsPlayer);
+        //Only cache while the game is actually ticking. Paused, the tick never changes,
+        //so a cached value could outlive a dev mode spawn or kill. Recomputing is free
+        //there because nothing is simulating.
+        var tickManager = Find.TickManager;
+        var caching = tickManager != null && !tickManager.Paused;
+
+        if (caching && cachedColonistCountTick == tickManager.TicksGame)
+        {
+            return cachedColonistCount;
+        }
+
+        var playerPawnAmount = 0;
+
+        var maps = Find.Maps;
+        for (var i = 0; i < maps.Count; i++)
+        {
+            playerPawnAmount += maps[i].mapPawns.ColonistCount;
+        }
+
+        var caravans = Find.WorldObjects.Caravans;
+        for (var i = 0; i < caravans.Count; i++)
+        {
+            var caravan = caravans[i];
+            if (!caravan.IsPlayerControlled)
+            {
+                continue;
+            }
+
+            var pawns = caravan.PawnsListForReading;
+            for (var j = 0; j < pawns.Count; j++)
+            {
+                if (pawns[j].Faction is { IsPlayer: true })
+                {
+                    playerPawnAmount++;
+                }
+            }
+        }
+
+        if (caching)
+        {
+            cachedColonistCount = playerPawnAmount;
+            cachedColonistCountTick = tickManager.TicksGame;
+        }
 
         return playerPawnAmount;
     }
@@ -128,5 +203,6 @@ public class GameComponent_RankInfo : GameComponent
     {
         base.ExposeData();
         Scribe_Collections.Look(ref rankLimits, "rankLimits");
+        Scribe_Values.Look(ref eligibilityBaselineDone, "eligibilityBaselineDone", false);
     }
 }

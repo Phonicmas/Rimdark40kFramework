@@ -14,6 +14,8 @@ public class Core40kModSettings : ModSettings
 
     public bool confirmRankUnlock = false;
 
+    public bool notifyOnRankEligibility = true;
+
     public bool showAllRankCategories = false;
         
     private List<ColourPreset> colourPresets = [];
@@ -96,6 +98,7 @@ public class Core40kModSettings : ModSettings
         Scribe_Values.Look(ref showCustomizationDebugOptions, "showCustomizationDebugOptions", false);
         Scribe_Values.Look(ref decorationsPerRow, "decorationsPerRow", 6);
         Scribe_Values.Look(ref confirmRankUnlock, "confirmRankUnlock", false);
+        Scribe_Values.Look(ref notifyOnRankEligibility, "notifyOnRankEligibility", true);
         Scribe_Values.Look(ref showAllRankCategories, "showAllRankCategories", false);
         Scribe_Collections.Look(ref colourPresets, "colourPresets");
         Scribe_Collections.Look(ref extraDecorationPresets, "extraDecorationPresets");

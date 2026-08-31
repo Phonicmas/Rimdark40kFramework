@@ -24,6 +24,21 @@ public class CompRankInfo : ThingComp
 
     public HashSet<RankDef> LimitCountedRanks => limitCountedRanks ??= [];
 
+    //Ranks the player has already been told this pawn became eligible for.
+    //Kept for the life of the save so a rank is only ever announced once.
+    private HashSet<RankDef> announcedEligibleRanks = [];
+
+    public bool HasAnnouncedEligibility(RankDef rankDef)
+    {
+        return announcedEligibleRanks != null && announcedEligibleRanks.Contains(rankDef);
+    }
+
+    public void MarkEligibilityAnnounced(RankDef rankDef)
+    {
+        announcedEligibleRanks ??= [];
+        announcedEligibleRanks.Add(rankDef);
+    }
+
     public List<RankDef> UnlockedRanks
     {
         get
@@ -258,19 +273,20 @@ public class CompRankInfo : ThingComp
 
     public void ResetRanks(RankCategoryDef rankCategoryDef)
     {
-        if (rankCategoryDef != null)
+        //Both branches must iterate a copy, RemoveRank mutates UnlockedRanks.
+        //UnlockedRanksOfDef already builds a new list, the null branch did not.
+        var ranksToRemove = rankCategoryDef != null
+            ? UnlockedRanksOfDef(rankCategoryDef)
+            : UnlockedRanks.ToList();
+
+        foreach (var rankDef in ranksToRemove)
         {
-            foreach (var rankDef in UnlockedRanksOfDef(rankCategoryDef))
-            {
-                RemoveRank(rankDef, true);
-            }
-        }
-        else
-        {
-            foreach (var rankDef in UnlockedRanks)
-            {
-                RemoveRank(rankDef, true);
-            }
+            RemoveRank(rankDef, true);
+
+            //A deliberate wipe re-arms the eligibility message for the ranks it removed,
+            //so the pawn is announced again as they climb back. Eligibility merely
+            //lapsing on its own still never re-announces.
+            announcedEligibleRanks?.Remove(rankDef);
         }
     }
 
@@ -328,6 +344,7 @@ public class CompRankInfo : ThingComp
         Scribe_Collections.Look(ref unlockedRanks, "unlockedRanks", LookMode.Def);
         Scribe_Collections.Look(ref unlockedRanksAtDeath, "unlockedRanksAtDeath", LookMode.Def);
         Scribe_Collections.Look(ref limitCountedRanks, "limitCountedRanks", LookMode.Def);
+        Scribe_Collections.Look(ref announcedEligibleRanks, "announcedEligibleRanks", LookMode.Def);
         Scribe_Collections.Look(ref daysAsRank, "daysAsRank");
         Scribe_Defs.Look(ref lastOpenedRankCategory, "lastOpenedRankCategory");
 
@@ -338,6 +355,7 @@ public class CompRankInfo : ThingComp
             
         daysAsRank ??= new Dictionary<RankDef, int>();
         limitCountedRanks ??= [];
+        announcedEligibleRanks ??= [];
 
         //Saves made before rank limit tracking existed counted every rank a colonist held.
         if (limitCountedRanks.Count == 0 && !UnlockedRanks.NullOrEmpty() && ParentPawn?.Faction is { IsPlayer: true })

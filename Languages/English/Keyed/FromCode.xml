@@ -8,6 +8,7 @@
   <BEWH.Framework.ModSettings.DecorationsPerRow>Decorations per row when customizing: {0}</BEWH.Framework.ModSettings.DecorationsPerRow>
   <BEWH.Framework.ModSettings.DecorationsPerRowTooltip>Amount of decorations shown when applying decorations on things. Icons and texts can become small and overlap wierdly if too many decorations per row.</BEWH.Framework.ModSettings.DecorationsPerRowTooltip>
   <BEWH.Framework.ModSettings.ConfirmRankUnlock>Confirm rank unlock with popup. (Looking at you butterfingers)</BEWH.Framework.ModSettings.ConfirmRankUnlock>
+  <BEWH.Framework.ModSettings.NotifyRankEligibility>Show a message when a pawn becomes eligible for a new rank</BEWH.Framework.ModSettings.NotifyRankEligibility>
 
   <BEWH.ModSettings.TabMain>Main</BEWH.ModSettings.TabMain>
   <BEWH.ModSettings.TabCustomization>Customization</BEWH.ModSettings.TabCustomization>
@@ -110,6 +111,9 @@
   <BEWH.Framework.RankSystem.RankRequirements>Requirements</BEWH.Framework.RankSystem.RankRequirements>
   <BEWH.Framework.RankSystem.RankBonuses>Bonuses from rank</BEWH.Framework.RankSystem.RankBonuses>
   <BEWH.Framework.RankSystem.DaysSinceRankGiven>{0} days since rank was given</BEWH.Framework.RankSystem.DaysSinceRankGiven>
+
+  <BEWH.Framework.RankSystem.EligibleForRank>{0} is now eligible for the rank {1}.</BEWH.Framework.RankSystem.EligibleForRank>
+  <BEWH.Framework.RankSystem.EligibleForRanks>{0} is now eligible for new ranks: {1}.</BEWH.Framework.RankSystem.EligibleForRanks>
 
   <BEWH.Framework.RankSystem.UnlockRank>Unlock rank</BEWH.Framework.RankSystem.UnlockRank>
   <BEWH.Framework.RankSystem.Stats>Stats</BEWH.Framework.RankSystem.Stats>

@@ -68,8 +68,27 @@ public class RankDef : Def
         }
     }
 
+    private static Game cachedGameForRankInfo = null;
     private static GameComponent_RankInfo gameCompRankInfo = null;
-    private static GameComponent_RankInfo GameCompRankInfo => gameCompRankInfo ??= Current.Game.GetComponent<GameComponent_RankInfo>();
+
+    //RankDefs outlive a game, so this cache has to be keyed on the game it came from.
+    //A plain ??= would keep handing out the previous save's component after loading a
+    //second save in the same session, and every colony rank limit would read wrong.
+    private static GameComponent_RankInfo GameCompRankInfo
+    {
+        get
+        {
+            if (gameCompRankInfo != null && cachedGameForRankInfo == Current.Game)
+            {
+                return gameCompRankInfo;
+            }
+
+            cachedGameForRankInfo = Current.Game;
+            gameCompRankInfo = cachedGameForRankInfo?.GetComponent<GameComponent_RankInfo>();
+
+            return gameCompRankInfo;
+        }
+    }
     
     public virtual void UnlockRank(CompRankInfo rankComp)
     {
@@ -133,83 +152,137 @@ public class RankDef : Def
         }
     }
 
+    //Boolean only evaluation: no requirement text is built and the first failed
+    //requirement returns immediately. Delegates to the virtual method so subclasses
+    //that override it are still respected.
+    public bool RequirementMet(Pawn pawn, CompRankInfo rankComp, RankCategoryDef rankCategoryDef)
+    {
+        return RequirementMet(null, pawn, rankComp, rankCategoryDef, out _);
+    }
+
     public virtual bool RequirementMet(StringBuilder stringBuilder, Pawn pawn, CompRankInfo rankComp, RankCategoryDef currentlySelectedRankCategory, out string reason)
     {
+        //A null stringBuilder means the caller only wants the boolean. All text work is
+        //skipped and each block may bail as soon as its requirement has failed.
+        var buildText = stringBuilder != null;
+        reason = null;
+
         //Limit on rank amount
         var rankLimitRequirementsMet = true;
         if (colonyLimitOfRank.x > 0 || (colonyLimitOfRank.x == 0 && colonyLimitOfRank.y > 0))
         {
-            var (allowed, allowedAmount, currentAmount) = GameCompRankInfo.CanHaveMoreOfRankWithInfo(this);
-            rankLimitRequirementsMet = allowed;
-                
-            var requirementColour = rankLimitRequirementsMet ? Core40kUtils.RequirementMetColour : Core40kUtils.RequirementNotMetColour;
-                
-            stringBuilder.Append("\n");
-            if (colonyLimitOfRank.y == 0)
+            if (!buildText)
             {
-                stringBuilder.AppendLine("BEWH.Framework.RankSystem.RequirementsLimitOnlyOneEver".Translate(allowedAmount, currentAmount).Colorize(requirementColour));
+                rankLimitRequirementsMet = GameCompRankInfo.CanHaveMoreOfRank(this);
             }
             else
             {
-                var limitIncreaseAmount = colonyLimitOfRank.y;
-                var text = " " + limitIncreaseAmount;
-                switch (limitIncreaseAmount)
+                var (allowed, allowedAmount, currentAmount) = GameCompRankInfo.CanHaveMoreOfRankWithInfo(this);
+                rankLimitRequirementsMet = allowed;
+
+                var requirementColour = rankLimitRequirementsMet ? Core40kUtils.RequirementMetColour : Core40kUtils.RequirementNotMetColour;
+
+                stringBuilder.Append("\n");
+                if (colonyLimitOfRank.y == 0)
                 {
-                    case 1:
-                        text = "";
-                        break;
-                    case 2:
-                        text += "nd";
-                        break;
-                    case 3:
-                        text += "rd";
-                        break;
-                    default:
-                        text += "th";
-                        break;
+                    stringBuilder.AppendLine("BEWH.Framework.RankSystem.RequirementsLimitOnlyOneEver".Translate(allowedAmount, currentAmount).Colorize(requirementColour));
                 }
-                stringBuilder.AppendLine("BEWH.Framework.RankSystem.RequirementsLimit".Translate(allowedAmount, currentAmount, text).Colorize(requirementColour));
+                else
+                {
+                    var limitIncreaseAmount = colonyLimitOfRank.y;
+                    var text = " " + limitIncreaseAmount;
+                    switch (limitIncreaseAmount)
+                    {
+                        case 1:
+                            text = "";
+                            break;
+                        case 2:
+                            text += "nd";
+                            break;
+                        case 3:
+                            text += "rd";
+                            break;
+                        default:
+                            text += "th";
+                            break;
+                    }
+                    stringBuilder.AppendLine("BEWH.Framework.RankSystem.RequirementsLimit".Translate(allowedAmount, currentAmount, text).Colorize(requirementColour));
+                }
             }
         }
-            
+
+        if (!buildText && !rankLimitRequirementsMet)
+        {
+            return false;
+        }
+
         //Skills
         var skillRequirementsMet = true;
         if (!requiredSkills.NullOrEmpty())
         {
-            stringBuilder.Append("\n");
-            stringBuilder.AppendLine("BEWH.Framework.RankSystem.RequirementsSkills".Translate());
+            if (buildText)
+            {
+                stringBuilder.Append("\n");
+                stringBuilder.AppendLine("BEWH.Framework.RankSystem.RequirementsSkills".Translate());
+            }
+
             foreach (var aptitude in requiredSkills)
             {
                 var skillRequirementMet = pawn.skills.GetSkill(aptitude.skill).Level >= aptitude.level;
                 if (!skillRequirementMet)
                 {
                     skillRequirementsMet = false;
+
+                    if (!buildText)
+                    {
+                        return false;
+                    }
                 }
+
+                if (!buildText)
+                {
+                    continue;
+                }
+
                 var requirementColour = skillRequirementMet ? Core40kUtils.RequirementMetColour : Core40kUtils.RequirementNotMetColour;
                 stringBuilder.AppendLine(("    " + aptitude.skill.label.CapitalizeFirst() + ": " + aptitude.level).Colorize(requirementColour));
             }
         }
-            
+
         //Ranks
         //All
         var rankAllRequirementsMet = true;
         if (!currentlySelectedRankCategory.rankDict[this].rankRequirements.NullOrEmpty())
         {
-            stringBuilder.Append("\n");
-            stringBuilder.AppendLine("BEWH.Framework.RankSystem.RequirementsRanks".Translate());
+            if (buildText)
+            {
+                stringBuilder.Append("\n");
+                stringBuilder.AppendLine("BEWH.Framework.RankSystem.RequirementsRanks".Translate());
+            }
+
             foreach (var rank in currentlySelectedRankCategory.rankDict[this].rankRequirements)
             {
                 var requiredDaysAsRank = Math.Round(rank.daysAs / pawn.GetStatValue(Core40kDefOf.BEWH_RankLearningFactor));
                 var rankRequirementMet = rankComp.HasRank(rank.rankDef) &&
                                          rankComp.GetDaysAsRank(rank.rankDef) >= requiredDaysAsRank;
-                    
+
                 if (!rankRequirementMet)
                 {
                     rankAllRequirementsMet = false;
+
+                    if (!buildText)
+                    {
+                        return false;
+                    }
                 }
-                    
+
+                if (!buildText)
+                {
+                    continue;
+                }
+
                 var requirementColour = rankRequirementMet ? Core40kUtils.RequirementMetColour : Core40kUtils.RequirementNotMetColour;
-                    
+
                 if (rank.daysAs > 0)
                 {
                     stringBuilder.AppendLine(("    " + "BEWH.Framework.RankSystem.HaveBeenRankForDays".Translate(rank.rankDef.label.CapitalizeFirst(), requiredDaysAsRank)).Colorize(requirementColour));
@@ -218,27 +291,42 @@ public class RankDef : Def
                 {
                     stringBuilder.AppendLine(("    " + "BEWH.Framework.RankSystem.HaveAchievedRank".Translate(rank.rankDef.label.CapitalizeFirst())).Colorize(requirementColour));
                 }
-                    
+
             }
         }
         //One Among
         var rankAtLeastOneRequirementsMet = currentlySelectedRankCategory.rankDict[this].rankRequirementsOneAmong.NullOrEmpty();
         if (!rankAtLeastOneRequirementsMet)
         {
-            stringBuilder.Append("\n");
-            stringBuilder.AppendLine("BEWH.Framework.RankSystem.RequirementsRanksAtLeastOne".Translate());
+            if (buildText)
+            {
+                stringBuilder.Append("\n");
+                stringBuilder.AppendLine("BEWH.Framework.RankSystem.RequirementsRanksAtLeastOne".Translate());
+            }
+
             foreach (var rank in currentlySelectedRankCategory.rankDict[this].rankRequirementsOneAmong)
             {
                 var rankRequirementMet = rankComp.HasRank(rank.rankDef) &&
                                          rankComp.GetDaysAsRank(rank.rankDef) >= rank.daysAs / pawn.GetStatValue(Core40kDefOf.BEWH_RankLearningFactor);
-                    
+
                 if (rankRequirementMet)
                 {
                     rankAtLeastOneRequirementsMet = true;
+
+                    //Nothing left to prove for this block when no text is wanted.
+                    if (!buildText)
+                    {
+                        break;
+                    }
                 }
-                    
+
+                if (!buildText)
+                {
+                    continue;
+                }
+
                 var requirementColour = rankRequirementMet ? Core40kUtils.RequirementMetColour : Core40kUtils.RequirementNotMetColour;
-                    
+
                 if (rank.daysAs > 0)
                 {
                     stringBuilder.AppendLine(("    " + "BEWH.Framework.RankSystem.HaveBeenRankForDays".Translate(rank.rankDef.label.CapitalizeFirst(), rank.daysAs)).Colorize(requirementColour));
@@ -249,23 +337,42 @@ public class RankDef : Def
                 }
             }
         }
-            
+
+        if (!buildText && !rankAtLeastOneRequirementsMet)
+        {
+            return false;
+        }
+
         //Traits
         //All
         var traitsAllRequirementsMet = true;
         if (!requiredTraitsAll.NullOrEmpty())
         {
-            stringBuilder.Append("\n");
-            stringBuilder.AppendLine("BEWH.Framework.RankSystem.RequirementsTraitAll".Translate());
+            if (buildText)
+            {
+                stringBuilder.Append("\n");
+                stringBuilder.AppendLine("BEWH.Framework.RankSystem.RequirementsTraitAll".Translate());
+            }
+
             foreach (var trait in requiredTraitsAll)
             {
                 var traitsAllRequirementMet = pawn.story.traits.HasTrait(trait.traitDef, trait.degree);
-                    
+
                 if (!traitsAllRequirementMet)
                 {
                     traitsAllRequirementsMet = false;
+
+                    if (!buildText)
+                    {
+                        return false;
+                    }
                 }
-                    
+
+                if (!buildText)
+                {
+                    continue;
+                }
+
                 var requirementColour = traitsAllRequirementMet ? Core40kUtils.RequirementMetColour : Core40kUtils.RequirementNotMetColour;
                 stringBuilder.AppendLine(("    " + trait.traitDef.DataAtDegree(trait.degree).label.CapitalizeFirst()).Colorize(requirementColour));
             }
@@ -274,23 +381,42 @@ public class RankDef : Def
         var traitsAtLeastOneRequirementsMet = requiredTraitsOneAmong.NullOrEmpty();
         if (!traitsAtLeastOneRequirementsMet)
         {
-            stringBuilder.Append("\n");
-            stringBuilder.AppendLine("BEWH.Framework.RankSystem.RequirementsTraitAtLeastOne".Translate());
+            if (buildText)
+            {
+                stringBuilder.Append("\n");
+                stringBuilder.AppendLine("BEWH.Framework.RankSystem.RequirementsTraitAtLeastOne".Translate());
+            }
+
             foreach (var trait in requiredTraitsOneAmong)
             {
                 var traitsAtLeastOneRequirementMet = pawn.story.traits.HasTrait(trait.traitDef, trait.degree);
-                        
+
                 if (traitsAtLeastOneRequirementMet)
                 {
                     traitsAtLeastOneRequirementsMet = true;
+
+                    if (!buildText)
+                    {
+                        break;
+                    }
                 }
-                    
+
+                if (!buildText)
+                {
+                    continue;
+                }
+
                 var requirementColour = traitsAtLeastOneRequirementMet ? Core40kUtils.RequirementMetColour : Core40kUtils.RequirementNotMetColour;
-                    
+
                 stringBuilder.AppendLine(("    " + trait.traitDef.DataAtDegree(trait.degree).label.CapitalizeFirst()).Colorize(requirementColour));
             }
         }
-            
+
+        if (!buildText && !traitsAtLeastOneRequirementsMet)
+        {
+            return false;
+        }
+
         //Royal titles
         //Without Royalty these can never be fulfilled, so they are ignored
         //instead of soft locking the rank tree for players without the DLC.
@@ -301,17 +427,31 @@ public class RankDef : Def
             //All
             if (!requiredTitlesAll.NullOrEmpty())
             {
-                stringBuilder.Append("\n");
-                stringBuilder.AppendLine("BEWH.Framework.RankSystem.RequirementsTitleAll".Translate());
+                if (buildText)
+                {
+                    stringBuilder.Append("\n");
+                    stringBuilder.AppendLine("BEWH.Framework.RankSystem.RequirementsTitleAll".Translate());
+                }
+
                 foreach (var titleRequirement in requiredTitlesAll)
                 {
                     var titlesAllRequirementMet = titleRequirement.MetBy(pawn);
-                    
+
                     if (!titlesAllRequirementMet)
                     {
                         titlesAllRequirementsMet = false;
+
+                        if (!buildText)
+                        {
+                            return false;
+                        }
                     }
-                    
+
+                    if (!buildText)
+                    {
+                        continue;
+                    }
+
                     var requirementColour = titlesAllRequirementMet ? Core40kUtils.RequirementMetColour : Core40kUtils.RequirementNotMetColour;
                     stringBuilder.AppendLine(("    " + titleRequirement.Label).Colorize(requirementColour));
                 }
@@ -319,23 +459,42 @@ public class RankDef : Def
             //One Among
             if (!titlesAtLeastOneRequirementsMet)
             {
-                stringBuilder.Append("\n");
-                stringBuilder.AppendLine("BEWH.Framework.RankSystem.RequirementsTitleAtLeastOne".Translate());
+                if (buildText)
+                {
+                    stringBuilder.Append("\n");
+                    stringBuilder.AppendLine("BEWH.Framework.RankSystem.RequirementsTitleAtLeastOne".Translate());
+                }
+
                 foreach (var titleRequirement in requiredTitlesOneAmong)
                 {
                     var titlesAtLeastOneRequirementMet = titleRequirement.MetBy(pawn);
-                    
+
                     if (titlesAtLeastOneRequirementMet)
                     {
                         titlesAtLeastOneRequirementsMet = true;
+
+                        if (!buildText)
+                        {
+                            break;
+                        }
                     }
-                    
+
+                    if (!buildText)
+                    {
+                        continue;
+                    }
+
                     var requirementColour = titlesAtLeastOneRequirementMet ? Core40kUtils.RequirementMetColour : Core40kUtils.RequirementNotMetColour;
                     stringBuilder.AppendLine(("    " + titleRequirement.Label).Colorize(requirementColour));
                 }
             }
         }
-            
+
+        if (!buildText && !titlesAtLeastOneRequirementsMet)
+        {
+            return false;
+        }
+
         //Genes
         var genesAllRequirementsMet = true;
         var genesAtLeastOneRequirementsMet = requiredGenesOneAmong.NullOrEmpty();
@@ -344,47 +503,85 @@ public class RankDef : Def
             //All
             if (!requiredGenesAll.NullOrEmpty())
             {
-                stringBuilder.Append("\n");
-                stringBuilder.AppendLine("BEWH.Framework.RankSystem.RequirementsGeneAll".Translate());
+                if (buildText)
+                {
+                    stringBuilder.Append("\n");
+                    stringBuilder.AppendLine("BEWH.Framework.RankSystem.RequirementsGeneAll".Translate());
+                }
+
                 foreach (var gene in requiredGenesAll)
                 {
                     var genesAllRequirementMet = pawn.genes.HasActiveGene(gene);
-                        
+
                     if (!genesAllRequirementMet)
                     {
                         genesAllRequirementsMet = false;
+
+                        if (!buildText)
+                        {
+                            return false;
+                        }
                     }
-                        
+
+                    if (!buildText)
+                    {
+                        continue;
+                    }
+
                     var requirementColour = genesAllRequirementMet ? Core40kUtils.RequirementMetColour : Core40kUtils.RequirementNotMetColour;
-                        
+
                     stringBuilder.AppendLine(("    " + gene.label.CapitalizeFirst()).Colorize(requirementColour));
                 }
             }
             //One Among
             if (!genesAtLeastOneRequirementsMet)
             {
-                stringBuilder.Append("\n");
-                stringBuilder.AppendLine("BEWH.Framework.RankSystem.RequirementsGeneAtLeastOne".Translate());
+                if (buildText)
+                {
+                    stringBuilder.Append("\n");
+                    stringBuilder.AppendLine("BEWH.Framework.RankSystem.RequirementsGeneAtLeastOne".Translate());
+                }
+
                 foreach (var gene in requiredGenesOneAmong)
                 {
                     var genesAtLeastOneRequirementMet = pawn.genes.HasActiveGene(gene);
-                        
+
                     if (genesAtLeastOneRequirementMet)
                     {
                         genesAtLeastOneRequirementsMet = true;
+
+                        if (!buildText)
+                        {
+                            break;
+                        }
                     }
-                    
+
+                    if (!buildText)
+                    {
+                        continue;
+                    }
+
                     var requirementColour = genesAtLeastOneRequirementMet ? Core40kUtils.RequirementMetColour : Core40kUtils.RequirementNotMetColour;
                     stringBuilder.AppendLine(("    " + gene.label.CapitalizeFirst()).Colorize(requirementColour));
                 }
             }
         }
+
+        if (!buildText && !genesAtLeastOneRequirementsMet)
+        {
+            return false;
+        }
+
         //Incompatible Ranks
         var noIncompatibleRanks = true;
         if (!incompatibleRanks.NullOrEmpty())
         {
-            stringBuilder.Append("\n");
-            stringBuilder.AppendLine("BEWH.Framework.RankSystem.IncompatibleRank".Translate());
+            if (buildText)
+            {
+                stringBuilder.Append("\n");
+                stringBuilder.AppendLine("BEWH.Framework.RankSystem.IncompatibleRank".Translate());
+            }
+
             foreach (var rank in incompatibleRanks)
             {
                 var isIncompatibleRank = rankComp.HasRank(rank);
@@ -392,18 +589,22 @@ public class RankDef : Def
                 if (isIncompatibleRank)
                 {
                     noIncompatibleRanks = false;
+
+                    if (!buildText)
+                    {
+                        return false;
+                    }
                 }
-                    
+
+                if (!buildText)
+                {
+                    continue;
+                }
+
                 var requirementColour = !isIncompatibleRank ? Core40kUtils.RequirementMetColour : Core40kUtils.RequirementNotMetColour;
-                    
+
                 stringBuilder.AppendLine(("    " + rank.label.CapitalizeFirst()).Colorize(requirementColour));
             }
-        }
-            
-        var requirementText = stringBuilder.ToString().TrimEnd('\r', '\n').TrimStart('\r', '\n');
-        if (requirementText.NullOrEmpty())
-        {
-            requirementText = "    " + "BEWH.Framework.CommonKeyword.None".Translate();
         }
 
         var requirementsMet = skillRequirementsMet 
@@ -418,7 +619,17 @@ public class RankDef : Def
                               && titlesAllRequirementsMet
                               && titlesAtLeastOneRequirementsMet;
 
-        reason = requirementText;
+        if (buildText)
+        {
+            var requirementText = stringBuilder.ToString().TrimEnd('\r', '\n').TrimStart('\r', '\n');
+            if (requirementText.NullOrEmpty())
+            {
+                requirementText = "    " + "BEWH.Framework.CommonKeyword.None".Translate();
+            }
+
+            reason = requirementText;
+        }
+
         return requirementsMet;
     }
 
