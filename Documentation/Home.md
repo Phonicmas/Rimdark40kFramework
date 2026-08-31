@@ -10,24 +10,24 @@ each add-on reinventing them.
 This documentation describes what the framework provides and how a submod (or a standalone mod
 that wants to depend on the framework) uses each system. It is written from the current `1.6`
 source. `1.5` is still supported by the mod for players, but is not receiving new features —
-see [Getting Started](Getting-Started.md#15-vs-16) for what that means for you.
+see [Getting Started](Getting-Started#15-vs-16) for what that means for you.
 
 ## How this documentation is organized
 
 | Page | Covers |
 |---|---|
-| [Getting Started](Getting-Started.md) | Depending on the framework, project layout, `Core40kDefOf`, versioning |
-| [Customization Framework](Customization-Framework.md) | The styling-station dialog, tabs, multi-colour system, alternate base textures, mask defs, presets |
-| [Decorations](Decorations.md) | Attachable armor & weapon decorations, including decorations that grant melee tools/verbs |
-| [Rank System](Rank-System.md) | `RankDef`/`RankCategoryDef`, requirements, colony limits, pawnkind pre-unlocked ranks, eligibility notifications |
-| [Changeable Ammo](Changeable-Ammo.md) | `Comp_AmmoChanger` — swappable firing modes/ammo with their own stats |
-| [Voidfaring System](Voidfaring-System.md) | Gravship/ship crew stats (Odyssey gravships and Save Our Ship 2) |
-| [Gene System](Gene-System.md) | The framework's reusable `Gene` classes |
-| [Comps and Abilities](Comps-and-Abilities.md) | Reusable `ThingComp`, `CompAbilityEffect`, and `HediffComp` classes |
-| [DefModExtension Reference](DefModExtension-Reference.md) | The smaller, single-purpose `DefModExtension`s not covered on another page |
-| [Damage and Recipes](Damage-and-Recipes.md) | Custom `DamageWorker`s and surgery `Recipe` classes |
-| [Mod Settings](Mod-Settings.md) | What `Core40kModSettings` exposes and where |
-| [Compatibility](Compatibility.md) | Built-in soft compatibility with Save Our Ship 2, Female Apparel Variants, Dual Wield, and framework dependencies |
+| [Getting Started](Getting-Started) | Depending on the framework, project layout, `Core40kDefOf`, versioning |
+| [Customization Framework](Customization-Framework) | The styling-station dialog, tabs, multi-colour system, alternate base textures, mask defs, presets |
+| [Decorations](Decorations) | Attachable armor & weapon decorations, including decorations that grant melee tools/verbs |
+| [Rank System](Rank-System) | `RankDef`/`RankCategoryDef`, requirements, colony limits, pawnkind pre-unlocked ranks, eligibility notifications |
+| [Changeable Ammo](Changeable-Ammo) | `Comp_AmmoChanger` — swappable firing modes/ammo with their own stats |
+| [Voidfaring System](Voidfaring-System) | Gravship/ship crew stats (Odyssey gravships and Save Our Ship 2) |
+| [Gene System](Gene-System) | The framework's reusable `Gene` classes |
+| [Comps and Abilities](Comps-and-Abilities) | Reusable `ThingComp`, `CompAbilityEffect`, and `HediffComp` classes |
+| [DefModExtension Reference](DefModExtension-Reference) | The smaller, single-purpose `DefModExtension`s not covered on another page |
+| [Damage and Recipes](Damage-and-Recipes) | Custom `DamageWorker`s and surgery `Recipe` classes |
+| [Mod Settings](Mod-Settings) | What `Core40kModSettings` exposes and where |
+| [Compatibility](Compatibility) | Built-in soft compatibility with Save Our Ship 2, Female Apparel Variants, Dual Wield, and framework dependencies |
 
 ## What the framework provides, at a glance
 
@@ -60,8 +60,10 @@ see [Getting Started](Getting-Started.md#15-vs-16) for what that means for you.
 ## Migrating this folder into the GitHub Wiki
 
 These pages are written to drop directly into a GitHub wiki with no changes: every internal link
-is a relative link to another page's file name (`Rank-System.md`, etc.), which is exactly how
-GitHub wiki pages link to each other.
+points at another page's name without the `.md` extension (`Rank-System`, etc.). GitHub wiki
+renders each page at a URL named after its file (`Page-Name.md` becomes `/wiki/Page-Name`), and
+only resolves links in that extension-less form to the rendered page — a link that still has
+`.md` on the end opens the raw file content instead.
 
 ```
 git clone https://github.com/Phonicmas/Rimdark40kFramework.wiki.git

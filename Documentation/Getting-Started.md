@@ -26,10 +26,10 @@ be copied into your own mod's `Assemblies` folder — RimWorld already loads it 
 ## Where to go next
 
 - Adding coloring/decoration support to a new piece of apparel or a weapon:
-  [Customization Framework](Customization-Framework.md) and [Decorations](Decorations.md).
+  [Customization Framework](Customization-Framework) and [Decorations](Decorations).
 - Giving a pawnkind a rank tree, or adding ranks other content can require:
-  [Rank System](Rank-System.md).
-- Giving a weapon swappable ammo/firing modes: [Changeable Ammo](Changeable-Ammo.md).
+  [Rank System](Rank-System).
+- Giving a weapon swappable ammo/firing modes: [Changeable Ammo](Changeable-Ammo).
 - Looking for a small utility extension (exclusive apparel, critical hits, weighted random
-  gene/trait, etc.) before writing your own: [DefModExtension Reference](DefModExtension-Reference.md)
-  and [Comps and Abilities](Comps-and-Abilities.md).
+  gene/trait, etc.) before writing your own: [DefModExtension Reference](DefModExtension-Reference)
+  and [Comps and Abilities](Comps-and-Abilities).

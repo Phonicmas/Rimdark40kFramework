@@ -87,7 +87,7 @@ needed — optionally carrying a `DefModExtension_AmmoChanger`:
 `statOffsets`/`statFactors` compose with everything else affecting the weapon's stats (quality,
 decorations, alternate-texture stat sources, other mods) rather than overwriting it, because
 they're implemented as an ordinary `ThingComp.GetStatOffset`/`GetStatFactor` override — the same
-mechanism as [decorations](Decorations.md#stats-and-requirements). `effectiveRange`/`warmupTime`/
+mechanism as [decorations](Decorations#stats-and-requirements). `effectiveRange`/`warmupTime`/
 `shotsPerBurst`, by contrast, replace the weapon's own verb values outright once selected (via
 patches on `CompEquippable`'s ranged verb getters — melee tool verbs on the same weapon are left
 untouched).
@@ -110,6 +110,6 @@ back to the first available ammo the pawn has research for, or the weapon's own
 ## Compatibility note
 
 If your weapon can also be dual-wielded (via the Dual Wield mod), see
-[Compatibility](Compatibility.md#dual-wield) — the framework already patches around a Dual Wield
+[Compatibility](Compatibility#dual-wield) — the framework already patches around a Dual Wield
 limitation so an off-hand weapon's ammo-changer warmup time applies correctly, but it's worth
 knowing that patch exists rather than re-solving the same problem.

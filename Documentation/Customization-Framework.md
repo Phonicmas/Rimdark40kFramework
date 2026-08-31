@@ -3,7 +3,7 @@
 The customization framework is the shared dialog/tab plumbing behind the "style at a styling
 station" feature. It doesn't do anything on its own — it hosts three concrete features that
 plug into it: [multi-colour recolouring](#multi-colour-recolouring), swappable
-**alternate base textures**, and [decorations](Decorations.md). If you only need one of those
+**alternate base textures**, and [decorations](Decorations). If you only need one of those
 features on a piece of apparel or a weapon, you still go through the pieces on this page to wire
 it up.
 
@@ -95,7 +95,7 @@ colour channel affects).
 `CompAlternateTexture` (`CompProperties_AlternateTexture`, no extra fields of its own) lets a
 piece of apparel or a weapon swap its entire base texture/draw size/colours for one of several
 alternates, defined as `AlternateBaseFormDef` (a `DecorationDef` subclass — see
-[Decorations](Decorations.md) for the fields it inherits):
+[Decorations](Decorations) for the fields it inherits):
 
 ```xml
 <Core40k.AlternateBaseFormDef>

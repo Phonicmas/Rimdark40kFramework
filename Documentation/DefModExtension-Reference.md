@@ -93,7 +93,7 @@ inheritable by their child, rather than vanilla's usual one-parent-suffices arch
 
 ### `DefModExtension_GeneDisabledBy`
 
-See [Gene System](Gene-System.md#gene_disabledby) — pairs with `Gene_DisabledBy`.
+See [Gene System](Gene-System#gene_disabledby) — pairs with `Gene_DisabledBy`.
 
 ## On a recipe (`RecipeDef.modExtensions`)
 
@@ -104,7 +104,7 @@ See [Gene System](Gene-System.md#gene_disabledby) — pairs with `Gene_DisabledB
 <li Class="Core40k.DefModExtension_RequiresHediff"><hediffDef>BEWH_Hediff_Implanted</hediffDef></li>
 ```
 Consumed by `Recipe_InstallImplantRequiringGene`/`Recipe_InstallImplantRequiringHediff` — see
-[Damage and Recipes](Damage-and-Recipes.md#implant-recipes).
+[Damage and Recipes](Damage-and-Recipes#implant-recipes).
 
 ### `DefModExtension_DontPlaceProduct`
 
@@ -189,4 +189,4 @@ decorations):
   this pawn's capacities (`HarmonyPatch_ArtificialPartsAffinityPatch`).
 - **`BEWH_RankLearningFactor`** — a multiplier on how much time-held-as-rank a pawn needs before
   meeting a rank's `daysAs` requirement (lower = learns ranks faster). See
-  [Rank System](Rank-System.md).
+  [Rank System](Rank-System).

@@ -65,7 +65,7 @@ named `...GeneTraitOrHediff` but currently only implements the gene check).
 ### `CompAbilityEffect_ResetRanks` (`CompProperties_ResetRanks`)
 
 Calls `CompRankInfo.ResetRanks` on the target (see
-[Rank System](Rank-System.md#resetting-ranks)). Only castable on a pawn that has `CompRankInfo`,
+[Rank System](Rank-System#resetting-ranks)). Only castable on a pawn that has `CompRankInfo`,
 holds at least one rank, holds a rank in the given category, and whose highest rank in that
 category is at or below the allowed demotion tier.
 

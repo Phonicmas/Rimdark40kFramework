@@ -31,7 +31,7 @@ soft dependency of the framework. Load order relative to the other mod does not 
 `ThisMapEvasionBoost`/`SourceMapAccuracyBoost` property getters to add the best crew member's
 `BEWH_ShipEvasionSkillOffset`/`BEWH_ShipGunnerySkillOffset` stat. Details, including exactly how
 the added skill levels feed SoS2's own dodge/hit-chance curves, are in
-[Voidfaring System](Voidfaring-System.md).
+[Voidfaring System](Voidfaring-System).
 
 ## Female Apparel Variants
 
@@ -62,6 +62,6 @@ vanilla's `Verb.TryStartCastOn` — Dual Wield drives it through its own copy,
 `DualWield.Ext_Verb.OffhandTryStartCastOn`, which reads `Verb.verbProps.warmupTime` as a **raw
 field access** rather than going through the `Verb.WarmupTime` property. That skips every
 postfix on the property, including `DefModExtension_AmmoChanger.warmupTime` (see
-[Changeable Ammo](Changeable-Ammo.md)) and a weapon decoration's `verbModifier.additionalWarmupTime`
-(see [Decorations](Decorations.md#weapon-decorations)) — a precision firing mode or a scope
+[Changeable Ammo](Changeable-Ammo)) and a weapon decoration's `verbModifier.additionalWarmupTime`
+(see [Decorations](Decorations#weapon-decorations)) — a precision firing mode or a scope
 decoration would fire at the weapon's unmodified base speed while held off-hand.

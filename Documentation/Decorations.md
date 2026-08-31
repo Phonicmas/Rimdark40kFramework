@@ -2,7 +2,7 @@
 
 Decorations are small attachable pieces layered on top of apparel or a weapon — trinkets, purity
 seals, decals, sights, wraps, a bayonet, an underbarrel launcher. They're one of the tabs hosted
-by the [Customization Framework](Customization-Framework.md) (`BEWH_ArmorDecoration` /
+by the [Customization Framework](Customization-Framework) (`BEWH_ArmorDecoration` /
 `BEWH_WeaponDecoration`), and can also be applied directly through def extensions without the
 player ever opening the dialog (starting pawnkind loadouts, presets).
 
@@ -27,7 +27,7 @@ which carries the fields common to every decoration:
 | `flipable` | `bool` | Can be mirrored; a second click on an already-attached flipable decoration flips it instead of removing it |
 | `defaultMask` | `MaskDef` | Mask applied by default |
 | `availablePresets` | `List<DecorationColourPresetDef>` | Named colour presets specific to this decoration |
-| `isIncompatibleWithBaseTexture` | `bool` | Removed automatically when the item has no alternate base form selected (see [Alternate base textures](Customization-Framework.md#alternate-base-textures)) |
+| `isIncompatibleWithBaseTexture` | `bool` | Removed automatically when the item has no alternate base form selected (see [Alternate base textures](Customization-Framework#alternate-base-textures)) |
 | `incompatibleDecorations` | `List<DecorationDef>` | Mutually exclusive with these other decorations |
 | `mustHaveRank` / `mustHaveGene` / `mustHaveTrait` / `mustHaveHediff` | requirement lists | Gate the decoration to pawns meeting them — enforced by `HasRequirements(pawn, out lockedReason)`, shown greyed-out with a tooltip reason otherwise |
 | `statOffsets` / `statFactors` | `List<StatModifier>` | Applied to the wearer/weapon while attached (see below) |
@@ -101,7 +101,7 @@ There is also `PawnRenderNodeWorker_AttachmentShoulderPad` and `PawnRenderNodeWo
 for the two most common armor decoration slots, and `Dialog_EditExtraDecorationPresets` /
 `ExtraDecorationPresetDef` / `DecorationPresetDef` for saving a set of attached decorations as a
 reusable named preset (also loadable from XML via `DefModExtension_PawnKindCustomization.extraDecorationPreset`,
-see [Customization Framework](Customization-Framework.md#applying-default-looks-per-pawnkindfaction)).
+see [Customization Framework](Customization-Framework#applying-default-looks-per-pawnkindfaction)).
 
 ## Weapon decorations
 
@@ -196,7 +196,7 @@ Other fields: `disablesWeaponVerbs` (matches `VerbProperties.label`) and `disabl
   verbs, so the weapon's own primary verb is never displaced; `isPrimary` is force-set `false` on
   every decoration verb regardless of its XML value.
 - **Tools are copied per weapon**, not shared def-level instances — safe for mods (e.g.
-  `Comp_ForceWeapon`, see [Comps and Abilities](Comps-and-Abilities.md)) that mutate a weapon's
+  `Comp_ForceWeapon`, see [Comps and Abilities](Comps-and-Abilities)) that mutate a weapon's
   own `Tool.extraMeleeDamages` at runtime.
 - **Melee DPS / Armor Penetration on the info card do not include decoration tools** — those
   vanilla stat workers read `ThingDef.tools` directly and can't see per-weapon-instance

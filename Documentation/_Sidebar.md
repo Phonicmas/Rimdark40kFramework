@@ -1,21 +1,21 @@
 **RimDark 40k — Framework**
 
-* [Home](Home.md)
-* [Getting Started](Getting-Started.md)
+* [Home](Home)
+* [Getting Started](Getting-Started)
 
 **Customization**
-* [Customization Framework](Customization-Framework.md)
-* [Decorations](Decorations.md)
+* [Customization Framework](Customization-Framework)
+* [Decorations](Decorations)
 
 **Systems**
-* [Rank System](Rank-System.md)
-* [Changeable Ammo](Changeable-Ammo.md)
-* [Voidfaring System](Voidfaring-System.md)
-* [Gene System](Gene-System.md)
-* [Comps and Abilities](Comps-and-Abilities.md)
-* [DefModExtension Reference](DefModExtension-Reference.md)
-* [Damage and Recipes](Damage-and-Recipes.md)
+* [Rank System](Rank-System)
+* [Changeable Ammo](Changeable-Ammo)
+* [Voidfaring System](Voidfaring-System)
+* [Gene System](Gene-System)
+* [Comps and Abilities](Comps-and-Abilities)
+* [DefModExtension Reference](DefModExtension-Reference)
+* [Damage and Recipes](Damage-and-Recipes)
 
 **Reference**
-* [Mod Settings](Mod-Settings.md)
-* [Compatibility](Compatibility.md)
+* [Mod Settings](Mod-Settings)
+* [Compatibility](Compatibility)

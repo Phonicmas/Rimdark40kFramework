@@ -9,14 +9,14 @@ settings window (`Core40kMod` / `CoreMod`, under **Mod Options → RimDark 40k -
 | Setting | Field | Default | Effect |
 |---|---|---|---|
 | Confirm rank unlock | `confirmRankUnlock` | `false` | Adds a confirmation dialog before manually unlocking a rank from the rank tab |
-| Notify on rank eligibility | `notifyOnRankEligibility` | `true` | Toggles the [rank eligibility messages](Rank-System.md#eligibility-notifications) |
+| Notify on rank eligibility | `notifyOnRankEligibility` | `true` | Toggles the [rank eligibility messages](Rank-System#eligibility-notifications) |
 
 ## Customization tab (`ModSettingTab_CoreCustomization`)
 
 | Setting | Field | Default | Effect |
 |---|---|---|---|
 | Show customization debug options | `showCustomizationDebugOptions` | `false` | Surfaces extra debug controls in the styling dialogs |
-| Decorations per row | `decorationsPerRow` | `6` | Grid width (3–8) for the decoration picker in [decoration tabs](Decorations.md) |
+| Decorations per row | `decorationsPerRow` | `6` | Grid width (3–8) for the decoration picker in [decoration tabs](Decorations) |
 
 ## Debug tab (`ModSettingTab_CoreDebug`)
 

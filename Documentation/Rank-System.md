@@ -190,4 +190,4 @@ pawns generated this way consume colony rank-limit slots.
 passed `null`, every rank the pawn holds) and re-arms that category's eligibility-notification
 flags so the pawn can be told about them again as they re-earn them. This is exposed to XML as an
 ability effect — see `CompAbilityEffect_ResetRanks` in
-[Comps and Abilities](Comps-and-Abilities.md#ability-effects).
+[Comps and Abilities](Comps-and-Abilities#ability-effects).

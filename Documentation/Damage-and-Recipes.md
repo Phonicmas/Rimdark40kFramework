@@ -51,7 +51,7 @@ the def directly (`BEWH_WarpFlame` is a specific def referenced by name from `Co
 Both extend vanilla's `Recipe_InstallImplant` and only add an `AvailableOnNow` gate: the recipe
 is unavailable unless the patient has the active gene / hediff named by
 `DefModExtension_RequiresGene`/`DefModExtension_RequiresHediff` (see
-[DefModExtension Reference](DefModExtension-Reference.md#on-a-recipe-recipedefmodextensions)).
+[DefModExtension Reference](DefModExtension-Reference#on-a-recipe-recipedefmodextensions)).
 
 ```xml
 <RecipeDef>
