@@ -61,29 +61,6 @@ shouldn't list a decoration tab.
 > to be how tabs were declared, directly on the color comp. `CompProperties_MultiColor.ResolveReferences`
 > logs a warning if it's still set. Always use `DefModExtension_AvailableDrawerTabDefs` instead.
 
-### Opening the dialog
-
-A pawn opens the dialog by way of a job: `Core40kDefOf.BEWH_OpenStylingStationDialogForApparelMultiColor`
-/ `BEWH_OpenStylingStationDialogForWeaponMultiColor`, driven by
-`JobDriver_OpenStylingStationDialogToCustomizeApparel` / `...Weapon` (walk to the target, then
-`Find.WindowStack.Add(new Dialog_CustomizeApparel(pawn))`). `HarmonyPatch_CustomizerOnThing`
-postfixes `ThingWithComps.GetFloatMenuOptions` to add "change decoration" options for a right-clicked
-styling station (or any other `ThingWithComps`) when `DefModExtension_AllowColoringOfThings` is
-present and the selected pawn is wearing/wielding something with `DefModExtension_AvailableDrawerTabDefs`.
-Reuse this job/float-menu pattern for your own styling stations rather than opening the dialog
-directly — `Find.TickManager.Pause()` in the dialog's constructor and the reservation-based job
-toil are both part of the expected flow.
-
-### Dialog lifecycle
-
-`Dialog_CustomizeApparel`/`Dialog_CustomizeWeapon` build one `CustomizerTabDrawer` instance per
-distinct tab across every eligible item, call `Setup(pawn)` on each, and render whichever tab is
-selected. On **Accept**, every drawer's `OnAccept(pawn)` runs. On **Cancel** / **close without
-accepting**, every drawer's `OnReset(pawn)` runs, which is why every comp that participates
-(`CompMultiColor`, `CompAlternateTexture`, `CompDecorative`, `CompWeaponDecoration` — all deriving
-from `CompGraphicParent`) implements `SetOriginals()`/`Reset()`: the tab snapshots state in
-`Setup`/`SetOriginals` and rolls back to it in `OnReset`/`Reset` if the player cancels.
-
 ## Multi-colour recolouring
 
 `CompMultiColor` (`CompProperties_MultiColor`) gives an apparel/weapon up to three independently
@@ -112,11 +89,6 @@ colour channel affects).
 - `ColourPresetDef` defines named colour swatches players can one-click apply
   (`primaryColour`/`secondaryColour`/`tertiaryColour`, `appliesTo` a list of defNames or
   `appliesToKind: Armor|Weapon|All`).
-
-For weapons specifically, `HarmonyPatch_ThingWithCompsMultiColorGraphicOverride` postfixes
-`Thing.Graphic` so a weapon carrying `CompMultiColor` or `CompAlternateTexture` renders its
-recoloured/re-textured graphic everywhere a weapon's icon or dropped-item graphic is drawn, not
-just on the pawn.
 
 ## Alternate base textures
 
