@@ -44,7 +44,10 @@ public class DecorationBaseTab : CustomizerTabDrawer
 
     private DecorationDef selectedPrecisionDef = null;
     private CompDecorativeBase selectedPrecisionComp = null;
-    
+
+    private readonly QuickSearchWidget searchWidget = new QuickSearchWidget();
+    private readonly List<DecorationDef> searchFilterBuffer = new();
+
     protected Pawn selPawn;
 
     protected virtual bool OnlyEditDefaultDrawData => false;
@@ -179,7 +182,19 @@ public class DecorationBaseTab : CustomizerTabDrawer
             DrawPrecisionMode(rect);
             return;
         }
-        
+
+        var searchRect = new Rect(rect.x, rect.y, rect.width - 16f, QuickSearchWidget.WidgetHeight);
+        rect.yMin += QuickSearchWidget.WidgetHeight + 4f;
+
+        var filterChanged = false;
+        searchWidget.OnGUI(searchRect, () => filterChanged = true);
+        if (filterChanged)
+        {
+            scrollPosition = Vector2.zero;
+        }
+
+        var anyMatch = false;
+
         viewRectHeight = curY;
 
         var viewRect = new Rect(rect)
@@ -273,10 +288,35 @@ public class DecorationBaseTab : CustomizerTabDrawer
                 {
                     continue;
                 }
-                DrawDecorationsForType(viewRect, decorativeComp, decorationByType.Key, decorationByType.Value, rect);
+
+                var decorationsToDraw = decorationByType.Value;
+
+                if (searchWidget.filter.Active)
+                {
+                    searchFilterBuffer.Clear();
+                    foreach (var decoDef in decorationByType.Value)
+                    {
+                        if (MatchesSearch(decoDef))
+                        {
+                            searchFilterBuffer.Add(decoDef);
+                        }
+                    }
+
+                    if (searchFilterBuffer.Count == 0)
+                    {
+                        continue;
+                    }
+
+                    decorationsToDraw = searchFilterBuffer;
+                }
+
+                anyMatch = true;
+                DrawDecorationsForType(viewRect, decorativeComp, decorationByType.Key, decorationsToDraw, rect);
             }
         }
-        
+
+        searchWidget.noResultsMatched = !anyMatch;
+
         Widgets.EndScrollView();
     }
 
@@ -580,6 +620,11 @@ public class DecorationBaseTab : CustomizerTabDrawer
             }
         }
         curY += 34f;
+    }
+
+    private bool MatchesSearch(DecorationDef decoDef)
+    {
+        return searchWidget.filter.Matches(decoDef.label) || searchWidget.filter.Matches(decoDef.defName);
     }
 
     private bool DecoIsIncompatible(DecorationDef decoDef, CompDecorativeBase decorativeComp)
