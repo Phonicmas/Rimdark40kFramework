@@ -267,8 +267,8 @@
     <Compile Include="HarmonyPatches\HarmonyPatch_UnslaveablePatch.cs" />
     <Compile Include="HarmonyPatches\HarmonyPatch_UnrecruitablePatch.cs" />
     <Compile Include="DefModExtensions\DefModExtension_SlaveabilityRecruitability.cs" />
-    <Compile Include="GeneClasses\Gene_GiveVFECoreAbility.cs" />
-    <Compile Include="DefModExtensions\DefModExtension_GivesVFEAbility.cs" />
+    <Compile Include="GeneClasses\Gene_GiveVEFAbility.cs" />
+    <Compile Include="DefModExtensions\DefModExtension_GivesVEFAbility.cs" />
     <Compile Include="DefModExtensions\DefModExtension_GenderDistribution.cs" />
     <Compile Include="HarmonyPatches\HarmonyPatch_GenderDistributionPatch.cs" />
     <Compile Include="DefModExtensions\DefModExtension_RequiresHediff.cs" />

@@ -1,7 +1,7 @@
 ﻿using HarmonyLib;
 using Verse;
 
-namespace Genes40k;
+namespace Core40k;
 
 [HarmonyPatch(typeof(RecipeDef), "AvailableNow", MethodType.Getter)]
 public class HarmonyPatch_LockedByResearch
