@@ -147,3 +147,18 @@ pawnkind's extension (falling back to the faction's) and, for each worn/equipped
 calls this automatically (once per pawn, tracked by `pawnKindDefSetupDone`) the first time a pawn
 equips apparel carrying `CompDecorative` — you don't normally need to call it yourself unless
 you're spawning gear onto a pawn outside the normal equip path.
+
+## Troubleshooting
+
+- **`BEWH_CutoutThreeColor` needs an actual mask.** Unlike vanilla's `Cutout`/`CutoutComplex`
+  shaders, the framework's three-colour shader (used automatically whenever `colorMaskAmount == 3`
+  on `CompMultiColor`, see above) does not degrade gracefully without a real mask texture present.
+  If an item using it renders wrong (or not at all), check that it actually has a `MaskDef` — its
+  own `defaultMask`, or one the player can select — pointing at a texture that exists.
+- **"Could not find texture ..._<BodyType>" in the log.** Base graphics, masks, and decoration art
+  are all looked up with a body-type (and, with Female Apparel Variants installed, gender) suffix
+  appended to the configured path. If a texture with that suffix can't be found, the usual cause
+  isn't a missing file — it's the relevant `appliesTo` list on the item's `DecorationDef`/
+  `MaskDef`/`AlternateBaseFormDef` being empty, missing the item's defName, or pointing at the
+  wrong one, so the framework goes looking for art under the wrong assumptions. Double-check
+  `appliesTo` before assuming the texture itself is missing.
