@@ -18,6 +18,7 @@
     <label>gravship fuel efficiency</label>
     <description>How much of a gravship's fuel burn this person saves while aboard it.\n\nOnly the most efficient crew member aboard counts - this does not stack. Adds to the savings already provided by the ship's own components, capped at 90% total.\n\nHas no effect without the Odyssey expansion.</description>
     <category>BEWH_Voidfaring</category>
+    <workerClass>Core40k.StatWorker_Voidfaring</workerClass>
     <toStringStyle>PercentZero</toStringStyle>
     <defaultBaseValue>0</defaultBaseValue>
     <hideAtValue>0</hideAtValue>
@@ -33,6 +34,7 @@
     <label>grav engine recharge</label>
     <description>A multiplier on how long a gravship's engine needs to recharge after this person helps bring it down. Lower is faster.\n\nOnly the best crew member aboard counts - this does not stack. It is applied on top of the cooldown the launch ritual's quality already earned.\n\nHas no effect without the Odyssey expansion.</description>
     <category>BEWH_Voidfaring</category>
+    <workerClass>Core40k.StatWorker_Voidfaring</workerClass>
     <toStringStyle>PercentZero</toStringStyle>
     <defaultBaseValue>1</defaultBaseValue>
     <hideAtValue>1</hideAtValue>
@@ -47,6 +49,7 @@
     <label>gravship range bonus</label>
     <description>How many extra tiles a gravship can reach while this person is aboard it.\n\nOnly the best crew member aboard counts - this does not stack.\n\nHas no effect without the Odyssey expansion.</description>
     <category>BEWH_Voidfaring</category>
+    <workerClass>Core40k.StatWorker_Voidfaring</workerClass>
     <toStringStyle>Integer</toStringStyle>
     <roundValue>true</roundValue>
     <defaultBaseValue>0</defaultBaseValue>
@@ -61,6 +64,7 @@
     <label>void evasion</label>
     <description>How many effective levels of piloting skill this person adds to a spacefaring ship they are aboard, for the purpose of dodging incoming fire.\n\nOnly the best crew member aboard counts - this does not stack. Diminishing past the equivalent of level 20, and worth nothing at all past 22.\n\nHas no effect without Save Our Ship 2.</description>
     <category>BEWH_Voidfaring</category>
+    <workerClass>Core40k.StatWorker_Voidfaring</workerClass>
     <toStringStyle>Integer</toStringStyle>
     <roundValue>true</roundValue>
     <defaultBaseValue>0</defaultBaseValue>
@@ -76,6 +80,7 @@
     <label>void gunnery</label>
     <description>How many effective levels of gunnery skill this person adds to a spacefaring ship they are aboard, for the purpose of landing hits on an enemy vessel.\n\nOnly the best crew member aboard counts - this does not stack. Worth nothing past the equivalent of level 20.\n\nHas no effect without Save Our Ship 2.</description>
     <category>BEWH_Voidfaring</category>
+    <workerClass>Core40k.StatWorker_Voidfaring</workerClass>
     <toStringStyle>Integer</toStringStyle>
     <roundValue>true</roundValue>
     <defaultBaseValue>0</defaultBaseValue>

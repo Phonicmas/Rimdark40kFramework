@@ -69,6 +69,7 @@
     <Compile Include="ChangeableBullets\CompProperties_AmmoChanger.cs" />
     <Compile Include="ChangeableBullets\Comp_AmmoChanger.cs" />
     <Compile Include="ChangeableBullets\DefModExtension_AmmoChanger.cs" />
+    <Compile Include="ChangeableBullets\DualWieldCompat.cs" />
     <Compile Include="ChangeableBullets\Gizmo_AmmoChanger.cs" />
     <Compile Include="ChangeableBullets\HarmonyPatch_AmmoChangerGizmo.cs" />
     <Compile Include="ChangeableBullets\HarmonyPatch_ChangeCurrentProjectile.cs" />
@@ -195,6 +196,7 @@
     <Compile Include="GraphicComps\Decoration\Weapon\WeaponDecorationDef.cs" />
     <Compile Include="GraphicComps\Decoration\Weapon\WeaponDecorationTab.cs" />
     <Compile Include="GraphicComps\DefModExtension_TextureFlags.cs" />
+    <Compile Include="GraphicComps\FemaleApparelVariantsCompat.cs" />
     <Compile Include="GraphicComps\HarmonyPatch_ForceBodyPatch.cs" />
     <Compile Include="GraphicComps\HarmonyPatch_GizmoTextureToggle.cs" />
     <Compile Include="GraphicComps\HarmonyPatch_HideApparelFromTextureFlags.cs" />
@@ -274,6 +276,7 @@
     <Compile Include="Recipes\Recipe_InstallImplantRequiringGene.cs" />
     <Compile Include="WeightedSelection.cs" />
     <Compile Include="Voidfaring\VoidfaringUtility.cs" />
+    <Compile Include="Voidfaring\StatWorker_Voidfaring.cs" />
     <Compile Include="Voidfaring\StatPart_GravshipCrewRange.cs" />
     <Compile Include="Voidfaring\HarmonyPatch_GravshipFuelEfficiency.cs" />
     <Compile Include="Voidfaring\HarmonyPatch_GravEngineCooldown.cs" />

@@ -61,7 +61,7 @@ public static class ForceBodyPatch
                           && apparel.WornGraphicPath != BaseContent.PlaceholderGearImagePath;
 
         var path = useBodyType
-            ? BodyTypeUtils.BodyTypedPath(apparel.WornGraphicPath, bodyType)
+            ? BodyTypeUtils.BodyTypedPath(apparel.WornGraphicPath, bodyType, apparel.Wearer?.gender ?? Gender.None)
             : apparel.WornGraphicPath;
         var shader = ShaderDatabase.Cutout;
         if (!forStatue)

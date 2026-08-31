@@ -28,13 +28,9 @@ public class Hediff_SendLetterAtSeverity : HediffComp
             return;
         }
             
-        var letter = new StandardLetter
-        {
-            lookTargets = Pawn,
-            def = Props.letterDef,
-            Text = Props.message,
-            Label = Props.letter,
-        };
+        // LetterMaker assigns the unique load ID. Building the letter with an object initializer
+        // leaves Letter.ID at 0, and two such letters in the archive collide on "Letter_0".
+        var letter = LetterMaker.MakeLetter(Props.letter, Props.message, Props.letterDef, Pawn);
 
         Find.LetterStack.ReceiveLetter(letter);
         hasSentLetter = true;

@@ -18,8 +18,40 @@ public class DefModExtension_BodyTypeTextureFallback : DefModExtension
 
 public static class BodyTypeUtils
 {
-    private static readonly Dictionary<(string, BodyTypeDef), string> pathCache = new();
+    /// <summary>
+    /// Suffix used by Female Apparel Variants (tiagocc0.FemaleApparelVariants) for gender-specific
+    /// art, appended after the bodytype: Apparel/PowerArmor/PowerArmor_Hulk_Female_south.png.
+    /// Core40k resolves it natively so the convention keeps working whether or not FAV is installed
+    /// - see FemaleApparelVariantsCompat for why we cannot let FAV resolve it for our apparel.
+    /// </summary>
+    public const string FemaleVariantSuffix = "_Female";
+
+    private static readonly Dictionary<(string, BodyTypeDef, Gender), string> pathCache = new();
+    private static readonly Dictionary<(string, BodyTypeDef, Gender), string> maskPathCache = new();
     private static readonly Dictionary<BodyTypeDef, List<BodyTypeDef>> chainCache = new();
+
+    /// <summary>
+    /// The best existing texture for this path and gender - the "_Female" variant when the pawn is
+    /// female and that art exists, the plain path when it does not, null when neither is there.
+    /// </summary>
+    private static string GenderedPath(string path, Gender gender)
+    {
+        if (path.NullOrEmpty())
+        {
+            return null;
+        }
+
+        if (gender == Gender.Female)
+        {
+            var femalePath = path + FemaleVariantSuffix;
+            if (TextureExists(femalePath))
+            {
+                return femalePath;
+            }
+        }
+
+        return TextureExists(path) ? path : null;
+    }
 
     /// <summary>Never returns null. Use instead of pawn.story.bodyType.</summary>
     public static BodyTypeDef SafeBodyType(Pawn pawn, BodyTypeDef preferred = null)
@@ -98,9 +130,10 @@ public static class BodyTypeUtils
     }
 
     /// <summary>
-    /// basePath + "_" + a bodytype that actually has textures, or basePath if none do.
+    /// basePath + "_" + a bodytype that actually has textures, or basePath if none do. Pass the
+    /// wearer's gender to pick up "_Female" variants of that art where a modder has supplied them.
     /// </summary>
-    public static string BodyTypedPath(string basePath, BodyTypeDef bodyType)
+    public static string BodyTypedPath(string basePath, BodyTypeDef bodyType, Gender gender = Gender.None)
     {
         if (basePath.NullOrEmpty())
         {
@@ -109,7 +142,7 @@ public static class BodyTypeUtils
 
         bodyType ??= BodyTypeDefOf.Male;
 
-        var key = (basePath, bodyType);
+        var key = (basePath, bodyType, gender);
         if (pathCache.TryGetValue(key, out var cachedPath))
         {
             return cachedPath;
@@ -118,8 +151,8 @@ public static class BodyTypeUtils
         string result = null;
         foreach (var candidate in FallbackChainFor(bodyType))
         {
-            var candidatePath = basePath + "_" + candidate.defName;
-            if (!TextureExists(candidatePath))
+            var candidatePath = GenderedPath(basePath + "_" + candidate.defName, gender);
+            if (candidatePath == null)
             {
                 continue;
             }
@@ -135,7 +168,7 @@ public static class BodyTypeUtils
 
         if (result == null)
         {
-            result = TextureExists(basePath) ? basePath : basePath + "_" + bodyType.defName;
+            result = GenderedPath(basePath, gender) ?? basePath + "_" + bodyType.defName;
             Log.WarningOnce(
                 $"[Core40k] No bodytype texture found for {basePath} (bodytype {bodyType.defName}).",
                 (basePath + bodyType.defName + "none").GetHashCode());
@@ -149,7 +182,7 @@ public static class BodyTypeUtils
     /// Same resolution for masks - returns null when no mask variant exists at all, so callers can
     /// pass null straight through to GraphicDatabase rather than a broken path.
     /// </summary>
-    public static string BodyTypedMaskPath(string baseMaskPath, BodyTypeDef bodyType)
+    public static string BodyTypedMaskPath(string baseMaskPath, BodyTypeDef bodyType, Gender gender = Gender.None)
     {
         if (baseMaskPath.NullOrEmpty())
         {
@@ -158,16 +191,26 @@ public static class BodyTypeUtils
 
         bodyType ??= BodyTypeDefOf.Male;
 
+        var key = (baseMaskPath, bodyType, gender);
+        if (maskPathCache.TryGetValue(key, out var cachedPath))
+        {
+            return cachedPath;
+        }
+
+        string result = null;
         foreach (var candidate in FallbackChainFor(bodyType))
         {
-            var candidatePath = baseMaskPath + "_" + candidate.defName;
-            if (TextureExists(candidatePath))
+            result = GenderedPath(baseMaskPath + "_" + candidate.defName, gender);
+            if (result != null)
             {
-                return candidatePath;
+                break;
             }
         }
 
-        return TextureExists(baseMaskPath) ? baseMaskPath : null;
+        result ??= GenderedPath(baseMaskPath, gender);
+
+        maskPathCache[key] = result;
+        return result;
     }
 
     /// <summary>

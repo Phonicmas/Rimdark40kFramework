@@ -281,6 +281,7 @@ public class ColoringBaseTab : CustomizerTabDrawer
                         }
                         var bodyType = BodyTypeUtils.SafeBodyType(
                             pawn, item.def.GetModExtension<DefModExtension_ForcesBodyType>()?.forcedBodyType);
+                        var gender = pawn?.gender ?? Gender.None;
                         
                         var alternatePath = alternateTexture?.CurrentAlternateBaseForm?.drawnTextureIconPath;
 
@@ -295,7 +296,7 @@ public class ColoringBaseTab : CustomizerTabDrawer
                                        && !apparel.RenderAsPack()
                                        && usedPath != BaseContent.PlaceholderImagePath
                                        && usedPath != BaseContent.PlaceholderGearImagePath
-                                ? BodyTypeUtils.BodyTypedPath(usedPath, bodyType) : usedPath;
+                                ? BodyTypeUtils.BodyTypedPath(usedPath, bodyType, gender) : usedPath;
                         }
                         else
                         {
@@ -306,7 +307,7 @@ public class ColoringBaseTab : CustomizerTabDrawer
                         var maskPath = curPageMasks[i]?.maskPath;
                         if (curPageMasks[i] != null && curPageMasks[i].useBodyTypes)
                         {
-                            maskPath = BodyTypeUtils.BodyTypedMaskPath(maskPath, bodyType);
+                            maskPath = BodyTypeUtils.BodyTypedMaskPath(maskPath, bodyType, gender);
                         }
                         var graphic = MultiColorUtils.GetGraphic<Graphic_Multi>(usedPath, shader, item.def.graphicData.drawSize, multiColor.DrawColor, multiColor.DrawColorTwo, multiColor.DrawColorThree, null, maskPath);
                         var material = graphic?.MatSouth ?? BaseContent.BadMat;

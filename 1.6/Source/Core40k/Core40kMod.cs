@@ -20,6 +20,8 @@ public class Core40kMod : CoreMod
 
         // Optional integrations. These no-op when the mod they target is absent.
         SaveOurShip2Compat.Apply(harmony);
+        FemaleApparelVariantsCompat.Apply(harmony);
+        DualWieldCompat.Apply(harmony);
     }
     
     private readonly ModSettingTab_CoreMain coreMainSettings = new();

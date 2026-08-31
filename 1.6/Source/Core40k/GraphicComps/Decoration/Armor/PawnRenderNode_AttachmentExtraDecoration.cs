@@ -22,10 +22,11 @@ public class PawnRenderNode_AttachmentExtraDecoration : PawnRenderNode
         
         var bodyType = propsMulti.bodyType ?? pawn?.story?.bodyType;
         var useBodyType = propsMulti.useBodyType && bodyType != null;
+        var gender = pawn?.gender ?? Gender.None;
 
         if (useBodyType)
         {
-            texPath = BodyTypeUtils.BodyTypedPath(texPath, bodyType);
+            texPath = BodyTypeUtils.BodyTypedPath(texPath, bodyType, gender);
         }
 
         var additionalMaskPath = string.Empty;
@@ -34,7 +35,7 @@ public class PawnRenderNode_AttachmentExtraDecoration : PawnRenderNode
             maskPath += additionalMaskPath;
             if (useBodyType)
             {
-                maskPath = BodyTypeUtils.BodyTypedMaskPath(maskPath, bodyType) ?? maskPath;
+                maskPath = BodyTypeUtils.BodyTypedMaskPath(maskPath, bodyType, gender) ?? maskPath;
             }
         }
         else
@@ -42,7 +43,7 @@ public class PawnRenderNode_AttachmentExtraDecoration : PawnRenderNode
             maskPath = propsMulti.texPath + additionalMaskPath;
             if (useBodyType)
             {
-                maskPath = BodyTypeUtils.BodyTypedMaskPath(maskPath, bodyType) ?? maskPath;
+                maskPath = BodyTypeUtils.BodyTypedMaskPath(maskPath, bodyType, gender) ?? maskPath;
             }
             maskPath += "_mask";
         }
