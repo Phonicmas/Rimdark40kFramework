@@ -68,14 +68,20 @@ public static class RestoreMultiColorAfterRescalePatch
             return;
         }
 
-        //Rebuild at whatever draw size the other mod settled on, with our shader parameters back.
+        //Colours one and two come off the graphic in front of us, not off the comp. A node is free
+        //to build its own graphic with colours of its own - the shoulder and rank icons in Mankind's
+        //Finest do - and the comp only knows the apparel's colours, so reading them from there
+        //repaints those nodes in the armour's colours. A rescaling mod preserves path, mask, colour
+        //and colourTwo and only drops the shader parameters, so the graphic itself is the better
+        //source of truth. Colour three has no field on Graphic and is genuinely lost, so that one
+        //falls back to the comp; nodes not using a three-colour shader ignore it anyway.
         var rebuilt = MultiColorUtils.GetGraphic<Graphic_Multi>(
             current.path,
             current.Shader,
             current.drawSize,
-            multiColor?.DrawColor ?? apparel.DrawColor,
-            multiColor?.DrawColorTwo ?? apparel.DrawColorTwo,
-            multiColor?.DrawColorThree ?? apparel.DrawColorTwo,
+            current.color,
+            current.colorTwo,
+            multiColor?.DrawColorThree ?? current.colorTwo,
             null,
             current.maskPath);
 
