@@ -180,14 +180,29 @@ public class DecorationDef : Def
     {
         var reason = new StringBuilder();
         var requirementFulfilled = true;
+
+        //Nothing to check against. Anything with a requirement is locked, anything without is free.
+        if (pawn == null)
+        {
+            lockedReason = string.Empty;
+            return mustHaveRank == null && mustHaveGene == null && mustHaveTrait == null && mustHaveHediff == null;
+        }
+
         if (mustHaveRank != null)
         {
-            if (!pawn.HasComp<CompRankInfo>())
-            {
-                reason.AppendLine("COMP ISSUE: SHOW PHONICMAS");
-                requirementFulfilled = false;
-            }
+            //No rank tracker on this pawn (CompRankInfo is only patched onto humans), so every
+            //listed rank counts as missing. Returning here keeps the queries below off a null comp.
             var comp = pawn.GetComp<CompRankInfo>();
+            if (comp == null)
+            {
+                reason.AppendLine("BEWH.Framework.Customization.MissingRanks".Translate());
+                foreach (var rank in mustHaveRank)
+                {
+                    reason.AppendLine("BEWH.Framework.Customization.AppendedLabel".Translate(rank.label.CapitalizeFirst()));
+                }
+                lockedReason = reason.ToString();
+                return false;
+            }
             var missingRanks = (from rank in mustHaveRank where !comp.HasRank(rank) select rank.label.CapitalizeFirst()).ToList();
             if (missingRanks.Count > 0)
             {
@@ -202,9 +217,16 @@ public class DecorationDef : Def
     
         if (mustHaveGene != null)
         {
+            //No gene tracker (Biotech off, or a race without one) means none of them are present.
             if (pawn.genes == null)
             {
-                requirementFulfilled = false;
+                reason.AppendLine("BEWH.Framework.Customization.MissingGenes".Translate());
+                foreach (var gene in mustHaveGene)
+                {
+                    reason.AppendLine("BEWH.Framework.Customization.AppendedLabel".Translate(gene.label.CapitalizeFirst()));
+                }
+                lockedReason = reason.ToString();
+                return false;
             }
             
             var missingGenes = (from gene in mustHaveGene where !pawn.genes.HasActiveGene(gene) select gene.label.CapitalizeFirst()).ToList();
@@ -223,7 +245,13 @@ public class DecorationDef : Def
         {
             if (pawn.story?.traits == null)
             {
-                requirementFulfilled = false;
+                reason.AppendLine("BEWH.Framework.Customization.MissingTraits".Translate());
+                foreach (var trait in mustHaveTrait)
+                {
+                    reason.AppendLine("BEWH.Framework.Customization.AppendedLabel".Translate(trait.traitDef.label.CapitalizeFirst()));
+                }
+                lockedReason = reason.ToString();
+                return false;
             }
             
             var missingTraits = (from trait in mustHaveTrait where !pawn.story.traits.HasTrait(trait.traitDef, trait.degree) select trait.traitDef.label.CapitalizeFirst()).ToList();
@@ -242,7 +270,13 @@ public class DecorationDef : Def
         {
             if (pawn.health?.hediffSet == null)
             {
-                requirementFulfilled = false;
+                reason.AppendLine("BEWH.Framework.Customization.MissingHediffs".Translate());
+                foreach (var hediff in mustHaveHediff)
+                {
+                    reason.AppendLine("BEWH.Framework.Customization.AppendedLabel".Translate(hediff.label.CapitalizeFirst()));
+                }
+                lockedReason = reason.ToString();
+                return false;
             }
             
             

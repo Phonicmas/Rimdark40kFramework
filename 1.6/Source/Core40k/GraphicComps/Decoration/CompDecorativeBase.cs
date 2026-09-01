@@ -241,7 +241,9 @@ public class CompDecorativeBase : CompGraphicParent
         foreach (var presetPart in preset.decorationPresetParts)
         {
             var decoDef = Core40kUtils.GetDecoDefFromString(presetPart.extraDecorationDefs);
-            if (decorations.ContainsKey(decoDef))
+            //The preset can still name a decoration whose mod is gone. Skip it rather than
+            //keying the dictionary with null.
+            if (decoDef == null || decorations.ContainsKey(decoDef))
             {
                 continue;
             }
@@ -261,7 +263,7 @@ public class CompDecorativeBase : CompGraphicParent
     {
         foreach (var presetPart in preset.presetData)
         {
-            if (decorations.ContainsKey(presetPart.decorationDef))
+            if (presetPart.decorationDef == null || decorations.ContainsKey(presetPart.decorationDef))
             {
                 continue;
             }

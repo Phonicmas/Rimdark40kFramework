@@ -30,7 +30,9 @@ public static class Core40kUtils
     
     public static DecorationDef GetDecoDefFromString(string defName)
     {
-        return DefDatabase<DecorationDef>.GetNamed(defName);
+        //Silent fail: presets are stored in mod settings and outlive the content that made them,
+        //so a missing decoration is an expected state, not an error worth a red log every draw.
+        return DefDatabase<DecorationDef>.GetNamedSilentFail(defName);
     }
         
     public static bool DeletePreset(Rect rect, ColourPreset preset)

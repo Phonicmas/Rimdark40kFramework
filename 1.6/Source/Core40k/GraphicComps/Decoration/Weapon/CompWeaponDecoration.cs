@@ -181,8 +181,8 @@ public class CompWeaponDecoration : CompDecorativeBase
             {
                 foreach (var tool in decoration.tools)
                 {
-                    //Copied per weapon, the def level Tool is shared by every weapon wearing
-                    //this decoration and Comp_ForceWeapon writes into the tools it is handed.
+                    //Copied per weapon: the def level Tool is shared by every weapon wearing
+                    //this decoration, so it must never be written to in place.
                     tools.Add(WeaponDecorationVerbUtility.CopyTool(tool));
                 }
             }

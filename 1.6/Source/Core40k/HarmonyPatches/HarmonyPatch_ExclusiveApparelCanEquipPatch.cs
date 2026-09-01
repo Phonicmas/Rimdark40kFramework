@@ -17,19 +17,20 @@ namespace Core40k;
 ])]
 public class ExclusiveApparelCanEquipPatch
 {
-    public static void Postfix(Thing thing, Pawn pawn, out string cantReason, ref bool __result)
+    //cantReason is taken by ref, not out: this runs on every CanEquip call in the game and must
+    //leave whatever reason vanilla (or an earlier patch) produced alone unless it is rejecting the
+    //equip itself.
+    public static void Postfix(Thing thing, Pawn pawn, ref string cantReason, ref bool __result)
     {
-        var defMod = thing.def.GetModExtension<DefModExtension_ExclusiveApparel>();
+        var defMod = thing?.def?.GetModExtension<DefModExtension_ExclusiveApparel>();
 
         if (defMod?.requiredGene == null)
         {
-            cantReason = null;
             return;
         }
 
         if (pawn?.genes != null && pawn.genes.HasActiveGene(defMod.requiredGene))
         {
-            cantReason = null;
             return;
         }
 

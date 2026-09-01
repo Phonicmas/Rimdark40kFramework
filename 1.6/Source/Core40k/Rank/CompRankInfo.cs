@@ -346,6 +346,9 @@ public class CompRankInfo : ThingComp
         Scribe_Collections.Look(ref limitCountedRanks, "limitCountedRanks", LookMode.Def);
         Scribe_Collections.Look(ref announcedEligibleRanks, "announcedEligibleRanks", LookMode.Def);
         Scribe_Collections.Look(ref daysAsRank, "daysAsRank");
+        //Without this the pre rank passions are gone after every load, so RecalculatePassions
+        //restores nothing and each rank's AddOneLevel stacks on the already boosted passion.
+        Scribe_Collections.Look(ref originalPassions, "originalPassions", LookMode.Def, LookMode.Value);
         Scribe_Defs.Look(ref lastOpenedRankCategory, "lastOpenedRankCategory");
 
         if (Scribe.mode != LoadSaveMode.PostLoadInit)
@@ -354,6 +357,7 @@ public class CompRankInfo : ThingComp
         }
             
         daysAsRank ??= new Dictionary<RankDef, int>();
+        originalPassions ??= new Dictionary<SkillDef, Passion>();
         limitCountedRanks ??= [];
         announcedEligibleRanks ??= [];
 

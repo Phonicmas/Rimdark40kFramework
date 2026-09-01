@@ -9,8 +9,8 @@ public static class WeaponDecorationVerbUtility
     private static readonly FieldInfo[] ToolFields = typeof(Tool).GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
 
     //Decoration tools live on the def, so every weapon wearing that decoration would otherwise
-    //share one Tool instance. Comp_ForceWeapon writes into the tools it gets from CompEquippable,
-    //so each weapon is handed its own copy instead.
+    //share one Tool instance. Anything that adjusts a tool per weapon (Comp_ForceWeapon, for one)
+    //has to work on a copy, so each weapon is handed its own.
     public static Tool CopyTool(Tool source)
     {
         var copy = new Tool();

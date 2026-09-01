@@ -23,6 +23,11 @@ public class ExtraDecorationDef : DecorationDef
         {
             return requirementFulfilled;
         }
+        //Same reason as the base checks: no apparel tracker means there is nothing to measure against.
+        if (pawn?.apparel == null)
+        {
+            return requirementFulfilled;
+        }
         var bodyApparel = pawn.apparel.WornApparel.FirstOrFallback(a => a.HasComp<CompDecorative>());
         if (bodyApparel == null)
         {

@@ -96,17 +96,19 @@ public class RankDef : Def
 
         if (!givesPassions.NullOrEmpty())
         {
-            if (rankComp.originalPassions.NullOrEmpty())
+            //Every rank records the passions it is about to change. Gating this on the dictionary
+            //being empty meant only the first passion granting rank ever stored an original, so
+            //later ranks' skills were never restored and climbed a level on every recalculation.
+            foreach (var passion in givesPassions)
             {
-                foreach (var passion in givesPassions)
+                var skill = rankComp.ParentPawn.skills?.GetSkill(passion.skill);
+                if (skill == null || rankComp.originalPassions.ContainsKey(skill.def))
                 {
-                    var skill = rankComp.ParentPawn.skills.GetSkill(passion.skill);
-                    if (!rankComp.originalPassions.ContainsKey(skill.def))
-                    {
-                        rankComp.originalPassions.Add(skill.def, skill.passion);
-                        skill.passion = passion.NewPassionFor(skill);
-                    }
+                    continue;
                 }
+
+                rankComp.originalPassions.Add(skill.def, skill.passion);
+                skill.passion = passion.NewPassionFor(skill);
             }
             rankComp.RecalculatePassions();
         }

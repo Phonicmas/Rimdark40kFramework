@@ -15,10 +15,24 @@ public static class WeaponDecorationToolsAndVerbs
     [HarmonyPatch(nameof(CompEquippable.Tools), MethodType.Getter)]
     public static void ToolsPostfix(CompEquippable __instance, ref List<Tool> __result)
     {
-        var tools = __instance.parent?.GetComp<CompWeaponDecoration>()?.DecoratedTools;
+        var weapon = __instance?.parent;
+        if (weapon == null)
+        {
+            return;
+        }
+
+        var tools = weapon.GetComp<CompWeaponDecoration>()?.DecoratedTools;
         if (tools != null)
         {
             __result = tools;
+        }
+
+        //Runs after the decoration swap so the scaled damage lands on the list that is actually
+        //used, and always on a per instance copy rather than the shared def tools.
+        var forceWeapon = weapon.GetComp<Comp_ForceWeapon>();
+        if (forceWeapon != null)
+        {
+            __result = forceWeapon.ApplyExtraDamage(__result);
         }
     }
 
