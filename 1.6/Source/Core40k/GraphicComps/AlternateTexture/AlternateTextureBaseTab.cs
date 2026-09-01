@@ -20,39 +20,48 @@ public class AlternateTextureBaseTab : CustomizerTabDrawer
     public override void Setup(Pawn pawn)
     {
         SetupHook(pawn);
+
+        var compsWithContent = new List<CompAlternateTexture>();
+
         foreach (var alternateComp in alternateComps)
         {
             alternateComp.SetOriginals();
-            
-            var alternateBaseFormForApparel = DefDatabase<AlternateBaseFormDef>.AllDefs
-                .Where(def => def.appliesTo.Contains(alternateComp.parent.def.defName))
-                .ToList();
+
+            var alternateBaseFormForApparel = DecorationIndex.AlternatesFor(alternateComp.parent.def);
 
             if (alternateBaseFormForApparel.Count == 0)
             {
+                //No alternate forms for this item, so it gets no header and no empty section.
                 continue;
             }
-            
+
             var decoGroupings = alternateBaseFormForApparel.Where(def => def.appliesTo.Contains(alternateComp.parent.def.defName) || def.appliesToAll).GroupBy(def => def.decorationType);
             var tempDictionary = decoGroupings.ToDictionary(decoGrouping => decoGrouping.Key, decoGrouping => decoGrouping.ToList());
 
-            if (!tempDictionary.NullOrEmpty())
+            if (tempDictionary.NullOrEmpty())
             {
-                foreach (var value in tempDictionary.Values)
-                {
-                    value.SortBy(def => def.sortOrder);
-                }
-                alternateBaseFormByTypeForComp.Add(alternateComp, tempDictionary);
+                continue;
             }
-            
+
+            foreach (var value in tempDictionary.Values)
+            {
+                value.SortBy(def => def.sortOrder);
+            }
+            alternateBaseFormByTypeForComp.Add(alternateComp, tempDictionary);
+            compsWithContent.Add(alternateComp);
+
             var toAppendToApparel = new List<AlternateBaseFormDef> { null };
             toAppendToApparel.AddRange(alternateBaseFormForApparel);
 
             alternateBaseFormDefs.Add(alternateComp, toAppendToApparel);
         }
+
+        alternateComps = compsWithContent;
     }
 
     protected virtual void SetupHook(Pawn pawn) { }
+
+    public override IEnumerable<CompGraphicParent> Comps => alternateComps;
 
      public override void DrawTab(Rect rect, Pawn pawn, ref Vector2 scrollPosition)
     {
@@ -149,15 +158,6 @@ public class AlternateTextureBaseTab : CustomizerTabDrawer
     public override void OnClose(Pawn pawn, bool closeOnCancel, bool closeOnClickedOutside)
     {
         OnReset(pawn);
-    }
-
-    public override void OnAccept(Pawn pawn)
-    {
-        foreach (var alternateComp in alternateComps)
-        {
-            alternateComp.SetOriginals();
-            alternateComp.Notify_GraphicChanged();
-        }
     }
     
     public override void OnReset(Pawn pawn)

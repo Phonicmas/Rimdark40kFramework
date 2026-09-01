@@ -56,6 +56,8 @@ public class ColoringBaseTab : CustomizerTabDrawer
     
     protected virtual void SetupHook(Pawn pawn) { }
 
+    public override IEnumerable<CompGraphicParent> Comps => multiColorComps;
+
     public override void DrawTab(Rect rect, Pawn pawn, ref Vector2 scrollPosition)
     {
         var viewRect = new Rect(rect.x, rect.y, rect.width - 16f, viewRectHeight);
@@ -410,15 +412,6 @@ public class ColoringBaseTab : CustomizerTabDrawer
     public override void OnClose(Pawn pawn, bool closeOnCancel, bool closeOnClickedOutside)
     {
         OnReset(pawn);
-    }
-
-    public override void OnAccept(Pawn pawn)
-    {
-        foreach (var multiColor in multiColorComps)
-        {
-            multiColor.SetOriginals();
-            multiColor.Notify_GraphicChanged();
-        }
     }
     
     public override void OnReset(Pawn pawn)

@@ -39,6 +39,9 @@ public class WeaponDecorationDef : DecorationDef
 
     public bool ChangesToolsOrVerbs => AddsToolsOrVerbs || disablesAllWeaponTools || !disablesWeaponTools.NullOrEmpty() || !disablesWeaponVerbs.NullOrEmpty();
 
+    //A bayonet is an upgrade even with no stat offsets on it.
+    protected override bool AutoDetectUpgrade => base.AutoDetectUpgrade || ChangesToolsOrVerbs || verbModifier != null;
+
     public override void ResolveReferences()
     {
         base.ResolveReferences();

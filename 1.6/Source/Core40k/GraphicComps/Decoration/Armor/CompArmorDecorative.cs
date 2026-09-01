@@ -11,7 +11,7 @@ public class CompDecorative : CompDecorativeBase
     public CompProperties_Decorative Props => (CompProperties_Decorative)props;
     public override void InitialSetup()
     {
-        ApplyDecorationsFromList(Props.decorations);
+        ApplyDecorationsFromList(Props.decorations, free: true);
         base.InitialSetup();
     }
     

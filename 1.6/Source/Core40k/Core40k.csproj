@@ -172,6 +172,14 @@
     <Compile Include="GraphicComps\Decoration\Armor\PawnRenderNodeWorker_AttachmentShoulderPad.cs" />
     <Compile Include="GraphicComps\Decoration\Armor\PawnRenderNode_AttachmentExtraDecoration.cs" />
     <Compile Include="GraphicComps\Decoration\CompDecorativeBase.cs" />
+    <Compile Include="GraphicComps\CustomizerShared\CustomizationTabResolver.cs" />
+    <Compile Include="GraphicComps\CustomizerShared\CustomizationTabWorker.cs" />
+    <Compile Include="GraphicComps\Decoration\DecorationIndex.cs" />
+    <Compile Include="GraphicComps\Decoration\Upgrades\ArmorUpgradeTab.cs" />
+    <Compile Include="GraphicComps\Decoration\Upgrades\WeaponUpgradeTab.cs" />
+    <Compile Include="GraphicComps\Decoration\Upgrades\DecorationWorkUtility.cs" />
+    <Compile Include="GraphicComps\Decoration\Upgrades\UpgradeCostUtility.cs" />
+    <Compile Include="GraphicComps\Decoration\Upgrades\JobDriver_CustomizeAtStation.cs" />
     <Compile Include="GraphicComps\Decoration\CompProperties_DecorationBase.cs" />
     <Compile Include="GraphicComps\Decoration\DecorationBaseTab.cs" />
     <Compile Include="GraphicComps\Decoration\DecorationDef.cs" />

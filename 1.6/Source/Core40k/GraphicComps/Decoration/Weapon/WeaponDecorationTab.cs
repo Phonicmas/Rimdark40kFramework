@@ -3,9 +3,13 @@
 public class WeaponDecorationTab : DecorationBaseTab
 {
     protected override bool OnlyEditDefaultDrawData => true;
-    
+
     protected override void SetupHook()
     {
-        decorativeComps.Add(selPawn.equipment.Primary.GetComp<CompDecorativeBase>());
+        var decorativeComp = selPawn?.equipment?.Primary?.GetComp<CompDecorativeBase>();
+        if (decorativeComp != null)
+        {
+            decorativeComps.Add(decorativeComp);
+        }
     }
 }

@@ -46,6 +46,56 @@ public class CompGraphicParent : ThingComp
     public virtual void Reset()
     {
     }
+
+    //Deferred changes.
+    //
+    //Accepting the customization dialog no longer applies anything straight away. The edited state
+    //is snapshotted, the comp is rolled back to what it was, and the pawn works at the station for
+    //the accumulated work amount. Only when that work finishes is the snapshot committed and the
+    //resource cost taken.
+    //
+    //Two sets of members, because the numbers are needed at two different moments:
+    //  Edit*    - live state versus committed state. Used to price the change in the confirm
+    //             dialog, before anything has been captured.
+    //  Pending* - the captured snapshot. Used by the job once the live state has been rolled back.
+
+    //Live state differs from the committed state.
+    public virtual bool HasEdits => false;
+
+    //Live colour / mask / alternate form differs. Drives the flat per item appearance charge.
+    public virtual bool HasAppearanceEdit => false;
+
+    //Structural work (things added and removed) for the live edits. Excludes the appearance charge.
+    public virtual float EditWork => 0f;
+
+    public virtual void CollectEditCost(List<ThingDefCountClass> into)
+    {
+    }
+
+    public virtual bool HasPendingChange => false;
+
+    public virtual bool PendingAppearanceChange => false;
+
+    public virtual float PendingWork => 0f;
+
+    public virtual void CollectPendingCost(List<ThingDefCountClass> into)
+    {
+    }
+
+    //Snapshot the live state and roll back to the committed state.
+    public virtual void CapturePending()
+    {
+    }
+
+    //Apply the snapshot for real.
+    public virtual void CommitPending()
+    {
+    }
+
+    //Throw the snapshot away, leaving the committed state untouched.
+    public virtual void DiscardPending()
+    {
+    }
     
     public virtual void InitialSetup()
     {

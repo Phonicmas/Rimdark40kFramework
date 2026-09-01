@@ -76,6 +76,41 @@ public class DecorationDef : Def
     public List<AbilityDef> givesAbilities = [];
     public List<VEF.Abilities.AbilityDef> givesVFEAbilities = [];
 
+    //One time resource cost to unlock this decoration on an individual item. Written like
+    //ThingDef.costList, so either <li><thingDef>Steel</thingDef><count>30</count></li> or the
+    //shorthand <Steel>30</Steel>. Once paid, the decoration stays unlocked on that item forever and
+    //can be taken off and refitted without paying again.
+    public List<ThingDefCountClass> cost = [];
+
+    //Work to fit this decoration. Charged in full on every add, whether or not it is already
+    //unlocked - resources are one time, labour is not.
+    public float workAmount = 100f;
+
+    //Removal work, as a fraction of workAmount.
+    public float removalWorkFactor = 0.5f;
+
+    //null means work it out from what the decoration actually does. Set explicitly to force a
+    //decoration onto the Decoration tab or the Upgrades tab.
+    public bool? isUpgrade = null;
+
+    [Unsaved]
+    private bool? isUpgradeCached;
+
+    public bool IsUpgrade => isUpgradeCached ??= isUpgrade ?? AutoDetectUpgrade;
+
+    //A decoration is an upgrade when it does something beyond looking nice. Note that `cost` is
+    //deliberately not part of this - a purely cosmetic badge is allowed to cost steel and still
+    //belong on the Decoration tab.
+    protected virtual bool AutoDetectUpgrade =>
+        !statOffsets.NullOrEmpty()
+        || !statFactors.NullOrEmpty()
+        || !givesAbilities.NullOrEmpty()
+        || !givesVFEAbilities.NullOrEmpty();
+
+    public bool HasCost => !cost.NullOrEmpty();
+
+    public float RemovalWork => workAmount * removalWorkFactor;
+
     public virtual string TooltipDescription()
     {
         var stringbuilder = new StringBuilder();
@@ -100,7 +135,20 @@ public class DecorationDef : Def
                 stringbuilder.AppendLine(statFactor.stat.label.CapitalizeFirst() + ": x" + statFactor.ValueToStringAsOffset);
             }
         }
-        
+
+        if (HasCost && DecorationWorkUtility.CostEnabled)
+        {
+            stringbuilder.AppendLine();
+            stringbuilder.AppendLine("BEWH.Framework.Customization.Cost".Translate());
+            foreach (var thingCount in cost)
+            {
+                stringbuilder.AppendLine("BEWH.Framework.Customization.CostLine".Translate(thingCount.thingDef.LabelCap, thingCount.count));
+            }
+        }
+
+        stringbuilder.AppendLine();
+        stringbuilder.AppendLine("BEWH.Framework.Customization.WorkAmount".Translate(workAmount.ToString("F0"), RemovalWork.ToString("F0")));
+
         return stringbuilder.ToString();
     }
     
@@ -190,6 +238,41 @@ public class DecorationDef : Def
         return requirementFulfilled;
     }
     
+    public override IEnumerable<string> ConfigErrors()
+    {
+        foreach (var configError in base.ConfigErrors())
+        {
+            yield return configError;
+        }
+
+        if (workAmount < 0f)
+        {
+            yield return "workAmount is negative";
+        }
+
+        if (removalWorkFactor < 0f)
+        {
+            yield return "removalWorkFactor is negative";
+        }
+
+        if (cost.NullOrEmpty())
+        {
+            yield break;
+        }
+
+        foreach (var thingCount in cost)
+        {
+            if (thingCount.thingDef == null)
+            {
+                yield return "cost entry has no thingDef";
+            }
+            else if (thingCount.count <= 0)
+            {
+                yield return "cost entry for " + thingCount.thingDef.defName + " has a count of " + thingCount.count;
+            }
+        }
+    }
+
     public override void ResolveReferences()
     {
         shaderType ??= Core40kDefOf.BEWH_CutoutThreeColor;

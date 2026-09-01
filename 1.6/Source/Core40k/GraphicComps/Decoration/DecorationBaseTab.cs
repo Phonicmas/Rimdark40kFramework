@@ -52,49 +52,63 @@ public class DecorationBaseTab : CustomizerTabDrawer
 
     protected virtual bool OnlyEditDefaultDrawData => false;
 
+    //false = the Decoration tab (purely cosmetic), true = the Upgrades tab (anything that grants
+    //stats, abilities, tools or verbs). See DecorationDef.IsUpgrade.
+    protected virtual bool ShowUpgrades => false;
+
+    public override IEnumerable<CompGraphicParent> Comps => decorativeComps;
+
     public override void Setup(Pawn pawn)
     {
         selPawn = pawn;
         SetupHook();
-        
+
         var tempPreset = DefDatabase<DecorationPresetDef>.AllDefs.ToList();
         foreach (var decorativeComp in decorativeComps)
         {
             decorationPresets.AddRangeFast(tempPreset.Where(def => def.appliesTo.Contains(decorativeComp.parent.def)));
         }
 
-        var tempMasks = DefDatabase<MaskDef>.AllDefs.Where(def => def.appliesToKind is AppliesToKind.ExtraDecoration or AppliesToKind.All).ToList();
-        var tempDefs = DefDatabase<DecorationDef>.AllDefs.Where(def => def is not AlternateBaseFormDef).ToList();
-        
+        //Content comes from the startup index rather than a fresh scan of the def database on
+        //every dialog open, and is split by IsUpgrade so each tab only sees its own half.
+        var compsWithContent = new List<CompDecorativeBase>();
+
         foreach (var decorativeComp in decorativeComps)
         {
-            var decoGroupings = tempDefs.Where(def => def.appliesTo.Contains(decorativeComp.parent.def.defName) || def.appliesToAll).GroupBy(def => def.decorationType);
-            var tempDictionary = decoGroupings.ToDictionary(decoGrouping => decoGrouping.Key, decoGrouping => decoGrouping.ToList());
+            var decorationsForItem = DecorationIndex.DecorationsFor(decorativeComp.parent.def, ShowUpgrades);
 
-            if (!tempDictionary.NullOrEmpty())
-            {
-                foreach (var value in tempDictionary.Values)
-                {
-                    value.SortBy(def => def.sortOrder);
-                }
-                decorationByTypeForComp.Add(decorativeComp, tempDictionary);
-            }
-            decorativeComp.SetOriginals();
+            //Drop decorations the pawn no longer qualifies for BEFORE snapshotting, so that forced
+            //removal is part of the baseline and is not billed as work the player asked for.
             decorativeComp.RemoveInvalidDecorations(pawn);
-        }
+            decorativeComp.SetOriginals();
 
-        foreach (var decoration in tempDefs)
-        {
-            var masksForItem = tempMasks.Where(mask => mask.appliesTo.Contains(decoration.defName) || mask.appliesToKind == AppliesToKind.All).ToList();
-
-            if (!masksForItem.Any())
+            if (decorationsForItem.Count == 0)
             {
+                //Nothing for this tab on this item, so it gets no header and no empty section.
                 continue;
             }
-            
-            masksForItem.SortBy(def => def.sortOrder);
-            masksForDeco.Add(decoration, masksForItem);
+
+            var decoGroupings = decorationsForItem.GroupBy(def => def.decorationType);
+            var tempDictionary = decoGroupings.ToDictionary(decoGrouping => decoGrouping.Key, decoGrouping => decoGrouping.ToList());
+
+            foreach (var value in tempDictionary.Values)
+            {
+                value.SortBy(def => def.sortOrder);
+            }
+
+            decorationByTypeForComp.Add(decorativeComp, tempDictionary);
+            compsWithContent.Add(decorativeComp);
+
+            foreach (var decoration in decorationsForItem)
+            {
+                if (!masksForDeco.ContainsKey(decoration))
+                {
+                    masksForDeco.Add(decoration, DecorationIndex.MasksFor(decoration));
+                }
+            }
         }
+
+        decorativeComps = compsWithContent;
     }
 
     protected virtual void SetupHook() { }
@@ -256,9 +270,10 @@ public class DecorationBaseTab : CustomizerTabDrawer
             }
 
             //Remove all decos
+            //Scoped to this tab, so pressing it on Upgrades does not wipe cosmetic decorations.
             if (Widgets.ButtonText(removeAllRect, "BEWH.Framework.Customization.RemoveAllDecorations".Translate()))
             {
-                decorativeComp.RemoveAllDecorations();
+                decorativeComp.RemoveAllDecorations(ShowUpgrades);
             }
 
             headerHeight = removeAllRect.height * 1.25f;
@@ -545,12 +560,28 @@ public class DecorationBaseTab : CustomizerTabDrawer
 
             var hasReq = decoDef.HasRequirements(selPawn, out var reason);
             var incompatibleDeco = DecoIsIncompatible(decoDef, decorativeComp);
-            
+
+            //Cost is charged once per item. Anything already paid for, or already selected and so
+            //only being taken off again, is always clickable.
+            var unlocked = !DecorationWorkUtility.CostEnabled || decorativeComp.IsUnlocked(decoDef);
+            var affordable = unlocked || hasDeco || CanAfford(decoDef);
+
             var color = Color.white;
             var tipTooltip = decoDef.TooltipDescription();
             if (Mouse.IsOver(iconRect))
             {
                 color = GenUI.MouseoverColor;
+            }
+            if (!unlocked)
+            {
+                tipTooltip += "\n" + (affordable
+                    ? "BEWH.Framework.Customization.Locked".Translate()
+                    : "BEWH.Framework.Customization.NotEnoughResources".Translate());
+                color = affordable ? Core40kUtils.LockedColour : Color.gray;
+            }
+            else if (decoDef.HasCost && DecorationWorkUtility.CostEnabled)
+            {
+                tipTooltip += "\n" + "BEWH.Framework.Customization.Unlocked".Translate();
             }
             if (!hasReq)
             {
@@ -578,7 +609,7 @@ public class DecorationBaseTab : CustomizerTabDrawer
                 }
             }
             
-            if(hasReq && !incompatibleDeco)
+            if(hasReq && !incompatibleDeco && affordable)
             {
                 if (Widgets.ButtonInvisible(iconRect))
                 {
@@ -620,6 +651,34 @@ public class DecorationBaseTab : CustomizerTabDrawer
             }
         }
         curY += 34f;
+    }
+
+    //UpgradeCostUtility walks the map's thing list, so the answer is memoised for the frame
+    //rather than recomputed per icon.
+    private readonly Dictionary<DecorationDef, bool> affordableCache = new();
+    private int affordableCacheFrame = -1;
+
+    private bool CanAfford(DecorationDef decoDef)
+    {
+        if (!decoDef.HasCost || !DecorationWorkUtility.CostEnabled)
+        {
+            return true;
+        }
+
+        if (Time.frameCount != affordableCacheFrame)
+        {
+            affordableCache.Clear();
+            affordableCacheFrame = Time.frameCount;
+        }
+
+        if (affordableCache.TryGetValue(decoDef, out var cached))
+        {
+            return cached;
+        }
+
+        var result = UpgradeCostUtility.CanAfford(selPawn, decoDef.cost);
+        affordableCache.Add(decoDef, result);
+        return result;
     }
 
     private bool MatchesSearch(DecorationDef decoDef)
@@ -898,14 +957,6 @@ public class DecorationBaseTab : CustomizerTabDrawer
     public override void OnClose(Pawn pawn, bool closeOnCancel, bool closeOnClickedOutside)
     {
         OnReset(pawn);
-    }
-
-    public override void OnAccept(Pawn pawn)
-    {
-        foreach (var decorativeComp in decorativeComps)
-        {
-            decorativeComp.SetOriginals();
-        }
     }
     
     public override void OnReset(Pawn pawn)

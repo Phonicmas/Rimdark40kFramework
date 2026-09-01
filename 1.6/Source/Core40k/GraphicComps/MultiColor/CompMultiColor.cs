@@ -212,6 +212,64 @@ public class CompMultiColor : CompGraphicParent
         maskDef = originalMaskDef;
         Notify_GraphicChanged();
     }
+
+    //Deferred changes. Recolouring is charged the flat per item appearance work, so it has to wait
+    //for the pawn to finish at the station like everything else.
+    private Color pendingColorOne = Color.white;
+    private Color pendingColorTwo = Color.white;
+    private Color pendingColorThree = Color.white;
+    private MaskDef pendingMaskDef;
+    private bool hasPendingChange;
+
+    public override bool HasEdits => HasAppearanceEdit;
+
+    public override bool HasAppearanceEdit =>
+        drawColorOne != originalColorOne
+        || drawColorTwo != originalColorTwo
+        || drawColorThree != originalColorThree
+        || maskDef != originalMaskDef;
+
+    public override bool HasPendingChange => hasPendingChange;
+
+    public override bool PendingAppearanceChange => hasPendingChange;
+
+    public override void CapturePending()
+    {
+        if (!HasAppearanceEdit)
+        {
+            return;
+        }
+
+        pendingColorOne = drawColorOne;
+        pendingColorTwo = drawColorTwo;
+        pendingColorThree = drawColorThree;
+        pendingMaskDef = maskDef;
+        hasPendingChange = true;
+
+        Reset();
+    }
+
+    public override void CommitPending()
+    {
+        if (!hasPendingChange)
+        {
+            return;
+        }
+
+        drawColorOne = pendingColorOne;
+        drawColorTwo = pendingColorTwo;
+        drawColorThree = pendingColorThree;
+        maskDef = pendingMaskDef;
+        hasPendingChange = false;
+
+        SetOriginals();
+        Notify_GraphicChanged();
+    }
+
+    public override void DiscardPending()
+    {
+        hasPendingChange = false;
+    }
     
     public override void Notify_GraphicChanged()
     {
@@ -244,6 +302,11 @@ public class CompMultiColor : CompGraphicParent
         Scribe_Values.Look(ref drawColorThree, "drawColorThree", Color.white);
         Scribe_Defs.Look(ref originalMaskDef, "originalMaskDef");
         Scribe_Defs.Look(ref maskDef, "maskDef");
+        Scribe_Values.Look(ref hasPendingChange, "hasPendingChange");
+        Scribe_Values.Look(ref pendingColorOne, "pendingColorOne", Color.white);
+        Scribe_Values.Look(ref pendingColorTwo, "pendingColorTwo", Color.white);
+        Scribe_Values.Look(ref pendingColorThree, "pendingColorThree", Color.white);
+        Scribe_Defs.Look(ref pendingMaskDef, "pendingMaskDef");
         Scribe_Defs.Look(ref originalBodyType, "originalBodyType");
         
         base.PostExposeData();

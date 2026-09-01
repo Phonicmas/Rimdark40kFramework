@@ -1,5 +1,4 @@
-﻿using System;
-using RimWorld;
+﻿using RimWorld;
 using Verse;
 
 namespace Core40k;
@@ -38,11 +37,6 @@ public static class Core40kDefOf
     public static StatCategoryDef BEWH_AlternateTextureFactors;
     
     public static BodyPartGroupDef UpperHead;
-    
-    [Obsolete]
-    public static CustomizationTabDef BEWH_ArmorColoring;
-    [Obsolete]
-    public static CustomizationTabDef BEWH_WeaponColoring;
 
     static Core40kDefOf()
     {

@@ -227,6 +227,53 @@ public class CompAlternateTexture : CompGraphicParent
         currentAlternateBaseForm = originalCurrentAlternateBaseForm;
         Notify_GraphicChanged();
     }
+
+    //Deferred changes. Switching the base texture is charged the same flat appearance work as a
+    //recolour, so it commits together with everything else rather than applying early.
+    private AlternateBaseFormDef pendingAlternateBaseForm;
+    private bool hasPendingChange;
+
+    public override bool HasEdits => HasAppearanceEdit;
+
+    public override bool HasAppearanceEdit => currentAlternateBaseForm != originalCurrentAlternateBaseForm;
+
+    public override bool HasPendingChange => hasPendingChange;
+
+    public override bool PendingAppearanceChange => hasPendingChange;
+
+    public override void CapturePending()
+    {
+        if (!HasAppearanceEdit)
+        {
+            return;
+        }
+
+        pendingAlternateBaseForm = currentAlternateBaseForm;
+        hasPendingChange = true;
+
+        Reset();
+    }
+
+    public override void CommitPending()
+    {
+        if (!hasPendingChange)
+        {
+            return;
+        }
+
+        currentAlternateBaseForm = pendingAlternateBaseForm;
+        pendingAlternateBaseForm = null;
+        hasPendingChange = false;
+
+        SetOriginals();
+        Notify_GraphicChanged();
+    }
+
+    public override void DiscardPending()
+    {
+        pendingAlternateBaseForm = null;
+        hasPendingChange = false;
+    }
     
     //Stat Related
     public override float GetStatOffset(StatDef stat)
@@ -363,6 +410,8 @@ public class CompAlternateTexture : CompGraphicParent
     {
         Scribe_Defs.Look(ref originalCurrentAlternateBaseForm, "originalCurrentAlternateBaseForm");
         Scribe_Defs.Look(ref currentAlternateBaseForm, "currentAlternateBaseForm");
+        Scribe_Values.Look(ref hasPendingChange, "hasPendingChange");
+        Scribe_Defs.Look(ref pendingAlternateBaseForm, "pendingAlternateBaseForm");
         
         base.PostExposeData();
         

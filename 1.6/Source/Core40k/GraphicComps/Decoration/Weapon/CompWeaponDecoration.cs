@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -12,7 +12,7 @@ public class CompWeaponDecoration : CompDecorativeBase
     public CompProperties_WeaponDecoration Props => (CompProperties_WeaponDecoration)props;
     public override void InitialSetup()
     {
-        ApplyDecorationsFromList(Props.decorations);
+        ApplyDecorationsFromList(Props.decorations, free: true);
         base.InitialSetup();
     }
     
@@ -191,9 +191,9 @@ public class CompWeaponDecoration : CompDecorativeBase
     }
 
     //Decoration changes
-    protected override void AddDecoration(DecorationDef decoration, DecorationSettings decorationSettings = null, bool setDefaultColors = false)
+    protected override void AddDecoration(DecorationDef decoration, DecorationSettings decorationSettings = null, bool setDefaultColors = false, bool free = false)
     {
-        base.AddDecoration(decoration, decorationSettings, setDefaultColors);
+        base.AddDecoration(decoration, decorationSettings, setDefaultColors, free);
         InvalidateToolsAndVerbs();
     }
 
@@ -210,6 +210,12 @@ public class CompWeaponDecoration : CompDecorativeBase
     public override void RemoveAllDecorations()
     {
         base.RemoveAllDecorations();
+        InvalidateToolsAndVerbs();
+    }
+
+    protected override void OnDecorationsChanged()
+    {
+        base.OnDecorationsChanged();
         InvalidateToolsAndVerbs();
     }
 

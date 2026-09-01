@@ -21,11 +21,16 @@ public class PawnRenderNodeWorker_AttachmentExtraDecorationHead : PawnRenderNode
             return false;
         }
             
+        if (!PawnRenderNodeWorker_Apparel_Head.HeadgearVisible(parms))
+        {
+            return false;
+        }
+
         var showWhenFacing = new List<Rot4>();
         if (node.Props.flipGraphic)
         {
             showWhenFacing.AddRange(extraDecoration.defaultShowRotation.Select(rotation => rotation.Opposite));
-        } 
+        }
         else
         {
             showWhenFacing = extraDecoration.defaultShowRotation;
@@ -33,16 +38,6 @@ public class PawnRenderNodeWorker_AttachmentExtraDecorationHead : PawnRenderNode
         if (parms.Portrait)
         {
             if (!showWhenFacing.Contains(parms.facing))
-            {
-                return false;
-            }
-
-            if ((parms.flags & PawnRenderFlags.Headgear) != PawnRenderFlags.Headgear)
-            {
-                return false;
-            }
-            
-            if ((parms.flags & PawnRenderFlags.Clothes) != PawnRenderFlags.Clothes)
             {
                 return false;
             }

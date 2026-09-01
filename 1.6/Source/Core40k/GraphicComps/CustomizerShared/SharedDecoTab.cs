@@ -19,11 +19,6 @@ public class SharedDecoTab : CustomizerTabDrawer
     {
             
     }
-
-    public override void OnAccept(Pawn pawn)
-    {
-            
-    }
     
     public override void OnReset(Pawn pawn)
     {

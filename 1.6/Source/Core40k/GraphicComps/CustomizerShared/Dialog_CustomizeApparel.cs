@@ -9,8 +9,10 @@ using Verse.Sound;
 namespace Core40k;
 
 [StaticConstructorOnStartup]
-public class Dialog_CustomizeApparel : Window
+public class Dialog_CustomizeApparel : Window, ICustomizationDialog
 {
+    public bool Closed { get; private set; }
+
     private Pawn pawn;
 
     Vector3 PortraitOffset = new Vector3(0f, 0f, 0.15f);
@@ -35,26 +37,11 @@ public class Dialog_CustomizeApparel : Window
     {
         this.pawn = pawn;
             
-        foreach (var item in pawn.apparel.WornApparel.Where(a => a.def.HasModExtension<DefModExtension_AvailableDrawerTabDefs>() || a.HasComp<CompMultiColor>()))
+        foreach (var item in pawn.apparel.WornApparel.Where(a => CustomizationTabResolver.HasAnyTab(a.def)))
         {
-            //var defMod = item.def.GetModExtension<DefModExtension_AvailableDrawerTabDefs>();
-            
-            //TEMP CODE START
-            var defMod = item.def.GetModExtension<DefModExtension_AvailableDrawerTabDefs>();
-            List<CustomizationTabDef> tabDefs;
-            if (defMod == null)
-            {
-                tabDefs = item.GetComp<CompMultiColor>().Props.tabDefs;
-                tabDefs.Add(Core40kDefOf.BEWH_ArmorColoring);
-            }
-            else
-            {
-                tabDefs = defMod.tabDefs;
-            }
-            //TEMP CODE END
-            
-            tabDefs.SortBy(def => def.sortOrder);
-            foreach (var tabDef in tabDefs)
+            //Tabs are worked out from the comps the item carries and the content that applies to
+            //it. The list is owned by the resolver and already sorted - do not mutate it.
+            foreach (var tabDef in CustomizationTabResolver.TabsFor(item.def))
             {
                 if (!tabRecords.ContainsKey(tabDef))
                 {
@@ -130,7 +117,6 @@ public class Dialog_CustomizeApparel : Window
         if (Widgets.ButtonText(new Rect(inRect.xMax - ButSize.x, inRect.yMax - ButSize.y, ButSize.x, ButSize.y), "Accept".Translate()))
         {
             Accept();
-            Close();
         }
     }
 
@@ -145,7 +131,8 @@ public class Dialog_CustomizeApparel : Window
         {
             Reset();
         }
-        
+
+        Closed = true;
         base.Close(doCloseSound);
     }
 
@@ -161,9 +148,6 @@ public class Dialog_CustomizeApparel : Window
 
     private void Accept()
     {
-        foreach (var tab in tabDrawers)
-        {
-            tab.Value.OnAccept(pawn);
-        }
+        DecorationWorkUtility.TryAccept(pawn, tabDrawers.Values.SelectMany(tab => tab.Comps), () => Close());
     }
 }

@@ -1,13 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Defs>
 
+    <!--
+        Tabs are matched to items automatically at runtime: an item shows a tab when it carries the
+        listed comps and there is at least one piece of content for that tab. Nothing needs to be
+        listed per ThingDef; DefModExtension_AvailableDrawerTabDefs is deprecated and ignored.
+    -->
+
     <!-- Armor -->
     <Core40k.CustomizationTabDef>
         <defName>BEWH_ArmorColoring</defName>
         <label>Armor Coloring</label>
         <description>Armor coloring.</description>
         <tabDrawerClass>Core40k.ArmorColoringTab</tabDrawerClass>
-        <sortOrder>1</sortOrder>
+        <workerClass>Core40k.CustomizationTabWorker_Comp</workerClass>
+        <requiredComps>
+            <li>Core40k.CompMultiColor</li>
+        </requiredComps>
+        <targetKind>Apparel</targetKind>
+        <sortOrder>0</sortOrder>
     </Core40k.CustomizationTabDef>
 
     <Core40k.CustomizationTabDef>
@@ -15,7 +26,25 @@
         <label>Armor Decoration</label>
         <description>Deocrations for armor.</description>
         <tabDrawerClass>Core40k.ArmorDecorationTab</tabDrawerClass>
+        <workerClass>Core40k.CustomizationTabWorker_Decoration</workerClass>
+        <requiredComps>
+            <li>Core40k.CompDecorative</li>
+        </requiredComps>
+        <targetKind>Apparel</targetKind>
         <sortOrder>2</sortOrder>
+    </Core40k.CustomizationTabDef>
+
+    <Core40k.CustomizationTabDef>
+        <defName>BEWH_ArmorUpgrades</defName>
+        <label>Armor Upgrades</label>
+        <description>Functional upgrades for armor. A decoration counts as an upgrade when it grants stats, abilities or anything else beyond appearance.</description>
+        <tabDrawerClass>Core40k.ArmorUpgradeTab</tabDrawerClass>
+        <workerClass>Core40k.CustomizationTabWorker_Upgrade</workerClass>
+        <requiredComps>
+            <li>Core40k.CompDecorative</li>
+        </requiredComps>
+        <targetKind>Apparel</targetKind>
+        <sortOrder>4</sortOrder>
     </Core40k.CustomizationTabDef>
 
     <Core40k.CustomizationTabDef>
@@ -23,7 +52,12 @@
         <label>Alternate base textures</label>
         <description>Alternate base textures for apparel.</description>
         <tabDrawerClass>Core40k.ArmorAlternateTextureTab</tabDrawerClass>
-        <sortOrder>3</sortOrder>
+        <workerClass>Core40k.CustomizationTabWorker_AlternateTexture</workerClass>
+        <requiredComps>
+            <li>Core40k.CompAlternateTexture</li>
+        </requiredComps>
+        <targetKind>Apparel</targetKind>
+        <sortOrder>6</sortOrder>
     </Core40k.CustomizationTabDef>
 
     <!-- Weapon -->
@@ -32,7 +66,12 @@
         <label>Weapon Coloring</label>
         <description>Weapon coloring.</description>
         <tabDrawerClass>Core40k.WeaponColoringTab</tabDrawerClass>
-        <sortOrder>1</sortOrder>
+        <workerClass>Core40k.CustomizationTabWorker_Comp</workerClass>
+        <requiredComps>
+            <li>Core40k.CompMultiColor</li>
+        </requiredComps>
+        <targetKind>Equipment</targetKind>
+        <sortOrder>0</sortOrder>
     </Core40k.CustomizationTabDef>
 
     <Core40k.CustomizationTabDef>
@@ -40,7 +79,25 @@
         <label>Weapon Decoration</label>
         <description>Decorations for weapon.</description>
         <tabDrawerClass>Core40k.WeaponDecorationTab</tabDrawerClass>
+        <workerClass>Core40k.CustomizationTabWorker_Decoration</workerClass>
+        <requiredComps>
+            <li>Core40k.CompWeaponDecoration</li>
+        </requiredComps>
+        <targetKind>Equipment</targetKind>
         <sortOrder>2</sortOrder>
+    </Core40k.CustomizationTabDef>
+
+    <Core40k.CustomizationTabDef>
+        <defName>BEWH_WeaponUpgrades</defName>
+        <label>Weapon Upgrades</label>
+        <description>Functional upgrades for weapons. A decoration counts as an upgrade when it grants stats, abilities, tools or verbs.</description>
+        <tabDrawerClass>Core40k.WeaponUpgradeTab</tabDrawerClass>
+        <workerClass>Core40k.CustomizationTabWorker_Upgrade</workerClass>
+        <requiredComps>
+            <li>Core40k.CompWeaponDecoration</li>
+        </requiredComps>
+        <targetKind>Equipment</targetKind>
+        <sortOrder>4</sortOrder>
     </Core40k.CustomizationTabDef>
 
     <Core40k.CustomizationTabDef>
@@ -48,8 +105,12 @@
         <label>Alternate base textures</label>
         <description>Alternate base textures for weapons.</description>
         <tabDrawerClass>Core40k.WeaponAlternateTextureTab</tabDrawerClass>
-        <sortOrder>3</sortOrder>
+        <workerClass>Core40k.CustomizationTabWorker_AlternateTexture</workerClass>
+        <requiredComps>
+            <li>Core40k.CompAlternateTexture</li>
+        </requiredComps>
+        <targetKind>Equipment</targetKind>
+        <sortOrder>6</sortOrder>
     </Core40k.CustomizationTabDef>
-
 
 </Defs>

@@ -23,6 +23,10 @@ public static class Core40kUtils
 
     public static readonly Color RequirementMetColour = Color.white;
     public static readonly Color RequirementNotMetColour = new(1f, 0.0f, 0.0f, 0.8f);
+
+    //Background tint for a decoration that has a cost and has not been paid for on this item yet,
+    //but is affordable right now.
+    public static readonly Color LockedColour = new(1f, 0.85f, 0.4f, 0.9f);
     
     public static DecorationDef GetDecoDefFromString(string defName)
     {
@@ -92,6 +96,26 @@ public static class Core40kUtils
     public static bool ContainsAllItems<T>(this IEnumerable<T> a, IEnumerable<T> b)
     {
         return !b.Except(a).Any();
+    }
+
+    //ThingDef.HasComp compares compClass by exact type equality, so it misses subclasses.
+    //Customization tab resolution needs to match e.g. CompDecorative against CompDecorativeBase.
+    public static bool HasCompAssignable(this ThingDef def, System.Type compType)
+    {
+        if (def?.comps == null || compType == null)
+        {
+            return false;
+        }
+
+        foreach (var comp in def.comps)
+        {
+            if (comp?.compClass != null && compType.IsAssignableFrom(comp.compClass))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
     
     public static string ValueToString(StatDef stat, float val, bool finalized, ToStringNumberSense numberSense = ToStringNumberSense.Absolute)
@@ -173,11 +197,11 @@ public static class Core40kUtils
         
         if (pawnModExtension.extraDecorationPreset.TryGetValue(thing.def, out var preset))
         {
-            decoComp.LoadFromPreset(preset);
+            decoComp.LoadFromPreset(preset, free: true);
         }
         if (pawnModExtension.extraDecorations.TryGetValue(thing.def, out var decos))
         {
-            decoComp.ApplyDecorationsFromList([..decos]);
+            decoComp.ApplyDecorationsFromList([..decos], free: true);
         }
     }
     

@@ -23,7 +23,7 @@ public class CustomizerOnThing
         //Apparel
         if (__instance.def.GetModExtension<DefModExtension_AllowColoringOfThings>().allowColoringOfApparel)
         {
-            if (selPawn.apparel.WornApparel.Any(a => a.def.HasModExtension<DefModExtension_AvailableDrawerTabDefs>()))
+            if (selPawn.apparel.WornApparel.Any(a => CustomizationTabResolver.HasAnyTab(a.def)))
             {
                 var secondColourChangeFloatMenu = FloatMenuUtility.DecoratePrioritizedTask(new FloatMenuOption("BEWH.Framework.Customization.ArmourDecorationFeature".Translate().CapitalizeFirst(), delegate
                 {
@@ -35,7 +35,7 @@ public class CustomizerOnThing
         //Equipment
         if (__instance.def.GetModExtension<DefModExtension_AllowColoringOfThings>().allowColoringOfEquipment)
         {   
-            if (selPawn.equipment.Primary?.def?.GetModExtension<DefModExtension_AvailableDrawerTabDefs>() != null)
+            if (selPawn.equipment.Primary != null && CustomizationTabResolver.HasAnyTab(selPawn.equipment.Primary.def))
             {
                 var changeFloatMenu = FloatMenuUtility.DecoratePrioritizedTask(new FloatMenuOption("BEWH.Framework.Customization.WeaponDecorationFeature".Translate().CapitalizeFirst(), delegate
                 {

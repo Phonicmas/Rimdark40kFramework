@@ -29,6 +29,21 @@ public class ModSettingTab_CoreCustomization : ModSettingTab
         core40KModSettings.decorationsPerRow = (int)listingStandard.SliderLabeled("BEWH.Framework.ModSettings.DecorationsPerRow".Translate(core40KModSettings.decorationsPerRow),core40KModSettings.decorationsPerRow, 3, 8, tooltip: "BEWH.Framework.ModSettings.DecorationsPerRowTooltip".Translate());
         scrollViewHeight += ListingHeightIncrease;
         
+        listingStandard.CheckboxLabeled("BEWH.Framework.ModSettings.DecorationWorkEnabled".Translate(), ref core40KModSettings.decorationWorkEnabled, "BEWH.Framework.ModSettings.DecorationWorkEnabledTooltip".Translate());
+        scrollViewHeight += ListingHeightIncrease;
+
+        listingStandard.CheckboxLabeled("BEWH.Framework.ModSettings.DecorationCostEnabled".Translate(), ref core40KModSettings.decorationCostEnabled, "BEWH.Framework.ModSettings.DecorationCostEnabledTooltip".Translate());
+        scrollViewHeight += ListingHeightIncrease;
+
+        if (core40KModSettings.decorationWorkEnabled)
+        {
+            core40KModSettings.appearanceChangeWorkAmount = listingStandard.SliderLabeled("BEWH.Framework.ModSettings.AppearanceChangeWork".Translate(core40KModSettings.appearanceChangeWorkAmount.ToString("F0")), core40KModSettings.appearanceChangeWorkAmount, 0f, 2000f, tooltip: "BEWH.Framework.ModSettings.AppearanceChangeWorkTooltip".Translate());
+            scrollViewHeight += ListingHeightIncrease;
+
+            core40KModSettings.minimumWorkAmount = listingStandard.SliderLabeled("BEWH.Framework.ModSettings.MinimumWork".Translate(core40KModSettings.minimumWorkAmount.ToString("F0")), core40KModSettings.minimumWorkAmount, 0f, 2000f, tooltip: "BEWH.Framework.ModSettings.MinimumWorkTooltip".Translate());
+            scrollViewHeight += ListingHeightIncrease;
+        }
+
         //Check VEF patches
         listingStandard.GapLine(36);
         scrollViewHeight += ListingHeightIncreaseGap;

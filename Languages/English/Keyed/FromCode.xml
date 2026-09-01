@@ -8,6 +8,14 @@
   <BEWH.Framework.ModSettings.DecorationsPerRow>Decorations per row when customizing: {0}</BEWH.Framework.ModSettings.DecorationsPerRow>
   <BEWH.Framework.ModSettings.DecorationsPerRowTooltip>Amount of decorations shown when applying decorations on things. Icons and texts can become small and overlap wierdly if too many decorations per row.</BEWH.Framework.ModSettings.DecorationsPerRowTooltip>
   <BEWH.Framework.ModSettings.ConfirmRankUnlock>Confirm rank unlock with popup. (Looking at you butterfingers)</BEWH.Framework.ModSettings.ConfirmRankUnlock>
+  <BEWH.Framework.ModSettings.DecorationWorkEnabled>Fitting decorations and upgrades takes work</BEWH.Framework.ModSettings.DecorationWorkEnabled>
+  <BEWH.Framework.ModSettings.DecorationWorkEnabledTooltip>When on, accepting changes at a station sends the pawn to work for the combined work amount, and any upgrade costs are paid when the work finishes. When off, changes apply instantly and cost nothing.</BEWH.Framework.ModSettings.DecorationWorkEnabledTooltip>
+  <BEWH.Framework.ModSettings.DecorationCostEnabled>Fitting decorations and upgrades cost materials</BEWH.Framework.ModSettings.DecorationCostEnabled>
+  <BEWH.Framework.ModSettings.DecorationCostEnabledTooltip>When on, a decoration with a cost has to be paid for once per item before it can be fitted. When off, everything is free to fit and nothing is ever charged. Independent of the work setting. Anything fitted while this is off stays permanently unlocked on that item, so turning it back on will not re-lock it.</BEWH.Framework.ModSettings.DecorationCostEnabledTooltip>
+  <BEWH.Framework.ModSettings.AppearanceChangeWork>Work for a colour or texture change: {0}</BEWH.Framework.ModSettings.AppearanceChangeWork>
+  <BEWH.Framework.ModSettings.AppearanceChangeWorkTooltip>Flat work charged when an item's colours, masks or base texture change. Charged once per item, no matter how many things were recoloured on it.</BEWH.Framework.ModSettings.AppearanceChangeWorkTooltip>
+  <BEWH.Framework.ModSettings.MinimumWork>Minimum work for any change: {0}</BEWH.Framework.ModSettings.MinimumWork>
+  <BEWH.Framework.ModSettings.MinimumWorkTooltip>No visit to the station takes less work than this, however small the change.</BEWH.Framework.ModSettings.MinimumWorkTooltip>
   <BEWH.Framework.ModSettings.NotifyRankEligibility>Show a message when a pawn becomes eligible for a new rank</BEWH.Framework.ModSettings.NotifyRankEligibility>
 
   <BEWH.ModSettings.TabMain>Main</BEWH.ModSettings.TabMain>
@@ -92,6 +100,18 @@
   <BEWH.Framework.Customization.IncompatibleWithCurrentAltBase>Incompatible with currently selected texture</BEWH.Framework.Customization.IncompatibleWithCurrentAltBase>
   <BEWH.Framework.Customization.AlternativeBaseTexture>Alt. Textures</BEWH.Framework.Customization.AlternativeBaseTexture>
   <BEWH.Framework.Customization.BaseTexture>Base Texture: </BEWH.Framework.Customization.BaseTexture>
+
+  <!--=== Decoration cost and work ===-->
+  <BEWH.Framework.Customization.Cost>Cost</BEWH.Framework.Customization.Cost>
+  <BEWH.Framework.Customization.CostLine>- {0} x{1}</BEWH.Framework.Customization.CostLine>
+  <BEWH.Framework.Customization.CostNothing>- nothing</BEWH.Framework.Customization.CostNothing>
+  <BEWH.Framework.Customization.WorkAmount>Work: {0} (removal {1})</BEWH.Framework.Customization.WorkAmount>
+  <BEWH.Framework.Customization.Locked>Not yet unlocked on this item. Fitting it costs the materials above, once.</BEWH.Framework.Customization.Locked>
+  <BEWH.Framework.Customization.Unlocked>Already unlocked on this item. Refitting is free.</BEWH.Framework.Customization.Unlocked>
+  <BEWH.Framework.Customization.NotEnoughResources>Not enough resources</BEWH.Framework.Customization.NotEnoughResources>
+  <BEWH.Framework.Customization.MissingResource>Not enough resources: missing {0} x{1}</BEWH.Framework.Customization.MissingResource>
+  <BEWH.Framework.Customization.ConfirmCostOnly>Applying these changes will cost:\n{0}</BEWH.Framework.Customization.ConfirmCostOnly>
+  <BEWH.Framework.Customization.ConfirmWork>Applying these changes will cost:\n{0}\n\nand take {1} work at the station.</BEWH.Framework.Customization.ConfirmWork>
 
   <!--=== Rank System ===-->
   <BEWH.Framework.RankSystem.RankTab>Ranks</BEWH.Framework.RankSystem.RankTab>

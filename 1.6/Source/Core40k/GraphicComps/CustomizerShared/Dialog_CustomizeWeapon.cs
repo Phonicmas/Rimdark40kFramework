@@ -9,8 +9,10 @@ using Verse.Sound;
 namespace Core40k;
 
 [StaticConstructorOnStartup]
-public class Dialog_CustomizeWeapon : Window
+public class Dialog_CustomizeWeapon : Window, ICustomizationDialog
 {
+    public bool Closed { get; private set; }
+
     private Pawn pawn;
 
     private ThingWithComps weapon => pawn?.equipment?.Primary;
@@ -35,22 +37,9 @@ public class Dialog_CustomizeWeapon : Window
     {
         this.pawn = pawn;
         
-        //TEMP CODE START
-        var defMod = pawn.equipment.Primary.def.GetModExtension<DefModExtension_AvailableDrawerTabDefs>();
-        List<CustomizationTabDef> tabDefs;
-        if (defMod == null)
-        {
-            tabDefs = pawn.equipment.Primary.GetComp<CompMultiColor>().Props.tabDefs;
-            tabDefs.Add(Core40kDefOf.BEWH_WeaponColoring);
-        }
-        else
-        {
-            tabDefs = defMod.tabDefs;
-        }
-        //TEMP CODE END
-        
-        tabDefs.SortBy(def => def.sortOrder);
-        foreach (var tabDef in tabDefs)
+        //Tabs are worked out from the comps the weapon carries and the content that applies to it.
+        //The list is owned by the resolver and already sorted - do not mutate it.
+        foreach (var tabDef in CustomizationTabResolver.TabsFor(pawn.equipment.Primary.def))
         {
             if (!tabRecords.ContainsKey(tabDef))
             {
@@ -174,7 +163,6 @@ public class Dialog_CustomizeWeapon : Window
         if (Widgets.ButtonText(new Rect(inRect.xMax - ButSize.x, inRect.yMax - ButSize.y, ButSize.x, ButSize.y), "Accept".Translate()))
         {
             Accept();
-            Close();
         }
     }
 
@@ -189,7 +177,8 @@ public class Dialog_CustomizeWeapon : Window
         {
             tab.Value.OnClose(pawn, closeOnCancel, closeOnClickedOutside);
         }
-        
+
+        Closed = true;
         base.Close(doCloseSound);
     }
 
@@ -205,9 +194,6 @@ public class Dialog_CustomizeWeapon : Window
 
     private void Accept()
     {
-        foreach (var tab in tabDrawers)
-        {
-            tab.Value.OnAccept(pawn);
-        }
+        DecorationWorkUtility.TryAccept(pawn, tabDrawers.Values.SelectMany(tab => tab.Comps), () => Close());
     }
 }

@@ -17,6 +17,18 @@ public class Core40kModSettings : ModSettings
     public bool notifyOnRankEligibility = true;
 
     public bool showAllRankCategories = false;
+
+    //Decoration work.
+    //Master switch: when off, changes commit instantly and no resources are taken, exactly as
+    //before this feature existed.
+    public bool decorationWorkEnabled = true;
+    //Independent of the work switch: turning work off does not make upgrades free, and turning
+    //cost off does not make them instant.
+    public bool decorationCostEnabled = true;
+    //Flat work for any colour, mask or base texture change, charged once per item.
+    public float appearanceChangeWorkAmount = 200f;
+    //Floor for any sitting that changed anything at all.
+    public float minimumWorkAmount = 50f;
         
     private List<ColourPreset> colourPresets = [];
     public List<ColourPreset> ColourPresets => colourPresets;
@@ -100,6 +112,10 @@ public class Core40kModSettings : ModSettings
         Scribe_Values.Look(ref confirmRankUnlock, "confirmRankUnlock", false);
         Scribe_Values.Look(ref notifyOnRankEligibility, "notifyOnRankEligibility", true);
         Scribe_Values.Look(ref showAllRankCategories, "showAllRankCategories", false);
+        Scribe_Values.Look(ref decorationWorkEnabled, "decorationWorkEnabled", true);
+        Scribe_Values.Look(ref decorationCostEnabled, "decorationCostEnabled", true);
+        Scribe_Values.Look(ref appearanceChangeWorkAmount, "appearanceChangeWorkAmount", 200f);
+        Scribe_Values.Look(ref minimumWorkAmount, "minimumWorkAmount", 200f);
         Scribe_Collections.Look(ref colourPresets, "colourPresets");
         Scribe_Collections.Look(ref extraDecorationPresets, "extraDecorationPresets");
 
