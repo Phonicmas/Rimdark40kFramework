@@ -19,7 +19,9 @@ public class DecorationBaseTab : CustomizerTabDrawer
     protected Dictionary<(DecorationDef, Rot4), string> layerStringBuffers = new();
     
     protected List<CompDecorativeBase> decorativeComps = new ();
-    private Dictionary<CompDecorativeBase, Dictionary<DecorationTypeDef, List<DecorationDef>>> decorationByTypeForComp = new();
+    //Ordered rather than a dictionary: internal upgrades are drawn after everything else, under
+    //their own header.
+    private Dictionary<CompDecorativeBase, List<KeyValuePair<DecorationTypeDef, List<DecorationDef>>>> decorationByTypeForComp = new();
     private Dictionary<DecorationDef, List<MaskDef>> masksForDeco = new ();
     private List<DecorationPresetDef> decorationPresets = [];
     
@@ -88,15 +90,29 @@ public class DecorationBaseTab : CustomizerTabDrawer
                 continue;
             }
 
-            var decoGroupings = decorationsForItem.GroupBy(def => def.decorationType);
-            var tempDictionary = decoGroupings.ToDictionary(decoGrouping => decoGrouping.Key, decoGrouping => decoGrouping.ToList());
-
-            foreach (var value in tempDictionary.Values)
+            var groups = new List<KeyValuePair<DecorationTypeDef, List<DecorationDef>>>();
+            //Non-internal categories first, internal ones after, so the Internal header sits at the
+            //bottom of the tab.
+            foreach (var internalGroup in new[] { false, true })
             {
-                value.SortBy(def => def.sortOrder);
+                var decoGroupings = decorationsForItem
+                    .Where(def => def.isInternal == internalGroup)
+                    .GroupBy(def => def.decorationType);
+
+                foreach (var decoGrouping in decoGroupings)
+                {
+                    var list = decoGrouping.ToList();
+                    list.SortBy(def => def.sortOrder);
+                    groups.Add(new KeyValuePair<DecorationTypeDef, List<DecorationDef>>(decoGrouping.Key, list));
+                }
             }
 
-            decorationByTypeForComp.Add(decorativeComp, tempDictionary);
+            if (groups.Count == 0)
+            {
+                continue;
+            }
+
+            decorationByTypeForComp.Add(decorativeComp, groups);
             compsWithContent.Add(decorativeComp);
 
             foreach (var decoration in decorationsForItem)
@@ -530,6 +546,8 @@ public class DecorationBaseTab : CustomizerTabDrawer
 
     private void DrawDecorationsForType(Rect viewRect, CompDecorativeBase decorativeComp, DecorationTypeDef decorationTypeDef, List<DecorationDef> decorationDefs, Rect mainRect)
     {
+        var internalGroup = decorationDefs.Any(def => def.isInternal);
+
         var headerRect = new Rect(viewRect)
         {
             height = headerHeight,
@@ -540,7 +558,11 @@ public class DecorationBaseTab : CustomizerTabDrawer
         
         Widgets.DrawMenuSection(headerRect.ContractedBy(-1));
         Text.Anchor = TextAnchor.MiddleCenter;
-        Widgets.Label(headerRect, decorationTypeDef.label);
+        TaggedString headerLabel = internalGroup
+            ? decorationTypeDef.label + "  " + "BEWH.Framework.Customization.SlotsUsed".Translate(
+                decorativeComp.UsedInternalSlots, decorativeComp.TotalInternalSlots)
+            : decorationTypeDef.label;
+        Widgets.Label(headerRect, headerLabel);
         Text.Anchor = TextAnchor.UpperLeft;
         
         for (var i = 0; i < decorationDefs.Count; i++)
@@ -565,6 +587,10 @@ public class DecorationBaseTab : CustomizerTabDrawer
             //only being taken off again, is always clickable.
             var unlocked = !DecorationWorkUtility.CostEnabled || decorativeComp.IsUnlocked(decoDef);
             var affordable = unlocked || hasDeco || CanAfford(decoDef);
+
+            //Internal upgrades take up slots on the item. Something already fitted is always
+            //clickable so it can be taken back out.
+            var noRoom = decoDef.isInternal && !hasDeco && !decorativeComp.HasRoomFor(decoDef);
 
             var color = Color.white;
             var tipTooltip = decoDef.TooltipDescription();
@@ -593,6 +619,12 @@ public class DecorationBaseTab : CustomizerTabDrawer
                 tipTooltip += "\n" +"BEWH.Framework.Customization.IncompatibleWithCurrentAltBase".Translate();
                 color = Color.gray;
             }
+            if (noRoom)
+            {
+                tipTooltip += "\n" + "BEWH.Framework.Customization.NoInternalSlots".Translate(
+                    decorativeComp.UsedInternalSlots, decorativeComp.TotalInternalSlots);
+                color = Color.gray;
+            }
             
             GUI.color = color;
             GUI.DrawTexture(iconRect, Command.BGTexShrunk);
@@ -609,13 +641,13 @@ public class DecorationBaseTab : CustomizerTabDrawer
                 }
             }
             
-            if(hasReq && !incompatibleDeco && affordable)
+            if(hasReq && !incompatibleDeco && affordable && !noRoom)
             {
                 if (Widgets.ButtonInvisible(iconRect))
                 {
                     decorativeComp.AddOrRemoveDecoration(decoDef);
                 }
-                if (decorativeComp.Decorations.ContainsKey(decoDef))
+                if (decorativeComp.Decorations.ContainsKey(decoDef) && decoDef.HasVisual)
                 {
                     var bottomRect = new Rect(new Vector2(iconRect.x, iconRect.yMax + 3f), iconRect.size);
                     bottomRect.height /= 3;

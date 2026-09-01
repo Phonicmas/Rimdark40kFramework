@@ -179,6 +179,7 @@
     <Compile Include="GraphicComps\Decoration\Upgrades\WeaponUpgradeTab.cs" />
     <Compile Include="GraphicComps\Decoration\Upgrades\DecorationWorkUtility.cs" />
     <Compile Include="GraphicComps\Decoration\Upgrades\UpgradeCostUtility.cs" />
+    <Compile Include="GraphicComps\Decoration\Upgrades\StatPart_DecorationSlots.cs" />
     <Compile Include="GraphicComps\Decoration\Upgrades\JobDriver_CustomizeAtStation.cs" />
     <Compile Include="GraphicComps\Decoration\CompProperties_DecorationBase.cs" />
     <Compile Include="GraphicComps\Decoration\DecorationBaseTab.cs" />
@@ -234,6 +235,7 @@
     <Compile Include="HarmonyPatches\HarmonyPatch_InitialGoodwillPatch.cs" />
     <Compile Include="HarmonyPatches\HarmonyPatch_LockedByResearch.cs" />
     <Compile Include="HarmonyPatches\HarmonyPatch_QualityCreatedBoostFromGenePatch.cs" />
+    <Compile Include="HarmonyPatches\HarmonyPatch_RelevantGearIncludesComps.cs" />
     <Compile Include="HarmonyPatches\HarmonyPatch_SpecificInheritableArchiteGenes.cs" />
     <Compile Include="GraphicComps\DefModExtension_ForcesBodyType.cs" />
     <Compile Include="HarmonyPatches\HarmonyPatch_StopDeterioation.cs" />

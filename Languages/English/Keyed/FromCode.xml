@@ -43,6 +43,8 @@
   <BEWH.Framework.StatReport.Decoration>Decorations</BEWH.Framework.StatReport.Decoration>
   <BEWH.Framework.StatReport.AlternateTexture>Alternate Base Form</BEWH.Framework.StatReport.AlternateTexture>
   <BEWH.Framework.StatReport.Ammo>Loaded ammunition</BEWH.Framework.StatReport.Ammo>
+  <BEWH.Framework.StatReport.Internal>Internal</BEWH.Framework.StatReport.Internal>
+  <BEWH.Framework.StatReport.Total>Total</BEWH.Framework.StatReport.Total>
 
   <!--=== Customization ===-->
   <BEWH.Framework.Customization.PrimaryColor>Primary</BEWH.Framework.Customization.PrimaryColor>
@@ -110,6 +112,14 @@
   <BEWH.Framework.Customization.Unlocked>Already unlocked on this item. Refitting is free.</BEWH.Framework.Customization.Unlocked>
   <BEWH.Framework.Customization.NotEnoughResources>Not enough resources</BEWH.Framework.Customization.NotEnoughResources>
   <BEWH.Framework.Customization.MissingResource>Not enough resources: missing {0} x{1}</BEWH.Framework.Customization.MissingResource>
+  <BEWH.Framework.Customization.Internal>internal</BEWH.Framework.Customization.Internal>
+  <BEWH.Framework.Customization.SlotCost>Internal slots used: {0}</BEWH.Framework.Customization.SlotCost>
+  <BEWH.Framework.Customization.SlotsUsed>({0}/{1} slots)</BEWH.Framework.Customization.SlotsUsed>
+  <BEWH.Framework.Customization.NoInternalSlots>No internal slots free ({0}/{1} used)</BEWH.Framework.Customization.NoInternalSlots>
+  <BEWH.Framework.Customization.InternalSlots>Internal slots</BEWH.Framework.Customization.InternalSlots>
+  <BEWH.Framework.Customization.InternalSlotsDesc>How many of this item's internal upgrade slots are filled.</BEWH.Framework.Customization.InternalSlotsDesc>
+  <BEWH.Framework.Customization.FittedDecorations>Decorations fitted</BEWH.Framework.Customization.FittedDecorations>
+  <BEWH.Framework.Customization.FittedUpgrades>Upgrades fitted</BEWH.Framework.Customization.FittedUpgrades>
   <BEWH.Framework.Customization.ConfirmCostOnly>Applying these changes will cost:\n{0}</BEWH.Framework.Customization.ConfirmCostOnly>
   <BEWH.Framework.Customization.ConfirmWork>Applying these changes will cost:\n{0}\n\nand take {1} work at the station.</BEWH.Framework.Customization.ConfirmWork>
 

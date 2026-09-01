@@ -29,8 +29,12 @@ public static class Core40kDefOf
     public static JoyKindDef BEWH_RecreationFromSkill;
     
     public static DecorationTypeDef BEWH_UndefinedType;
+    public static DecorationTypeDef BEWH_DecoCategory_Internal;
+
+    public static StatDef BEWH_InternalUpgradeSlots;
     
     public static StatCategoryDef BEWH_Voidfaring;
+    public static StatCategoryDef BEWH_Customization;
     public static StatCategoryDef BEWH_DecorationOffsets;
     public static StatCategoryDef BEWH_DecorationFactors;
     public static StatCategoryDef BEWH_AlternateTextureOffsets;

@@ -37,6 +37,48 @@ public class CompDecorativeBase : CompGraphicParent
         }
     }
 
+    //Internal slots.
+    //
+    //The capacity is a stat on the ThingDef (BEWH_InternalUpgradeSlots, default 0), so each piece of
+    //armour or weapon decides for itself how much room it has, and an upgrade can grant more by
+    //carrying a statOffset for it.
+    //
+    //Computed straight from statBases plus the decoration offsets rather than through
+    //parent.GetStatValue, because the customization dialog needs a live answer as the player adds
+    //and removes upgrades and the stat system caches. StatPart_DecorationSlots mirrors this so the
+    //info card shows the same number.
+    public int TotalInternalSlots
+    {
+        get
+        {
+            var baseValue = parent.def.statBases.GetStatValueFromList(Core40kDefOf.BEWH_InternalUpgradeSlots, 0f);
+            return Mathf.Max(0, Mathf.RoundToInt(baseValue + GetStatOffset(Core40kDefOf.BEWH_InternalUpgradeSlots)));
+        }
+    }
+
+    public int UsedInternalSlots
+    {
+        get
+        {
+            var used = 0;
+            foreach (var decoration in Decorations)
+            {
+                if (decoration.Key is { isInternal: true })
+                {
+                    used += decoration.Key.slotCost;
+                }
+            }
+            return used;
+        }
+    }
+
+    public int FreeInternalSlots => TotalInternalSlots - UsedInternalSlots;
+
+    public bool HasRoomFor(DecorationDef decoration)
+    {
+        return !decoration.isInternal || decoration.slotCost <= FreeInternalSlots;
+    }
+
     //Called whenever the decoration dictionary is replaced wholesale rather than through
     //Add/RemoveDecoration. CompWeaponDecoration uses it to rebuild tools and verbs.
     protected virtual void OnDecorationsChanged()
@@ -542,22 +584,90 @@ public class CompDecorativeBase : CompGraphicParent
         hasPendingChange = false;
     }
 
+    //Abilities and hediffs granted by a decoration are tied to the item being worn, not just to the
+    //decoration being attached - see Notify_Equipped / Notify_Unequipped.
     private void AddAbilitiesOf(DecorationDef decoration)
     {
-        if (Pawn == null)
+        var pawn = Pawn;
+        if (pawn == null)
         {
             return;
         }
-        Pawn.AddAbilities(decoration.givesAbilities, decoration.givesVFEAbilities);
+
+        pawn.AddAbilities(decoration.givesAbilities, decoration.givesVFEAbilities);
+        AddHediffsOf(decoration, pawn);
     }
 
     private void RemoveAbilitiesOf(DecorationDef decoration)
     {
-        if (Pawn == null)
+        var pawn = Pawn;
+        if (pawn == null)
         {
             return;
         }
-        Pawn.RemoveAbilities(decoration.givesAbilities, decoration.givesVFEAbilities);
+
+        pawn.RemoveAbilities(decoration.givesAbilities, decoration.givesVFEAbilities);
+        RemoveHediffsOf(decoration, pawn);
+    }
+
+    private static void AddHediffsOf(DecorationDef decoration, Pawn pawn)
+    {
+        if (decoration.givesHediffs.NullOrEmpty() || pawn.health == null)
+        {
+            return;
+        }
+
+        foreach (var hediffDef in decoration.givesHediffs)
+        {
+            //One instance per decoration granting it. Already having one from another source is
+            //fine; the removal below only ever takes one back off.
+            pawn.health.AddHediff(hediffDef);
+        }
+    }
+
+    private static void RemoveHediffsOf(DecorationDef decoration, Pawn pawn)
+    {
+        if (decoration.givesHediffs.NullOrEmpty() || pawn.health?.hediffSet == null)
+        {
+            return;
+        }
+
+        foreach (var hediffDef in decoration.givesHediffs)
+        {
+            var hediff = pawn.health.hediffSet.GetFirstHediffOfDef(hediffDef);
+            if (hediff != null)
+            {
+                pawn.health.RemoveHediff(hediff);
+            }
+        }
+    }
+
+    //Everything currently attached, applied to or taken off the pawn in one go.
+    private void ApplyGrantsToPawn(Pawn pawn, bool add)
+    {
+        if (pawn == null)
+        {
+            return;
+        }
+
+        foreach (var decoration in Decorations)
+        {
+            if (decoration.Key == null)
+            {
+                continue;
+            }
+
+            if (add)
+            {
+                pawn.AddAbilities(decoration.Key.givesAbilities, decoration.Key.givesVFEAbilities);
+                AddHediffsOf(decoration.Key, pawn);
+            }
+            else
+            {
+                pawn.RemoveAbilities(decoration.Key.givesAbilities, decoration.Key.givesVFEAbilities);
+                RemoveHediffsOf(decoration.Key, pawn);
+            }
+        }
     }
 
     //DrawData for Rot
@@ -599,7 +709,13 @@ public class CompDecorativeBase : CompGraphicParent
     public override void Notify_Equipped(Pawn pawn)
     {
         RemoveInvalidDecorations(pawn);
-        
+
+        //Abilities and hediffs from attached decorations belong to whoever is wearing the item, so
+        //they are granted here rather than only when a decoration is attached. Previously they were
+        //handed out on attach and never taken back on unequip, so they leaked onto the pawn
+        //permanently.
+        ApplyGrantsToPawn(pawn, add: true);
+
         TryAddCachedStat(pawn);
         
         Notify_GraphicChanged();
@@ -607,6 +723,9 @@ public class CompDecorativeBase : CompGraphicParent
     }
     public override void Notify_Unequipped(Pawn pawn)
     {
+        //Take back whatever the decorations granted while it was worn.
+        ApplyGrantsToPawn(pawn, add: false);
+
         if (pawn != null)
         {
             if (CoreUtils.cachedDecoratives.TryGetValue(pawn, out var decoratives))
@@ -741,10 +860,20 @@ public class CompDecorativeBase : CompGraphicParent
             base.GetStatsExplanation(stat, sb, whitespace);
             return;
         }
-        var stringBuilder = new StringBuilder();
+        //Two builders so internal upgrades get their own heading rather than being listed as if
+        //they were something visible bolted to the outside.
+        var external = new StringBuilder();
+        var internals = new StringBuilder();
         
         foreach (var decoration in Decorations)
         {
+            if (decoration.Key == null)
+            {
+                continue;
+            }
+
+            var stringBuilder = decoration.Key.isInternal ? internals : external;
+            
             var statOffsetFromList = decoration.Key.statOffsets.GetStatOffsetFromList(stat);
             if (!Mathf.Approximately(statOffsetFromList, 0f))
             {
@@ -757,60 +886,145 @@ public class CompDecorativeBase : CompGraphicParent
             }
         }
         
-        if (stringBuilder.Length != 0)
+        if (external.Length != 0)
         {
             sb.AppendLine(whitespace + "BEWH.Framework.StatReport.Decoration".Translate() + ":");
-            sb.Append(stringBuilder);
+            sb.Append(external);
+        }
+        
+        if (internals.Length != 0)
+        {
+            sb.AppendLine(whitespace + "BEWH.Framework.StatReport.Internal".Translate() + ":");
+            sb.Append(internals);
         }
     }
     public override IEnumerable<StatDrawEntry> SpecialDisplayStats()
     {
-        foreach (var pair in GetStatOffsetsFromDecorations())
+        //What is actually fitted, so the item's info card says so rather than only showing the
+        //summed offsets it produces.
+        var decorationEntry = FittedEntry(false, "BEWH.Framework.Customization.FittedDecorations", 90);
+        if (decorationEntry != null)
         {
-            var val = pair.Value.Sum(modifier => modifier.value);
-            yield return new StatDrawEntry(Core40kDefOf.BEWH_DecorationOffsets, pair.Key, pair.Key.Worker.ValueToString(val, finalized: false, ToStringNumberSense.Offset));
+            yield return decorationEntry;
+        }
+
+        var upgradeEntry = FittedEntry(true, "BEWH.Framework.Customization.FittedUpgrades", 89);
+        if (upgradeEntry != null)
+        {
+            yield return upgradeEntry;
+        }
+
+        if (TotalInternalSlots > 0)
+        {
+            yield return new StatDrawEntry(
+                Core40kDefOf.BEWH_Customization,
+                "BEWH.Framework.Customization.InternalSlots".Translate(),
+                UsedInternalSlots + " / " + TotalInternalSlots,
+                "BEWH.Framework.Customization.InternalSlotsDesc".Translate(),
+                88);
+        }
+
+        foreach (var pair in GetStatModifiersFromDecorations(false))
+        {
+            yield return StatContributionEntry(Core40kDefOf.BEWH_DecorationOffsets, pair.Key, pair.Value, false);
         }
         
-        foreach (var pair in GetStatFactorsFromDecorations())
+        foreach (var pair in GetStatModifiersFromDecorations(true))
         {
-            var val = pair.Value.Sum(modifier => modifier.value);
-            yield return new StatDrawEntry(Core40kDefOf.BEWH_DecorationFactors, pair.Key, pair.Key.Worker.ValueToString(val, finalized: false, ToStringNumberSense.Factor));
+            yield return StatContributionEntry(Core40kDefOf.BEWH_DecorationFactors, pair.Key, pair.Value, true);
         }
     }
-    private Dictionary<StatDef, List<StatModifier>> GetStatOffsetsFromDecorations()
+    //One info card entry listing everything fitted of a given kind, with each entry's own
+    //contribution spelled out in the report text.
+    //
+    //Split on isInternal rather than IsUpgrade. IsUpgrade auto-detects from what a decoration does,
+    //so a visible pauldron badge that grants a stat counts as an upgrade and the whole card
+    //collapsed into "Upgrades fitted". The card is answering a different question - what is bolted
+    //on the outside, versus what is fitted inside - and that is exactly isInternal.
+    private StatDrawEntry FittedEntry(bool internalUpgrades, string labelKey, int displayPriority)
     {
-        var dict = new  Dictionary<StatDef, List<StatModifier>>();
-        foreach (var decoration in decorations)
+        var fitted = new List<DecorationDef>();
+        foreach (var decoration in Decorations)
         {
-            foreach (var statModifier in decoration.Key.statOffsets)
+            if (decoration.Key != null && decoration.Key.isInternal == internalUpgrades)
             {
-                if (dict.ContainsKey(statModifier.stat))
-                {
-                    dict[statModifier.stat].Add(statModifier);
-                }
-                else
-                {
-                    dict.Add(statModifier.stat, [statModifier]);
-                }
+                fitted.Add(decoration.Key);
             }
         }
 
-        return dict;
+        if (fitted.Count == 0)
+        {
+            return null;
+        }
+
+        fitted.SortBy(def => def.label);
+
+        var report = new StringBuilder();
+        foreach (var decoration in fitted)
+        {
+            //No "(internal)" marker: every entry in a given report is now on the same side of
+            //that line already.
+            report.AppendLine(decoration.LabelCap);
+
+            foreach (var statOffset in decoration.statOffsets)
+            {
+                report.AppendLine("    " + statOffset.stat.LabelCap + ": " + statOffset.ValueToStringAsOffset);
+            }
+            foreach (var statFactor in decoration.statFactors)
+            {
+                report.AppendLine("    " + statFactor.stat.LabelCap + ": x" + statFactor.ValueToStringAsOffset);
+            }
+            foreach (var hediff in decoration.givesHediffs)
+            {
+                report.AppendLine("    " + hediff.LabelCap);
+            }
+
+            report.AppendLine();
+        }
+
+        return new StatDrawEntry(
+            Core40kDefOf.BEWH_Customization,
+            labelKey.Translate(),
+            fitted.Count.ToString(),
+            report.ToString().TrimEndNewlines(),
+            displayPriority);
     }
-    private Dictionary<StatDef, List<StatModifier>> GetStatFactorsFromDecorations()
+
+    //Keyed by stat, and each contribution keeps the label of the decoration it came from so the
+    //info card report can name what is granting what instead of only showing a lump sum.
+    private Dictionary<StatDef, List<StatContribution>> GetStatModifiersFromDecorations(bool factors)
     {
-        var dict = new  Dictionary<StatDef, List<StatModifier>>();
+        var dict = new Dictionary<StatDef, List<StatContribution>>();
         foreach (var decoration in decorations)
         {
-            foreach (var statModifier in decoration.Key.statFactors)
+            if (decoration.Key == null)
             {
-                if (dict.ContainsKey(statModifier.stat))
+                continue;
+            }
+
+            var statModifiers = factors ? decoration.Key.statFactors : decoration.Key.statOffsets;
+            if (statModifiers.NullOrEmpty())
+            {
+                continue;
+            }
+
+            //Internal upgrades are reported under their own heading, so a hidden component never
+            //reads as if it were something visible on the outside.
+            var groupKey = decoration.Key.isInternal
+                ? "BEWH.Framework.StatReport.Internal"
+                : "BEWH.Framework.StatReport.Decoration";
+            var groupOrder = decoration.Key.isInternal ? 1 : 0;
+
+            foreach (var statModifier in statModifiers)
+            {
+                var contribution = new StatContribution(decoration.Key.LabelCap, statModifier, groupKey, groupOrder);
+                if (dict.TryGetValue(statModifier.stat, out var contributions))
                 {
-                    dict[statModifier.stat].Add(statModifier);
+                    contributions.Add(contribution);
                 }
                 else
                 {
-                    dict.Add(statModifier.stat, [statModifier]);
+                    dict.Add(statModifier.stat, [contribution]);
                 }
             }
         }

@@ -43,6 +43,12 @@ public class CompWeaponDecoration : CompDecorativeBase
         }
         foreach (var weaponDecoration in sortedGraphics)
         {
+            //Internal upgrades draw nothing, so they never get a graphic.
+            if (!weaponDecoration.HasVisual)
+            {
+                continue;
+            }
+
             Graphic graphic;
             if (weaponDecoration.colorAmount > 2)
             {

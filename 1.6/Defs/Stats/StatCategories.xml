@@ -3,7 +3,7 @@
 
   <StatCategoryDef>
     <defName>BEWH_DecorationOffsets</defName>
-    <label>Decoration Offsets</label>
+    <label>Customization Offsets</label>
     <displayOrder>85</displayOrder>
     <displayAllByDefault>true</displayAllByDefault>
   </StatCategoryDef>
@@ -11,10 +11,11 @@
 
   <StatCategoryDef>
     <defName>BEWH_DecorationFactors</defName>
-    <label>Decoration Factors</label>
+    <label>Customization Factors</label>
     <displayOrder>86</displayOrder>
     <displayAllByDefault>true</displayAllByDefault>
   </StatCategoryDef>
+
 
   <StatCategoryDef>
     <defName>BEWH_AlternateTextureOffsets</defName>
@@ -23,11 +24,18 @@
     <displayAllByDefault>true</displayAllByDefault>
   </StatCategoryDef>
 
-
   <StatCategoryDef>
     <defName>BEWH_AlternateTextureFactors</defName>
     <label>Alt. Factors</label>
     <displayOrder>88</displayOrder>
+    <displayAllByDefault>true</displayAllByDefault>
+  </StatCategoryDef>
+
+
+  <StatCategoryDef>
+    <defName>BEWH_Customization</defName>
+    <label>Customization</label>
+    <displayOrder>200</displayOrder>
     <displayAllByDefault>true</displayAllByDefault>
   </StatCategoryDef>
 

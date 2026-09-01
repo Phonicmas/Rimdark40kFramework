@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+﻿<?xml version="1.0" encoding="UTF-8"?>
 <Defs>
 
     <!-- Shared -->
@@ -10,6 +10,12 @@
     <Core40k.DecorationTypeDef>
         <defName>BEWH_DecoCategory_Misc</defName>
         <label>Misc</label>
+    </Core40k.DecorationTypeDef>
+
+    <!-- Default category for internal upgrades. Always drawn last in the Upgrades tab. -->
+    <Core40k.DecorationTypeDef>
+        <defName>BEWH_DecoCategory_Internal</defName>
+        <label>Internal</label>
     </Core40k.DecorationTypeDef>
 
     <Core40k.DecorationTypeDef>

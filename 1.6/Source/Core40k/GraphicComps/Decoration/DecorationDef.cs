@@ -76,6 +76,17 @@ public class DecorationDef : Def
     public List<AbilityDef> givesAbilities = [];
     public List<VEF.Abilities.AbilityDef> givesVFEAbilities = [];
 
+    //Hediffs put on the wearer/holder while this is attached, and taken off again when it is
+    //removed or the item is unequipped.
+    public List<HediffDef> givesHediffs = [];
+
+    //An internal upgrade changes what the item does without changing how it looks. Nothing is drawn
+    //for it, it has no colours, mask or flip, and it takes up internal slots on the item.
+    public bool isInternal = false;
+
+    //How many of the item's internal slots this fills. Only read for internal upgrades.
+    public int slotCost = 1;
+
     //One time resource cost to unlock this decoration on an individual item. Written like
     //ThingDef.costList, so either <li><thingDef>Steel</thingDef><count>30</count></li> or the
     //shorthand <Steel>30</Steel>. Once paid, the decoration stays unlocked on that item forever and
@@ -102,12 +113,19 @@ public class DecorationDef : Def
     //deliberately not part of this - a purely cosmetic badge is allowed to cost steel and still
     //belong on the Decoration tab.
     protected virtual bool AutoDetectUpgrade =>
-        !statOffsets.NullOrEmpty()
+        isInternal
+        || !statOffsets.NullOrEmpty()
         || !statFactors.NullOrEmpty()
         || !givesAbilities.NullOrEmpty()
-        || !givesVFEAbilities.NullOrEmpty();
+        || !givesVFEAbilities.NullOrEmpty()
+        || !givesHediffs.NullOrEmpty();
 
     public bool HasCost => !cost.NullOrEmpty();
+
+    //Whether anything is drawn for this decoration. Internal upgrades never are, and a decoration
+    //that somehow lost its texture path fails safe to drawing nothing rather than building a broken
+    //render node.
+    public bool HasVisual => !isInternal && !drawnTextureIconPath.NullOrEmpty();
 
     public float RemovalWork => workAmount * removalWorkFactor;
 
@@ -144,6 +162,12 @@ public class DecorationDef : Def
             {
                 stringbuilder.AppendLine("BEWH.Framework.Customization.CostLine".Translate(thingCount.thingDef.LabelCap, thingCount.count));
             }
+        }
+
+        if (isInternal && slotCost > 0)
+        {
+            stringbuilder.AppendLine();
+            stringbuilder.AppendLine("BEWH.Framework.Customization.SlotCost".Translate(slotCost));
         }
 
         stringbuilder.AppendLine();
@@ -255,6 +279,26 @@ public class DecorationDef : Def
             yield return "removalWorkFactor is negative";
         }
 
+        if (isInternal)
+        {
+            if (!drawnTextureIconPath.NullOrEmpty())
+            {
+                yield return "isInternal but has a drawnTextureIconPath - internal upgrades are never drawn";
+            }
+            if (isIncompatibleWithBaseTexture)
+            {
+                yield return "isInternal but isIncompatibleWithBaseTexture - nothing is drawn, so it cannot clash with a base texture";
+            }
+            if (slotCost < 0)
+            {
+                yield return "slotCost is negative";
+            }
+        }
+        else if (drawnTextureIconPath.NullOrEmpty() && this is not AlternateBaseFormDef)
+        {
+            yield return "no drawnTextureIconPath and not marked isInternal - nothing will be drawn for this decoration";
+        }
+
         if (cost.NullOrEmpty())
         {
             yield break;
@@ -277,6 +321,18 @@ public class DecorationDef : Def
     {
         shaderType ??= Core40kDefOf.BEWH_CutoutThreeColor;
         defaultMask ??= Core40kDefOf.BEWH_DefaultMask;
+
+        if (isInternal)
+        {
+            //Nothing is drawn, so the appearance options cannot mean anything. Forced rather than
+            //only reported as a config error, so a stray XML value can never reach the drawing code.
+            colourable = false;
+            flipable = false;
+            //Internal upgrades group under their own header in the Upgrades tab unless the content
+            //explicitly picked a category.
+            decorationType ??= Core40kDefOf.BEWH_DecoCategory_Internal;
+        }
+
         decorationType ??= Core40kDefOf.BEWH_UndefinedType;
         if (useMask)
         {

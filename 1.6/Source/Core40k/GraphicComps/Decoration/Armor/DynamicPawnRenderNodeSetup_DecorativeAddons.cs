@@ -30,7 +30,8 @@ public class DynamicPawnRenderNodeSetup_DecorativeAddons : DynamicPawnRenderNode
                                ?? baseBodyType;
             foreach (var decoration in decorativeComp.Decorations)
             {
-                if (decoration.Key is not ExtraDecorationDef decorationDef)
+                //Internal upgrades draw nothing, so they get no render node at all.
+                if (decoration.Key is not ExtraDecorationDef decorationDef || !decorationDef.HasVisual)
                 {
                     continue;
                 }

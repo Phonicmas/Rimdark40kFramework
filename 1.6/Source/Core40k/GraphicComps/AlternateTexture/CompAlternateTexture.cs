@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using RimWorld;
 using UnityEngine;
@@ -359,47 +358,37 @@ public class CompAlternateTexture : CompGraphicParent
             yield break;
         }
         
-        foreach (var pair in GetStatOffsetsFromDecorations())
+        foreach (var pair in GetStatModifiersFromAlternateForm(false))
         {
-            var val = pair.Value.Sum(modifier => modifier.value);
-            yield return new StatDrawEntry(Core40kDefOf.BEWH_AlternateTextureOffsets, pair.Key, pair.Key.Worker.ValueToString(val, finalized: false, ToStringNumberSense.Offset));
+            yield return StatContributionEntry(Core40kDefOf.BEWH_AlternateTextureOffsets, pair.Key, pair.Value, false);
         }
         
-        foreach (var pair in GetStatFactorsFromDecorations())
+        foreach (var pair in GetStatModifiersFromAlternateForm(true))
         {
-            var val = pair.Value.Sum(modifier => modifier.value);
-            yield return new StatDrawEntry(Core40kDefOf.BEWH_AlternateTextureFactors, pair.Key, pair.Key.Worker.ValueToString(val, finalized: false, ToStringNumberSense.Factor));
+            yield return StatContributionEntry(Core40kDefOf.BEWH_AlternateTextureFactors, pair.Key, pair.Value, true);
         }
     }
-    private Dictionary<StatDef, List<StatModifier>> GetStatOffsetsFromDecorations()
+    //Keyed by stat, each contribution labelled with the alternate form it came from, so the info
+    //card report names the source rather than only showing a lump sum.
+    private Dictionary<StatDef, List<StatContribution>> GetStatModifiersFromAlternateForm(bool factors)
     {
-        var dict = new  Dictionary<StatDef, List<StatModifier>>();
-        foreach (var statModifier in CurrentAlternateBaseForm.statOffsets)
+        var dict = new Dictionary<StatDef, List<StatContribution>>();
+        var statModifiers = factors ? CurrentAlternateBaseForm.statFactors : CurrentAlternateBaseForm.statOffsets;
+        if (statModifiers.NullOrEmpty())
         {
-            if (dict.ContainsKey(statModifier.stat))
-            {
-                dict[statModifier.stat].Add(statModifier);
-            }
-            else
-            {
-                dict.Add(statModifier.stat, [statModifier]);
-            }
+            return dict;
         }
 
-        return dict;
-    }
-    private Dictionary<StatDef, List<StatModifier>> GetStatFactorsFromDecorations()
-    {
-        var dict = new  Dictionary<StatDef, List<StatModifier>>();
-        foreach (var statModifier in CurrentAlternateBaseForm.statFactors)
+        foreach (var statModifier in statModifiers)
         {
-            if (dict.ContainsKey(statModifier.stat))
+            var contribution = new StatContribution(CurrentAlternateBaseForm.LabelCap, statModifier, "BEWH.Framework.StatReport.AlternateTexture");
+            if (dict.TryGetValue(statModifier.stat, out var contributions))
             {
-                dict[statModifier.stat].Add(statModifier);
+                contributions.Add(contribution);
             }
             else
             {
-                dict.Add(statModifier.stat, [statModifier]);
+                dict.Add(statModifier.stat, [contribution]);
             }
         }
 

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+
+  <!-- ============================================================
+       How many internal upgrades an item can hold.
+
+       Lives on the ThingDef so every piece of armour or weapon sets
+       its own capacity:
+
+         <statBases>
+           <BEWH_InternalUpgradeSlots>3</BEWH_InternalUpgradeSlots>
+         </statBases>
+
+       Defaults to 0, so an item takes no internal upgrades until it
+       says otherwise. An upgrade can grant more room by carrying a
+       statOffset for this stat - StatPart_DecorationSlots is what
+       makes that show up here on the info card.
+       ============================================================ -->
+
+  <StatDef>
+    <defName>BEWH_InternalUpgradeSlots</defName>
+    <label>internal upgrade slots</label>
+    <description>How many internal upgrades can be fitted inside this item at once.\n\nInternal upgrades change what the item does without changing how it looks. Each one takes up one or more slots.</description>
+    <category>Basics</category>
+    <defaultBaseValue>0</defaultBaseValue>
+    <minValue>0</minValue>
+    <toStringStyle>Integer</toStringStyle>
+    <hideAtValue>0</hideAtValue>
+    <showIfUndefined>false</showIfUndefined>
+    <displayPriorityInCategory>100</displayPriorityInCategory>
+    <parts>
+      <li Class="Core40k.StatPart_DecorationSlots" />
+    </parts>
+  </StatDef>
+
+</Defs>
