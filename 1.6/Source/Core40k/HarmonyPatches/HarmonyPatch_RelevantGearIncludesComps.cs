@@ -36,6 +36,13 @@ public static class RelevantGearUtility
             return false;
         }
 
+        //A move speed penalty that the wearer's gene has already cancelled leaves nothing to
+        //report, so the gear does not count as affecting the stat at all.
+        if (IgnoreMovespeedDecreaseUtility.HidesStatOffset(gear, stat))
+        {
+            return false;
+        }
+
         if (!gear.def.equippedStatOffsets.NullOrEmpty())
         {
             foreach (var statModifier in gear.def.equippedStatOffsets)
@@ -80,6 +87,14 @@ public static class RelevantGearPatch
 
         foreach (var gear in original)
         {
+            //Vanilla lists gear purely by its declared offsets, so it still yields apparel whose move
+            //speed penalty a gene has cancelled. Dropping it here also drops the "Relevant gear"
+            //header when nothing else is left, and the info card hyperlink that led nowhere.
+            if (IgnoreMovespeedDecreaseUtility.HidesStatOffset(gear, stat))
+            {
+                continue;
+            }
+
             alreadyListed.Add(gear);
             yield return gear;
         }

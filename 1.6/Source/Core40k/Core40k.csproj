@@ -131,6 +131,7 @@
     <Compile Include="DefModExtensions\DefModExtension_GeneExtension.cs" />
     <Compile Include="DefModExtensions\DefModExtension_DontPlaceProduct.cs" />
     <Compile Include="DefModExtensions\DefModExtension_HolyDamageExtension.cs" />
+    <Compile Include="DefModExtensions\DefModExtension_IgnoreMovespeedDecrease.cs" />
     <Compile Include="DefModExtensions\DefModExtension_InheritableArchite.cs" />
     <Compile Include="DefModExtensions\DefModExtension_InitialGoodwill.cs" />
     <Compile Include="DefModExtensions\DefModExtension_LockedByResearch.cs" />
@@ -232,6 +233,7 @@
     <Compile Include="HarmonyPatches\HarmonyPatch_CriticalHitPatch.cs" />
     <Compile Include="HarmonyPatches\HarmonyPatch_DontPlaceProductPatch.cs" />
     <Compile Include="HarmonyPatches\HarmonyPatch_ExclusiveApparelCanEquipPatch.cs" />
+    <Compile Include="HarmonyPatches\HarmonyPatch_IgnoreMovespeedDecrease.cs" />
     <Compile Include="HarmonyPatches\HarmonyPatch_InitialGoodwillPatch.cs" />
     <Compile Include="HarmonyPatches\HarmonyPatch_LockedByResearch.cs" />
     <Compile Include="HarmonyPatches\HarmonyPatch_QualityCreatedBoostFromGenePatch.cs" />
