@@ -15,16 +15,11 @@ public class DisallowSlaveBuyingPatch
 		foreach (var thing in __result)
 		{
 			var addThing = true;
-			if (thing is Pawn pawn)
+
+			if (thing is Pawn pawn && pawn.genes?.Xenotype != null
+			    && pawn.genes.Xenotype.HasModExtension<DefModExtension_UntradeablePawn>())
 			{
-				if (pawn.genes == null)
-				{
-					continue;
-				}
-				if (pawn.genes.Xenotype.HasModExtension<DefModExtension_UntradeablePawn>())
-				{
-					addThing = false;
-				}
+				addThing = false;
 			}
 			if (addThing)
 			{
@@ -32,6 +27,6 @@ public class DisallowSlaveBuyingPatch
 			}
 		}
 
-		return newResult.NullOrEmpty() ? __result : newResult;
+		return newResult;
 	}
 }

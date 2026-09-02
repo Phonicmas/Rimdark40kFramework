@@ -16,6 +16,7 @@ public abstract class JobDriver_CustomizeAtStation : JobDriver
     private int totalWorkTicks = -1;
 
     private ICustomizationDialog dialog;
+    private Window dialogWindow;
 
     protected abstract Window MakeDialog();
 
@@ -38,6 +39,14 @@ public abstract class JobDriver_CustomizeAtStation : JobDriver
             //dropped and the gear is left exactly as it was. Materials the pawn already picked up
             //stay in its inventory and get hauled back to storage by the usual behaviour.
             DecorationWorkUtility.DiscardAll(pawn);
+
+            //Close the window with the job. Left open, pressing Accept afterwards rolled the live
+            //state back and parked a pending change that no job would ever commit.
+            if (dialogWindow != null)
+            {
+                Find.WindowStack.TryRemove(dialogWindow, false);
+                dialogWindow = null;
+            }
         });
 
         yield return Toils_Goto.GotoThing(TargetIndex.A, PathEndMode.InteractionCell).FailOnDespawnedOrNull(TargetIndex.A);
@@ -46,6 +55,16 @@ public abstract class JobDriver_CustomizeAtStation : JobDriver
         {
             var window = MakeDialog();
             dialog = window as ICustomizationDialog;
+            dialogWindow = window;
+
+            //A dialog that refused to open (the item went away on the walk over) ends the job here
+            //rather than parking on a wait toil forever.
+            if (dialog == null || dialog.Closed)
+            {
+                EndJobWith(JobCondition.Incompletable);
+                return;
+            }
+
             Find.WindowStack.Add(window);
         });
 
@@ -54,6 +73,8 @@ public abstract class JobDriver_CustomizeAtStation : JobDriver
         {
             defaultCompleteMode = ToilCompleteMode.Never,
         };
+        //The station going away while the player is in the dialog ends the job cleanly.
+        waitForDialog.FailOnDespawnedNullOrForbidden(TargetIndex.A);
         waitForDialog.tickAction = delegate
         {
             if (dialog == null || dialog.Closed)

@@ -22,6 +22,7 @@ public class FloatMenuMask : FloatMenu
         foreach (var t in options)
         {
 	        t.SetSizeMode(SizeMode);
+	        (t as FloatMenuOptionMask)?.SetMaskSizeMode(SizeMode);
         }
         layer = WindowLayer.Super;
         closeOnClickedOutside = true;
@@ -69,8 +70,8 @@ public class FloatMenuMask : FloatMenu
 					num2 += requiredHeight + -1f;
 				}
 				var columnCount = ColumnCount;
-				num2 += (float)columnCount * num;
-				return num2 / (float)columnCount;
+				num2 += columnCount * num;
+				return num2 / columnCount;
 			}
 			return MaxWindowHeight;
 		}
@@ -107,7 +108,7 @@ public class FloatMenuMask : FloatMenu
 	{
 		get
 		{
-			float num = (float)ColumnCount * ColumnWidth;
+			float num = ColumnCount * ColumnWidth;
 			if (UsingScrollbar)
 			{
 				num += 16f;
@@ -183,7 +184,8 @@ public class FloatMenuMask : FloatMenu
 		{
 			vector.y = UI.screenHeight - InitialSize.y;
 		}
-		windowRect = new Rect(vector.x, vector.y, InitialSize.x + (options.Count * 100), InitialSize.y + (options.Count * 100));
+		
+		windowRect = new Rect(vector.x, vector.y, InitialSize.x, InitialSize.y);
 	}
 
     

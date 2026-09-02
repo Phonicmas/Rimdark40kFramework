@@ -49,9 +49,9 @@ public class ColoringBaseTab : CustomizerTabDrawer
             defaultColors.Add(item.def, (multiColor?.Props?.defaultPrimaryColor ?? (item.def.MadeFromStuff ? item.def.GetColorForStuff(item.Stuff) : Color.white), multiColor?.Props?.defaultSecondaryColor ?? Color.white, multiColor?.Props?.defaultTertiaryColor ?? Color.white));
             
             apparelColorMaskPageNumber.Add(multiColor.parent.def, 0);
-            
-            presets = DefDatabase<ColourPresetDef>.AllDefsListForReading.Where(def => def.appliesTo.Contains(multiColor.parent.def.defName)).ToList();
         }
+
+        presets = DefDatabase<ColourPresetDef>.AllDefsListForReading;
     }
     
     protected virtual void SetupHook(Pawn pawn) { }
@@ -263,12 +263,17 @@ public class ColoringBaseTab : CustomizerTabDrawer
                 {
                     maskDefs = masks[item.def];
                 }
-                
-                var num = maskDefs.Count - apparelColorMaskPageNumber[item.def]*4;
-                num = num > 4 ? 4 : num;
-                
-                //Might null error at maskDefs.Count 0?
-                var curPageMasks = maskDefs.GetRange(apparelColorMaskPageNumber[item.def]*4, num);
+
+                var maxPage = Math.Max(0, (int)Math.Ceiling((float)maskDefs.Count / 4) - 1);
+                if (apparelColorMaskPageNumber[item.def] > maxPage)
+                {
+                    apparelColorMaskPageNumber[item.def] = maxPage;
+                }
+
+                var pageStart = apparelColorMaskPageNumber[item.def] * 4;
+                var num = Math.Max(0, Math.Min(4, maskDefs.Count - pageStart));
+
+                var curPageMasks = num > 0 ? maskDefs.GetRange(pageStart, num) : new List<MaskDef>();
                 
                 for (var i = 0; i < curPageMasks.Count; i++)
                 {
@@ -357,7 +362,7 @@ public class ColoringBaseTab : CustomizerTabDrawer
                         Widgets.DrawTextureFitted(arrowBack, Core40kUtils.ScrollBackwardIcon, 1);
                     }
                     
-                    if (apparelColorMaskPageNumber[item.def] < Math.Ceiling((float)masks[item.def].Count / 4)-1)
+                    if (apparelColorMaskPageNumber[item.def] < maxPage)
                     {
                         var arrowForward = new Rect(arrowBack)
                         {

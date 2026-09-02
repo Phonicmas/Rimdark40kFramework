@@ -9,8 +9,6 @@ public class BeheadingCutWorkerNormalPatch
 {
     public static void Postfix(ref BodyPartRecord __result, DamageInfo dinfo, Pawn pawn)
     {
-        //This runs for every injury in the game, so the cheap mod check goes first and __result is
-        //never assumed to be non null - ChooseHitPart returns null when nothing matches its filter.
         var beheadingCut = dinfo.Weapon?.GetModExtension<DefModExtension_BeheadingCut>();
         if (beheadingCut == null)
         {

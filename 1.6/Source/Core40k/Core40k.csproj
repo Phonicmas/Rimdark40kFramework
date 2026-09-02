@@ -207,7 +207,6 @@
     <Compile Include="GraphicComps\Decoration\Weapon\WeaponDecorationTab.cs" />
     <Compile Include="GraphicComps\DefModExtension_TextureFlags.cs" />
     <Compile Include="GraphicComps\FemaleApparelVariantsCompat.cs" />
-    <Compile Include="GraphicComps\HarmonyPatch_ForceBodyPatch.cs" />
     <Compile Include="GraphicComps\HarmonyPatch_GizmoTextureToggle.cs" />
     <Compile Include="GraphicComps\HarmonyPatch_HideApparelFromTextureFlags.cs" />
     <Compile Include="GraphicComps\HarmonyPatch_HideBodyPatch.cs" />

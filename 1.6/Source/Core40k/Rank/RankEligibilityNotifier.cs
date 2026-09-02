@@ -5,8 +5,6 @@ using Verse;
 
 namespace Core40k;
 
-//Watches player colonists and posts a one-off message the first time a pawn
-//becomes eligible for a rank it does not already have.
 public static class RankEligibilityNotifier
 {
     //Every colonist is checked once within this many ticks.
@@ -38,7 +36,6 @@ public static class RankEligibilityNotifier
             return;
         }
 
-        //Round up, so the whole colony is always covered within SweepIntervalTicks.
         var pawnsThisStep = (colonists.Count + SweepSteps - 1) / SweepSteps;
 
         for (var i = 0; i < pawnsThisStep; i++)
@@ -52,9 +49,7 @@ public static class RankEligibilityNotifier
             sweepIndex++;
         }
     }
-
-    //Records everything every colonist is currently eligible for without posting
-    //anything. Runs once on a save made before this feature existed.
+    
     public static void SeedBaseline()
     {
         foreach (var pawn in PawnsFinder.AllMapsCaravansAndTravellingTransporters_Alive_FreeColonists)
@@ -93,7 +88,6 @@ public static class RankEligibilityNotifier
                     continue;
                 }
 
-                //Boolean only overload, so no requirement text is built for this call.
                 if (!rank.RequirementMet(pawn, comp, category))
                 {
                     continue;

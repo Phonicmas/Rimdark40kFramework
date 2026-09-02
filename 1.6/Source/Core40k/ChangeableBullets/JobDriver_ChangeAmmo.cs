@@ -15,8 +15,11 @@ public class JobDriver_ChangeAmmo : JobDriver
 
     protected override IEnumerable<Toil> MakeNewToils()
     {
+        this.FailOnDestroyedOrNull(TargetIndex.A);
+
         var pawnManipulation = pawn.health.capacities.GetLevel(PawnCapacityDefOf.Manipulation);
-        var manipulation = pawnManipulation < 1 ? pawnManipulation : Math.Max(pawnManipulation / 2, 1);
+
+        var manipulation = pawnManipulation < 1 ? Math.Max(pawnManipulation, 0.01f) : Math.Max(pawnManipulation / 2, 1);
         var reloadTime = (int)Math.Max(100 / manipulation, 20);
         
         yield return Toils_General.Wait(reloadTime).WithProgressBarToilDelay(TargetIndex.A);
@@ -27,7 +30,7 @@ public class JobDriver_ChangeAmmo : JobDriver
                 return;
             }
             
-            thingWithComps.GetComp<Comp_AmmoChanger>().LoadNextProjectile();
+            thingWithComps.GetComp<Comp_AmmoChanger>()?.LoadNextProjectile();
         });
     }
 }

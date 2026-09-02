@@ -17,15 +17,10 @@ public class CompRankInfo : ThingComp
 
     public List<RankDef> unlockedRanksAtDeath = [];
 
-    //Ranks that actually consumed a slot in GameComponent_RankInfo.rankLimits.
-    //Ranks granted to non player pawns on generation never take a slot,
-    //so they must not release one when the pawn dies or is destroyed either.
     private HashSet<RankDef> limitCountedRanks = [];
 
     public HashSet<RankDef> LimitCountedRanks => limitCountedRanks ??= [];
 
-    //Ranks the player has already been told this pawn became eligible for.
-    //Kept for the life of the save so a rank is only ever announced once.
     private HashSet<RankDef> announcedEligibleRanks = [];
 
     public bool HasAnnouncedEligibility(RankDef rankDef)
@@ -61,22 +56,46 @@ public class CompRankInfo : ThingComp
     
     public Dictionary<SkillDef, Passion> originalPassions = new Dictionary<SkillDef, Passion>();
 
+    private bool migratedLimitCounts;
+
     private GameComponent_RankInfo gameComponentRankInfo = null;
 
     public GameComponent_RankInfo GameComponentRankInfo => gameComponentRankInfo ??= Current.Game.GetComponent<GameComponent_RankInfo>();
     
-    public List<SkillDef> recreationSkillFromRanks
+    private HashSet<SkillDef> cachedRecreationSkills;
+
+    public HashSet<SkillDef> RecreationSkillsFromRanks
     {
         get
         {
-            List<SkillDef> recreationSkillFromRanks = [];
-            foreach (var rank in UnlockedRanks)
+            if (cachedRecreationSkills != null)
             {
-                recreationSkillFromRanks.AddRange(rank.recreationFromSkills);
+                return cachedRecreationSkills;
             }
 
-            return recreationSkillFromRanks;
+            cachedRecreationSkills = [];
+            foreach (var rank in UnlockedRanks)
+            {
+                if (rank?.recreationFromSkills == null)
+                {
+                    continue;
+                }
+
+                foreach (var skill in rank.recreationFromSkills)
+                {
+                    cachedRecreationSkills.Add(skill);
+                }
+            }
+
+            return cachedRecreationSkills;
         }
+    }
+
+    private void InvalidateRankCaches()
+    {
+        cachedRecreationSkills = null;
+        cachedStatOffset = new Dictionary<StatDef, float>();
+        cachedStatFactor = new Dictionary<StatDef, float>();
     }
 
     public Pawn ParentPawn => parent as Pawn;
@@ -124,8 +143,7 @@ public class CompRankInfo : ThingComp
             LimitCountedRanks.Add(rank);
         }
 
-        cachedStatOffset = new Dictionary<StatDef, float>();
-        cachedStatFactor = new Dictionary<StatDef, float>();
+        InvalidateRankCaches();
     }
 
     public void RemoveRank(RankDef rank, bool removeFromRankLimit)
@@ -153,8 +171,7 @@ public class CompRankInfo : ThingComp
             pawn.story.Title = newHighestRank.label;
         }
         
-        cachedStatOffset = new Dictionary<StatDef, float>();
-        cachedStatFactor = new Dictionary<StatDef, float>();
+        InvalidateRankCaches();
     }
     
     public void RecalculatePassions()
@@ -273,8 +290,6 @@ public class CompRankInfo : ThingComp
 
     public void ResetRanks(RankCategoryDef rankCategoryDef)
     {
-        //Both branches must iterate a copy, RemoveRank mutates UnlockedRanks.
-        //UnlockedRanksOfDef already builds a new list, the null branch did not.
         var ranksToRemove = rankCategoryDef != null
             ? UnlockedRanksOfDef(rankCategoryDef)
             : UnlockedRanks.ToList();
@@ -283,9 +298,6 @@ public class CompRankInfo : ThingComp
         {
             RemoveRank(rankDef, true);
 
-            //A deliberate wipe re-arms the eligibility message for the ranks it removed,
-            //so the pawn is announced again as they climb back. Eligibility merely
-            //lapsing on its own still never re-announces.
             announcedEligibleRanks?.Remove(rankDef);
         }
     }
@@ -331,8 +343,7 @@ public class CompRankInfo : ThingComp
     {
         daysAsRank[rankDef] -= TicksPerDay;
     }
-
-    //Backdates the rank so the pawn counts as having held it for the given amount of days.
+    
     public void SetDaysAsRank(RankDef rankDef, float days)
     {
         daysAsRank[rankDef] = (Find.TickManager?.TicksGame ?? 0) - (int)(days * TicksPerDay);
@@ -346,10 +357,9 @@ public class CompRankInfo : ThingComp
         Scribe_Collections.Look(ref limitCountedRanks, "limitCountedRanks", LookMode.Def);
         Scribe_Collections.Look(ref announcedEligibleRanks, "announcedEligibleRanks", LookMode.Def);
         Scribe_Collections.Look(ref daysAsRank, "daysAsRank");
-        //Without this the pre rank passions are gone after every load, so RecalculatePassions
-        //restores nothing and each rank's AddOneLevel stacks on the already boosted passion.
         Scribe_Collections.Look(ref originalPassions, "originalPassions", LookMode.Def, LookMode.Value);
         Scribe_Defs.Look(ref lastOpenedRankCategory, "lastOpenedRankCategory");
+        Scribe_Values.Look(ref migratedLimitCounts, "migratedLimitCounts");
 
         if (Scribe.mode != LoadSaveMode.PostLoadInit)
         {
@@ -361,10 +371,14 @@ public class CompRankInfo : ThingComp
         limitCountedRanks ??= [];
         announcedEligibleRanks ??= [];
 
-        //Saves made before rank limit tracking existed counted every rank a colonist held.
-        if (limitCountedRanks.Count == 0 && !UnlockedRanks.NullOrEmpty() && ParentPawn?.Faction is { IsPlayer: true })
+        if (!migratedLimitCounts)
         {
-            limitCountedRanks.AddRange(UnlockedRanks);
+            migratedLimitCounts = true;
+
+            if (limitCountedRanks.Count == 0 && !UnlockedRanks.NullOrEmpty() && ParentPawn?.Faction is { IsPlayer: true })
+            {
+                limitCountedRanks.AddRange(UnlockedRanks);
+            }
         }
     }
     

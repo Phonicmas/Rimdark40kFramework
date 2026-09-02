@@ -31,7 +31,18 @@ public class CompWeaponDecoration : CompDecorativeBase
     
     public bool recacheGraphics = true;
     private Dictionary<DecorationDef, Graphic> cachedGraphics = [];
-    public Dictionary<DecorationDef, Graphic> Graphics => cachedGraphics ??= new Dictionary<DecorationDef, Graphic>();
+    public Dictionary<DecorationDef, Graphic> Graphics
+    {
+        get
+        {
+            if (recacheGraphics)
+            {
+                RecacheDecorationGraphics();
+            }
+
+            return cachedGraphics ??= new Dictionary<DecorationDef, Graphic>();
+        }
+    }
     public void RecacheDecorationGraphics()
     {
         recacheGraphics = false;
@@ -43,15 +54,11 @@ public class CompWeaponDecoration : CompDecorativeBase
         }
         foreach (var weaponDecoration in sortedGraphics)
         {
-            //Null keys survive in the dictionary when the mod that added a decoration is removed.
-            //The base class skips them everywhere it walks Decorations, and this runs from inside
-            //pawn rendering, so it has to as well.
             if (weaponDecoration == null)
             {
                 continue;
             }
-
-            //Internal upgrades draw nothing, so they never get a graphic.
+            
             if (!weaponDecoration.HasVisual)
             {
                 continue;
@@ -59,10 +66,6 @@ public class CompWeaponDecoration : CompDecorativeBase
 
             var settings = decorations[weaponDecoration];
 
-            //The mask the player selected, falling back to the decoration's default. A mask that
-            //sets null, or carries no path, means no mask at all. The old code read the def default
-            //and inverted the test, so a real mask path was replaced by null and an empty one was
-            //passed through - the mask picker did nothing on weapons at all.
             var mask = settings.maskDef ?? weaponDecoration.defaultMask;
             var usesMask = mask is { setsNull: false };
             var maskPath = usesMask && !mask.maskPath.NullOrEmpty() ? mask.maskPath : null;
@@ -96,14 +99,11 @@ public class CompWeaponDecoration : CompDecorativeBase
             cachedGraphics.Add(weaponDecoration, graphic);
         }
     }
-
-    //Tools and verbs granted by decorations
+    
     private List<Tool> cachedTools;
     private List<VerbProperties> cachedVerbProperties;
     private bool toolsAndVerbsCached;
 
-    //Both of these return null when no decoration touches the weapons tools or verbs, which
-    //tells the CompEquippable patch to leave the weapons own lists alone.
     public List<Tool> DecoratedTools
     {
         get
@@ -129,7 +129,6 @@ public class CompWeaponDecoration : CompDecorativeBase
         toolsAndVerbsCached = false;
         cachedTools = null;
         cachedVerbProperties = null;
-        //Forces CompEquippable to build its verbs again the next time anything asks for them.
         parent.GetComp<CompEquippable>()?.verbTracker?.VerbsNeedReinitOnLoad();
     }
 
@@ -143,8 +142,7 @@ public class CompWeaponDecoration : CompDecorativeBase
         toolsAndVerbsCached = true;
         cachedTools = null;
         cachedVerbProperties = null;
-
-        //Ordered by defName so verb load ids stay stable between saves.
+        
         var relevantDecorations = Decorations.Keys
             .OfType<WeaponDecorationDef>()
             .Where(deco => deco.ChangesToolsOrVerbs)
@@ -200,8 +198,6 @@ public class CompWeaponDecoration : CompDecorativeBase
             {
                 foreach (var tool in decoration.tools)
                 {
-                    //Copied per weapon: the def level Tool is shared by every weapon wearing
-                    //this decoration, so it must never be written to in place.
                     tools.Add(WeaponDecorationVerbUtility.CopyTool(tool));
                 }
             }
@@ -328,17 +324,19 @@ public class CompWeaponDecoration : CompDecorativeBase
     
     public override void PostExposeData()
     {
-        //TODO: Remove at later point
-        Scribe_Collections.Look(ref originalWeaponDecorations, "originalWeaponDecorations");
-        Scribe_Collections.Look(ref weaponDecorations, "weaponDecorations");
-        if (Scribe.mode == LoadSaveMode.PostLoadInit && !weaponDecorations.NullOrEmpty() && !originalWeaponDecorations.NullOrEmpty())
+        if (Scribe.mode != LoadSaveMode.Saving || !weaponDecorations.NullOrEmpty() || !originalWeaponDecorations.NullOrEmpty())
+        {
+            //TODO: Remove at later point
+            Scribe_Collections.Look(ref originalWeaponDecorations, "originalWeaponDecorations");
+            Scribe_Collections.Look(ref weaponDecorations, "weaponDecorations");
+        }
+
+        if (Scribe.mode == LoadSaveMode.PostLoadInit && (!weaponDecorations.NullOrEmpty() || !originalWeaponDecorations.NullOrEmpty()))
         {
             FixDecos();
         }
         base.PostExposeData();
-
-        //CompEquippable may well have rebuilt its verbs before this comp finished loading its
-        //decorations, so anything that grants tools or verbs gets a clean rebuild here.
+        
         if (Scribe.mode == LoadSaveMode.PostLoadInit && AnyDecorationChangesToolsOrVerbs)
         {
             InvalidateToolsAndVerbs();

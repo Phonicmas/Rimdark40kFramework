@@ -1,6 +1,5 @@
 ﻿using HarmonyLib;
 using RimWorld;
-using System.Linq;
 using UnityEngine;
 using Verse;
 
@@ -24,16 +23,30 @@ public class QualityCreatedBoostFromGene
             return;
         }
 
-        var genes = pawn.genes.GenesListForReading.Where(g => 
-            g.def.HasModExtension<DefModExtension_BoostQualityCreatedByPawn>() &&
-            g.def.GetModExtension<DefModExtension_BoostQualityCreatedByPawn>().qualityBoostLevel.Keys.Contains(relevantSkill));
-
-        if (!genes.Any())
+        if (relevantSkill == null)
         {
             return;
         }
 
-        var levelIncrease = genes.Sum(g => g.def.GetModExtension<DefModExtension_BoostQualityCreatedByPawn>().qualityBoostLevel.Values.First());
+        var levelIncrease = 0;
+        foreach (var gene in pawn.genes.GenesListForReading)
+        {
+            var defMod = gene.def?.GetModExtension<DefModExtension_BoostQualityCreatedByPawn>();
+            if (defMod?.qualityBoostLevel == null)
+            {
+                continue;
+            }
+
+            if (defMod.qualityBoostLevel.TryGetValue(relevantSkill, out var boost))
+            {
+                levelIncrease += boost;
+            }
+        }
+
+        if (levelIncrease == 0)
+        {
+            return;
+        }
 
         __result = (QualityCategory)Mathf.Min((int)__result + levelIncrease, 6);
     }

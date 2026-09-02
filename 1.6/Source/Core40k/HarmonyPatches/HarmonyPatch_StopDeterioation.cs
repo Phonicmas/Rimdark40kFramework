@@ -31,10 +31,8 @@ public class StopDeterioationPatch
         if (comp.ShouldDeteriorate)
         {
             __result += comp.Props.deteriorationRateOutside;
-            if (!reasons.NullOrEmpty())
-            {
-                reasons.Add("BEWH.Framework.Comp.ItemDeterioratingNotInContainer".Translate());
-            }
+
+            reasons?.Add("BEWH.Framework.Comp.ItemDeterioratingNotInContainer".Translate());
         }
         else
         {

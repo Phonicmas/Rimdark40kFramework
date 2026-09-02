@@ -8,8 +8,6 @@ public static class IncreaseRangeFromVarious
 {
     public static void Postfix(Verb __instance, ref float __result)
     {
-        //A weapon's melee tool verbs share its comps, so without this guard a bolt pistol's
-        //bash verb was handed the ranged weapon's warmup, burst count and range.
         if (__instance?.verbProps == null || __instance.IsMeleeAttack)
         {
             return;
@@ -27,8 +25,6 @@ public static class IncreaseRangeFromVarious
             __result = ammoChangerComp.EffectiveRangeOr(__result);
         }
         var weaponDecoComp = equipment.GetComp<CompWeaponDecoration>();
-        //Decorations lazily creates the dictionary, so the old null test was never false and every
-        //decorated weapon allocated one on the first read.
         if (weaponDecoComp?.Decorations is { Count: > 0 })
         {
             foreach (var weaponDecoration in weaponDecoComp.Decorations)

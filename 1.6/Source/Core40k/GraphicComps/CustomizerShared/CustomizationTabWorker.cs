@@ -9,11 +9,6 @@ public enum TabTargetKind
     Equipment = 2,
 }
 
-//Decides whether a customization tab shows up for a given ThingDef.
-//A tab applies when the item carries the comp(s) the tab's drawer operates on, and there is at
-//least one piece of content for it. Content presence is checked per ThingDef and is independent of
-//the pawn, so a tab still appears when every entry in it is requirement locked for the current
-//pawn - a greyed out entry with its requirements in the tooltip is how the player learns it exists.
 public abstract class CustomizationTabWorker
 {
     public CustomizationTabDef def;

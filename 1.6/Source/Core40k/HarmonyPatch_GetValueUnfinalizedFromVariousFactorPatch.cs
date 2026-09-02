@@ -7,10 +7,6 @@ namespace Core40k;
 [HarmonyPatch(typeof(StatWorker), "GetValueUnfinalized")]
 public static class GetValueUnfinalizedFromVariousFactorPatch
 {
-    //RankDef's pattern: these types outlive a game, so the cache has to be keyed on the game it
-    //came from. A plain ??= keeps handing out the previous save's component after loading a second
-    //save in the same session, which pins every pawn and item from the old game in memory and
-    //answers every lookup from the wrong colony.
     private static Game cachedGameForCoreUtils;
     private static GameComponent_CoreUtils coreUtils;
 

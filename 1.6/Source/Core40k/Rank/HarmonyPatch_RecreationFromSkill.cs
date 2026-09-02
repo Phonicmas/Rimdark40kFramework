@@ -14,7 +14,7 @@ public class RecreationFromSkill
         {
             return;
         }
-        if (xp > 0f && rankComp.recreationSkillFromRanks.Contains(sDef))
+        if (xp > 0f && rankComp.RecreationSkillsFromRanks.Contains(sDef))
         {
             ___pawn.needs?.joy?.GainJoy(xp * 0.001f, Core40kDefOf.BEWH_RecreationFromSkill);
         }

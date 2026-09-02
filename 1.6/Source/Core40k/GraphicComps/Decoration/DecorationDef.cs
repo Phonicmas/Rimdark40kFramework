@@ -75,33 +75,19 @@ public class DecorationDef : Def
     
     public List<AbilityDef> givesAbilities = [];
     public List<VEF.Abilities.AbilityDef> givesVFEAbilities = [];
-
-    //Hediffs put on the wearer/holder while this is attached, and taken off again when it is
-    //removed or the item is unequipped.
+    
     public List<HediffDef> givesHediffs = [];
 
-    //An internal upgrade changes what the item does without changing how it looks. Nothing is drawn
-    //for it, it has no colours, mask or flip, and it takes up internal slots on the item.
     public bool isInternal = false;
-
-    //How many of the item's internal slots this fills. Only read for internal upgrades.
+    
     public int slotCost = 1;
 
-    //One time resource cost to unlock this decoration on an individual item. Written like
-    //ThingDef.costList, so either <li><thingDef>Steel</thingDef><count>30</count></li> or the
-    //shorthand <Steel>30</Steel>. Once paid, the decoration stays unlocked on that item forever and
-    //can be taken off and refitted without paying again.
     public List<ThingDefCountClass> cost = [];
-
-    //Work to fit this decoration. Charged in full on every add, whether or not it is already
-    //unlocked - resources are one time, labour is not.
+    
     public float workAmount = 100f;
-
-    //Removal work, as a fraction of workAmount.
+    
     public float removalWorkFactor = 0.5f;
-
-    //null means work it out from what the decoration actually does. Set explicitly to force a
-    //decoration onto the Decoration tab or the Upgrades tab.
+    
     public bool? isUpgrade = null;
 
     [Unsaved]
@@ -109,9 +95,6 @@ public class DecorationDef : Def
 
     public bool IsUpgrade => isUpgradeCached ??= isUpgrade ?? AutoDetectUpgrade;
 
-    //A decoration is an upgrade when it does something beyond looking nice. Note that `cost` is
-    //deliberately not part of this - a purely cosmetic badge is allowed to cost steel and still
-    //belong on the Decoration tab.
     protected virtual bool AutoDetectUpgrade =>
         isInternal
         || !statOffsets.NullOrEmpty()
@@ -121,10 +104,7 @@ public class DecorationDef : Def
         || !givesHediffs.NullOrEmpty();
 
     public bool HasCost => !cost.NullOrEmpty();
-
-    //Whether anything is drawn for this decoration. Internal upgrades never are, and a decoration
-    //that somehow lost its texture path fails safe to drawing nothing rather than building a broken
-    //render node.
+    
     public bool HasVisual => !isInternal && !drawnTextureIconPath.NullOrEmpty();
 
     public float RemovalWork => workAmount * removalWorkFactor;
@@ -190,8 +170,6 @@ public class DecorationDef : Def
 
         if (mustHaveRank != null)
         {
-            //No rank tracker on this pawn (CompRankInfo is only patched onto humans), so every
-            //listed rank counts as missing. Returning here keeps the queries below off a null comp.
             var comp = pawn.GetComp<CompRankInfo>();
             if (comp == null)
             {
@@ -217,7 +195,6 @@ public class DecorationDef : Def
     
         if (mustHaveGene != null)
         {
-            //No gene tracker (Biotech off, or a race without one) means none of them are present.
             if (pawn.genes == null)
             {
                 reason.AppendLine("BEWH.Framework.Customization.MissingGenes".Translate());
@@ -358,12 +335,8 @@ public class DecorationDef : Def
 
         if (isInternal)
         {
-            //Nothing is drawn, so the appearance options cannot mean anything. Forced rather than
-            //only reported as a config error, so a stray XML value can never reach the drawing code.
             colourable = false;
             flipable = false;
-            //Internal upgrades group under their own header in the Upgrades tab unless the content
-            //explicitly picked a category.
             decorationType ??= Core40kDefOf.BEWH_DecoCategory_Internal;
         }
 

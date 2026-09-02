@@ -4,10 +4,6 @@ using Verse;
 
 namespace Core40k;
 
-//Weapon decorations can grant extra tools (a bayonet) and extra verbs (an underbarrel launcher).
-//CompEquippable reads both straight off the ThingDef, so the decorated lists get swapped in here.
-//CompWeaponDecoration returns null when nothing about the weapon changed, which leaves the
-//vanilla lists untouched.
 [HarmonyPatch(typeof(CompEquippable))]
 public static class WeaponDecorationToolsAndVerbs
 {
@@ -27,8 +23,6 @@ public static class WeaponDecorationToolsAndVerbs
             __result = tools;
         }
 
-        //Runs after the decoration swap so the scaled damage lands on the list that is actually
-        //used, and always on a per instance copy rather than the shared def tools.
         var forceWeapon = weapon.GetComp<Comp_ForceWeapon>();
         if (forceWeapon != null)
         {

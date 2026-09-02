@@ -15,13 +15,14 @@ public class CustomizerOnThing
         {
             yield return floatMenu;
         }
-        
-        if (!__instance.def.HasModExtension<DefModExtension_AllowColoringOfThings>())
+
+        var defMod = __instance?.def?.GetModExtension<DefModExtension_AllowColoringOfThings>();
+        if (defMod == null || selPawn == null)
         {
             yield break;
         }
-        //Apparel
-        if (__instance.def.GetModExtension<DefModExtension_AllowColoringOfThings>().allowColoringOfApparel)
+
+        if (defMod.allowColoringOfApparel && selPawn.apparel?.WornApparel != null)
         {
             if (selPawn.apparel.WornApparel.Any(a => CustomizationTabResolver.HasAnyTab(a.def)))
             {
@@ -32,10 +33,11 @@ public class CustomizerOnThing
                 yield return secondColourChangeFloatMenu;
             }
         }
+
         //Equipment
-        if (__instance.def.GetModExtension<DefModExtension_AllowColoringOfThings>().allowColoringOfEquipment)
+        if (defMod.allowColoringOfEquipment && selPawn.equipment?.Primary != null)
         {   
-            if (selPawn.equipment.Primary != null && CustomizationTabResolver.HasAnyTab(selPawn.equipment.Primary.def))
+            if (CustomizationTabResolver.HasAnyTab(selPawn.equipment.Primary.def))
             {
                 var changeFloatMenu = FloatMenuUtility.DecoratePrioritizedTask(new FloatMenuOption("BEWH.Framework.Customization.WeaponDecorationFeature".Translate().CapitalizeFirst(), delegate
                 {

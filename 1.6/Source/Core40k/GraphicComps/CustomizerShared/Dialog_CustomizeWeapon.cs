@@ -25,8 +25,6 @@ public class Dialog_CustomizeWeapon : Window, ICustomizationDialog
     
     private Dictionary<CustomizationTabDef, CustomizerTabDrawer>  tabDrawers = [];
     private Dictionary<CustomizationTabDef, TabRecord>  tabRecords = [];
-    //Was a property materialising a new list from the dictionary on every access, once per
-    //DoWindowContents - i.e. several times per frame for as long as the dialog was open.
     private List<TabRecord> cachedTabRecordsToRead;
     private List<TabRecord> tabRecordsToRead => cachedTabRecordsToRead ??= tabRecords.Values.ToList();
 
@@ -39,17 +37,21 @@ public class Dialog_CustomizeWeapon : Window, ICustomizationDialog
     public Dialog_CustomizeWeapon(Pawn pawn)
     {
         this.pawn = pawn;
-        
-        //Tabs are worked out from the comps the weapon carries and the content that applies to it.
-        //The list is owned by the resolver and already sorted - do not mutate it.
-        foreach (var tabDef in CustomizationTabResolver.TabsFor(pawn.equipment.Primary.def))
+
+        if (weapon == null)
+        {
+            Closed = true;
+            return;
+        }
+
+        foreach (var tabDef in CustomizationTabResolver.TabsFor(weapon.def))
         {
             if (!tabRecords.ContainsKey(tabDef))
             {
                 var tabRecord = new TabRecord(tabDef.label, delegate
                 {
                     curTab = tabDef;
-                }, curTab == tabDef);
+                }, () => curTab == tabDef);
                 tabRecords.Add(tabDef, tabRecord);
             }
             
@@ -67,6 +69,12 @@ public class Dialog_CustomizeWeapon : Window, ICustomizationDialog
 
     public override void DoWindowContents(Rect inRect)
     {
+        if (weapon == null || curTab == null || !tabDrawers.ContainsKey(curTab))
+        {
+            Close();
+            return;
+        }
+
         Text.Font = GameFont.Medium;
         var rect = new Rect(inRect)
         {
@@ -86,7 +94,7 @@ public class Dialog_CustomizeWeapon : Window, ICustomizationDialog
         TabDrawer.DrawTabs(rect3, tabRecordsToRead);
         rect3 = rect3.ContractedBy(18f);
 
-        tabDrawers.TryGetValue(curTab).DrawTab(rect3, pawn, ref apparelColorScrollPosition);
+        tabDrawers[curTab].DrawTab(rect3, pawn, ref apparelColorScrollPosition);
         
         DrawBottomButtons(inRect);
     }

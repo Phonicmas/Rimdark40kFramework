@@ -11,62 +11,64 @@ public class CompAbilityEffect_ResetRanks : CompAbilityEffect
     {
         base.Apply(target, dest);
 
-        target.Pawn.GetComp<CompRankInfo>().ResetRanks(Props.rankCategoryDef);
+        target.Pawn?.GetComp<CompRankInfo>()?.ResetRanks(Props.rankCategoryDef);
+    }
+    
+    private int CanDemoteTier()
+    {
+        if (!Props.ownRankAsTier)
+        {
+            return Props.canDemoteToTierInclusive;
+        }
+
+        var casterComp = parent.pawn?.GetComp<CompRankInfo>();
+        return casterComp?.HighestRank() ?? Props.canDemoteToTierInclusive;
     }
         
     public override bool Valid(LocalTargetInfo target, bool throwMessages = false)
     {
         base.Valid(target, throwMessages);
-        if (!target.Pawn.HasComp<CompRankInfo>())
+        
+        var rankComp = target.Pawn?.GetComp<CompRankInfo>();
+        if (rankComp == null || rankComp.UnlockedRanks.NullOrEmpty())
         {
             return false;
         }
 
-        if (target.Pawn.GetComp<CompRankInfo>().UnlockedRanks.NullOrEmpty())
-        {
-            return false;
-        }
-            
-        if (!target.Pawn.GetComp<CompRankInfo>().HasRankOfCategory(Props.rankCategoryDef))
+        if (!rankComp.HasRankOfCategory(Props.rankCategoryDef))
         {
             return false;
         }
 
-        var canDemoteTier = Props.canDemoteToTierInclusive;
-        if (Props.ownRankAsTier)
-        {
-            canDemoteTier = parent.pawn.GetComp<CompRankInfo>().HighestRank();
-        }
-            
-        return target.Pawn.GetComp<CompRankInfo>().HighestRank() <= canDemoteTier;
+        return rankComp.HighestRank() <= CanDemoteTier();
     }
         
     public override string ExtraLabelMouseAttachment(LocalTargetInfo target)
     {
-        if (!target.Pawn.HasComp<CompRankInfo>())
+        if (target.Pawn is not { } pawn)
         {
-            return "BEWH.Framework.RankSystem.DoesNotHaveRank".Translate(target.Pawn);
-        }
-            
-        if (target.Pawn.GetComp<CompRankInfo>().UnlockedRanks.NullOrEmpty())
-        {
-            return "BEWH.Framework.RankSystem.NoUnlockedRanks".Translate(target.Pawn);
+            return null;
         }
 
-        if (!target.Pawn.GetComp<CompRankInfo>().HasRankOfCategory(Props.rankCategoryDef))
+        var rankComp = pawn.GetComp<CompRankInfo>();
+        if (rankComp == null)
         {
-            return "BEWH.Framework.RankSystem.NoUnlockedRanksOfCategory".Translate(target.Pawn, Props.rankCategoryDef);
+            return "BEWH.Framework.RankSystem.DoesNotHaveRank".Translate(pawn);
         }
             
-        var canDemoteTier = Props.canDemoteToTierInclusive;
-        if (Props.ownRankAsTier)
+        if (rankComp.UnlockedRanks.NullOrEmpty())
         {
-            canDemoteTier = parent.pawn.GetComp<CompRankInfo>().HighestRank();
+            return "BEWH.Framework.RankSystem.NoUnlockedRanks".Translate(pawn);
         }
 
-        if (target.Pawn.GetComp<CompRankInfo>().HighestRank() > canDemoteTier)
+        if (!rankComp.HasRankOfCategory(Props.rankCategoryDef))
         {
-            return "BEWH.Framework.RankSystem.RankTooHigh".Translate(target.Pawn);
+            return "BEWH.Framework.RankSystem.NoUnlockedRanksOfCategory".Translate(pawn, Props.rankCategoryDef);
+        }
+
+        if (rankComp.HighestRank() > CanDemoteTier())
+        {
+            return "BEWH.Framework.RankSystem.RankTooHigh".Translate(pawn);
         }
             
         return null;

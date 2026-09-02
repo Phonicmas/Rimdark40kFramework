@@ -1,20 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using RimWorld.Planet;
 using Verse;
 
 namespace Core40k;
 
 public class GameComponent_RankInfo : GameComponent
 {
-    //Counts rankDef limits, meaning that each time a rank is unlocked that is limited, it is counted here.
     public Dictionary<RankDef, int> rankLimits = new Dictionary<RankDef, int>();
-
-    //False on saves made before rank eligibility messages existed.
+    
     private bool eligibilityBaselineDone;
-
-    //Colonist count cached for the current tick. Never scribed, a fresh count on load is correct.
+    
     private int cachedColonistCount = -1;
     private int cachedColonistCountTick = -1;
 
@@ -31,7 +27,6 @@ public class GameComponent_RankInfo : GameComponent
     public override void StartedNewGame()
     {
         base.StartedNewGame();
-        //A new colony should be told about its starting eligibility, so nothing is seeded.
         eligibilityBaselineDone = true;
     }
 
@@ -44,8 +39,6 @@ public class GameComponent_RankInfo : GameComponent
             return;
         }
 
-        //Save predates the feature. Record what everyone is already eligible for
-        //so the player is not flooded on this one load.
         RankEligibilityNotifier.SeedBaseline();
         eligibilityBaselineDone = true;
     }
@@ -152,9 +145,6 @@ public class GameComponent_RankInfo : GameComponent
         
     private int GetColonistForCounting()
     {
-        //Only cache while the game is actually ticking. Paused, the tick never changes,
-        //so a cached value could outlive a dev mode spawn or kill. Recomputing is free
-        //there because nothing is simulating.
         var tickManager = Find.TickManager;
         var caching = tickManager != null && !tickManager.Paused;
 

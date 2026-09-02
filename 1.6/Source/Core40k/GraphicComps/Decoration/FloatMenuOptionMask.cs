@@ -74,6 +74,11 @@ public class FloatMenuOptionMask : FloatMenuOption
     private HorizontalJustification iconJustification;
     
     private FloatMenuSizeMode sizeMode;
+	
+    public void SetMaskSizeMode(FloatMenuSizeMode mode)
+    {
+        sizeMode = mode;
+    }
     
     private GameFont CurrentFont
     {

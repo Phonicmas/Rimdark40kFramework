@@ -55,8 +55,6 @@ public static class RankUtils
             return;
         }
 
-        //Only player faction pawns occupy limited rank slots on generation.
-        //Recruited and captured pawns are counted by their own patches.
         var countTowardsLimit = pawn.Faction is { IsPlayer: true };
 
         var planned = new List<RankDef>();

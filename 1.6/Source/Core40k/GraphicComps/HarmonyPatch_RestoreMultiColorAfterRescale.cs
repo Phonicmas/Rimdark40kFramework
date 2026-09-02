@@ -54,8 +54,7 @@ public static class RestoreMultiColorAfterRescalePatch
         }
 
         var current = PrimaryGraphicRef(node);
-
-        //Null, or still a graphic we built - nothing has rescaled it.
+        
         if (current == null || MultiColorUtils.IsOwnGraphic(current))
         {
             return;

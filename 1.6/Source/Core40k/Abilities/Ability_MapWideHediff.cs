@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 using RimWorld;
 using RimWorld.Planet;
 using Verse;
@@ -10,21 +9,36 @@ public class Ability_MapWideHediff : VEF.Abilities.Ability
 {
     private void AffectThings()
     {
-        var pawnsToAffect = new List<Pawn>();
-
         var defMod = def.GetModExtension<DefModExtension_MapWideHediff>();
+        var map = CasterPawn?.Map;
+
+        if (defMod?.hediffDef == null || map == null)
+        {
+            return;
+        }
+
+        var pawnsToAffect = new HashSet<Pawn>();
             
         if (defMod.affectEnemies)
         {
-            pawnsToAffect.AddRange(CasterPawn.Map.mapPawns.AllPawnsSpawned.Where(p => p.Faction != Faction.OfPlayer));
+            foreach (var pawn in map.mapPawns.AllPawnsSpawned)
+            {
+                if (pawn.HostileTo(CasterPawn))
+                {
+                    pawnsToAffect.Add(pawn);
+                }
+            }
         }
             
         if (defMod.affectPlayerColonists)
         {
-            pawnsToAffect.AddRange(CasterPawn.Map.mapPawns.FreeColonistsSpawned);
+            foreach (var pawn in map.mapPawns.FreeColonistsSpawned)
+            {
+                pawnsToAffect.Add(pawn);
+            }
         }
             
-        if (!defMod.affectCaster && pawnsToAffect.Contains(CasterPawn))
+        if (!defMod.affectCaster)
         {
             pawnsToAffect.Remove(CasterPawn);
         }

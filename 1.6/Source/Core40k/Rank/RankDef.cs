@@ -70,10 +70,7 @@ public class RankDef : Def
 
     private static Game cachedGameForRankInfo = null;
     private static GameComponent_RankInfo gameCompRankInfo = null;
-
-    //RankDefs outlive a game, so this cache has to be keyed on the game it came from.
-    //A plain ??= would keep handing out the previous save's component after loading a
-    //second save in the same session, and every colony rank limit would read wrong.
+    
     private static GameComponent_RankInfo GameCompRankInfo
     {
         get
@@ -96,9 +93,6 @@ public class RankDef : Def
 
         if (!givesPassions.NullOrEmpty())
         {
-            //Every rank records the passions it is about to change. Gating this on the dictionary
-            //being empty meant only the first passion granting rank ever stored an original, so
-            //later ranks' skills were never restored and climbed a level on every recalculation.
             foreach (var passion in givesPassions)
             {
                 var skill = rankComp.ParentPawn.skills?.GetSkill(passion.skill);
@@ -153,10 +147,7 @@ public class RankDef : Def
             }
         }
     }
-
-    //Boolean only evaluation: no requirement text is built and the first failed
-    //requirement returns immediately. Delegates to the virtual method so subclasses
-    //that override it are still respected.
+    
     public bool RequirementMet(Pawn pawn, CompRankInfo rankComp, RankCategoryDef rankCategoryDef)
     {
         return RequirementMet(null, pawn, rankComp, rankCategoryDef, out _);
@@ -164,8 +155,6 @@ public class RankDef : Def
 
     public virtual bool RequirementMet(StringBuilder stringBuilder, Pawn pawn, CompRankInfo rankComp, RankCategoryDef currentlySelectedRankCategory, out string reason)
     {
-        //A null stringBuilder means the caller only wants the boolean. All text work is
-        //skipped and each block may bail as soon as its requirement has failed.
         var buildText = stringBuilder != null;
         reason = null;
 
@@ -252,9 +241,6 @@ public class RankDef : Def
         }
 
         //Ranks
-        //Hoisted: GetStatValue here is a full StatWorker evaluation (which runs this mod's own
-        //postfix), and it was being recomputed once per rank requirement entry - for every rank of
-        //every unlocked category, for every colonist, on every eligibility sweep.
         var rankRequirementData = currentlySelectedRankCategory.rankDict[this];
         var rankLearningFactor = 1f;
         if (!rankRequirementData.rankRequirements.NullOrEmpty() || !rankRequirementData.rankRequirementsOneAmong.NullOrEmpty())
@@ -318,8 +304,6 @@ public class RankDef : Def
 
             foreach (var rank in currentlySelectedRankCategory.rankDict[this].rankRequirementsOneAmong)
             {
-                //Same adjusted figure the check uses is what gets displayed below. The two used to
-                //disagree: the check divided by the learning factor and the text printed raw days.
                 var requiredDaysAsRank = Math.Round(rank.daysAs / rankLearningFactor);
                 var rankRequirementMet = rankComp.HasRank(rank.rankDef) &&
                                          rankComp.GetDaysAsRank(rank.rankDef) >= requiredDaysAsRank;
@@ -327,8 +311,7 @@ public class RankDef : Def
                 if (rankRequirementMet)
                 {
                     rankAtLeastOneRequirementsMet = true;
-
-                    //Nothing left to prove for this block when no text is wanted.
+                    
                     if (!buildText)
                     {
                         break;
@@ -433,8 +416,6 @@ public class RankDef : Def
         }
 
         //Royal titles
-        //Without Royalty these can never be fulfilled, so they are ignored
-        //instead of soft locking the rank tree for players without the DLC.
         var titlesAllRequirementsMet = true;
         var titlesAtLeastOneRequirementsMet = requiredTitlesOneAmong.NullOrEmpty();
         if (ModsConfig.RoyaltyActive)

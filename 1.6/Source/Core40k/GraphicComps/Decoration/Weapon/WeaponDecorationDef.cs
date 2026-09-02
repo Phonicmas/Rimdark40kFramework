@@ -13,21 +13,12 @@ public class WeaponDecorationDef : DecorationDef
 
     public VerbModifier verbModifier = null;
 
-    //Extra melee attacks this decoration grants to the weapon it sits on, e.g. a bayonet.
-    //Written exactly like ThingDef.tools.
     public List<Tool> tools = null;
-
-    //Extra verbs this decoration grants, e.g. an underbarrel grenade launcher.
-    //Written exactly like ThingDef.verbs. These get their own gizmo, they are never the
-    //weapons primary verb and pawns will not pick them on their own.
+    
     public List<VerbProperties> verbs = null;
 
-    //Tools on the host weapon that get suppressed while this decoration is attached.
-    //Matches against Tool.id or Tool.label, so a bayonet can remove the stock bash.
     public List<string> disablesWeaponTools = null;
 
-    //Verbs on the host weapon that get suppressed while this decoration is attached.
-    //Matches against VerbProperties.label.
     public List<string> disablesWeaponVerbs = null;
 
     public bool disablesAllWeaponTools = false;
@@ -39,7 +30,6 @@ public class WeaponDecorationDef : DecorationDef
 
     public bool ChangesToolsOrVerbs => AddsToolsOrVerbs || disablesAllWeaponTools || !disablesWeaponTools.NullOrEmpty() || !disablesWeaponVerbs.NullOrEmpty();
 
-    //A bayonet is an upgrade even with no stat offsets on it.
     protected override bool AutoDetectUpgrade => base.AutoDetectUpgrade || ChangesToolsOrVerbs || verbModifier != null;
 
     public override void ResolveReferences()
@@ -50,7 +40,6 @@ public class WeaponDecorationDef : DecorationDef
         {
             foreach (var verbProperties in verbs)
             {
-                //The host weapon keeps its own primary verb, a decoration must never take it over.
                 verbProperties.isPrimary = false;
             }
         }
@@ -61,8 +50,6 @@ public class WeaponDecorationDef : DecorationDef
         }
 
         toolIdsResolved = true;
-        //ThingDef hands its own tools plain index ids ("0", "1", ...), so decoration tools are
-        //namespaced with the defName to keep verb load ids unique on whatever weapon they attach to.
         for (var i = 0; i < tools.Count; i++)
         {
             tools[i].id = defName + "_" + (tools[i].id.NullOrEmpty() ? i.ToString() : tools[i].id);

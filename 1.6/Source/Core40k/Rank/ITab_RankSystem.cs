@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using RimWorld;
@@ -175,8 +174,8 @@ public class ITab_RankSystem : ITab
             {
                 compRankInfo.ResetRanks(currentlySelectedRankCategory);
             }
-                
-            if (Widgets.ButtonText(debugUnlockRankRect,"dev:\nunlock rank"))
+            
+            if (Widgets.ButtonText(debugUnlockRankRect,"dev:\nunlock rank") && currentlySelectedRank != null)
             {
                 UnlockRank(currentlySelectedRank.rankDef);
             }
@@ -234,7 +233,6 @@ public class ITab_RankSystem : ITab
         var rectRankInfo = new Rect(rect2);
         rectRankInfo.height -= curY;
         rectRankInfo.y = curY;
-        rectRankInfo.ContractedBy(10f);
 
         Widgets.DrawMenuSection(rectRankInfo);
             
@@ -266,9 +264,7 @@ public class ITab_RankSystem : ITab
         {
             return cachedYAndX.Value;
         }
-
-        //MaxBy throws on an empty sequence, and a category with no ranks would have done that every
-        //frame the tab was open.
+        
         if (currentlySelectedRankCategory == null || availableRanksForCategory.NullOrEmpty())
         {
             cachedYAndX = (0f, 0f, 0f);
@@ -293,38 +289,39 @@ public class ITab_RankSystem : ITab
             return;
         }
         
-        var viewRect = new Rect(rectRankTree);
+        var outRect = rectRankTree.ContractedBy(10f);
 
-        viewRect.ContractedBy(20f);
-            
-        var yStart = viewRect.height / 2 + rankIconRectSize;
-        var xStart = rectRankTree.xMin + rankIconMargin;
-            
         var (yMax, yMin, xMax) = GetYAndX();
-            
-        //Needs correction on larger uiscale
-        var newYMin = (Math.Abs(yMin * rankIconRectSize) + Math.Abs(yMin * rankIconGapSize) + rankIconMargin) * Prefs.UIScale;
-        var newYMax = (Math.Abs(yMax * rankIconRectSize) + Math.Abs(yMax * rankIconGapSize) + rankIconMargin) * Prefs.UIScale;
-        var newXMax = (Math.Abs(xMax * rankPlacementMult) + rankIconMargin * 2) * Prefs.UIScale;
+        
+        var cellsUp = Mathf.Max(0f, -yMin);
+        var cellsDown = Mathf.Max(0f, yMax);
+        var cellsRight = Mathf.Max(0f, xMax);
+        
+        var halfContentHeight = Mathf.Max(cellsUp, cellsDown) * rankPlacementMult + rankIconRectSize / 2f + rankIconMargin;
+        var contentWidth = cellsRight * rankPlacementMult + rankIconRectSize + rankIconMargin * 2f;
 
-        if (newYMin - yStart > 0)
+        const float scrollBarWidth = 16f;
+        var contentHeight = halfContentHeight * 2f;
+
+        var needsHorizontal = contentWidth > outRect.width;
+        var needsVertical = contentHeight > outRect.height - (needsHorizontal ? scrollBarWidth : 0f);
+        if (needsVertical && !needsHorizontal)
         {
-            viewRect.yMin -= Math.Abs(newYMin);
+            needsHorizontal = contentWidth > outRect.width - scrollBarWidth;
         }
-        if (newYMax - yStart > 0)
-        {
-            viewRect.yMax += Math.Abs(newYMax);
-        }
-        if (newXMax > viewRect.width)
-        {
-            viewRect.width = newXMax;
-        }
-            
-        Widgets.BeginScrollView(rectRankTree.ContractedBy(10f), ref scrollPosition, viewRect);
+
+        var viewRect = new Rect(outRect.x, outRect.y,
+            Mathf.Max(contentWidth, outRect.width - (needsVertical ? scrollBarWidth : 0f)),
+            Mathf.Max(contentHeight, outRect.height - (needsHorizontal ? scrollBarWidth : 0f)));
+
+        var xStart = viewRect.x + rankIconMargin;
+
+        var yStart = viewRect.y + viewRect.height / 2f - rankIconRectSize / 2f;
+
+        Widgets.BeginScrollView(outRect, ref scrollPosition, viewRect);
             
         Widgets.DrawRectFast(viewRect, new Color(0f, 0f, 0f, 0.3f));
-            
-        //Find positions for ranks if they're not presents. Will only happen when category is switched
+        
         if (rankPos.NullOrEmpty())
         {
             foreach (var rank in availableRanksForCategory)
@@ -432,18 +429,17 @@ public class ITab_RankSystem : ITab
     private void FillRankInfo(Rect rect)
     {
         var rectRankInfo = new Rect(rect);
-        rectRankInfo.ContractedBy(20f);
+        rectRankInfo = rectRankInfo.ContractedBy(20f);
         
         if (currentlySelectedRank != null)
         {
-            const float listingHeightIncreaseMedium = 30f;
-            const float listingHeightIncreaseSmall = 24f;
-            const float listingHeightIncreaseGap = 12f;
+            var viewRect = new Rect(rectRankInfo.x, rectRankInfo.y, rectRankInfo.width - 16f,
+                Mathf.Max(scrollViewHeightRankInfo, rectRankInfo.height));
             
-            var viewRect = new Rect(rectRankInfo.x, rectRankInfo.y, rectRankInfo.width - 16f, scrollViewHeightRankInfo);
-            scrollViewHeightRankInfo = 0f;
-            
-            var listingRankInfo = new Listing_Standard();
+            var listingRankInfo = new Listing_Standard
+            {
+                maxOneColumn = true,
+            };
             //Start
             Widgets.BeginScrollView(rectRankInfo, ref scrollPosRankInfo, viewRect);
             listingRankInfo.Begin(viewRect);
@@ -453,27 +449,22 @@ public class ITab_RankSystem : ITab
                 
             //Name
             listingRankInfo.Gap(5);
-            scrollViewHeightRankInfo += 5f;
             var rankLabel = currentlySelectedRank.rankDef.label.CapitalizeFirst();
             listingRankInfo.Label(rankLabel);
-            scrollViewHeightRankInfo += listingHeightIncreaseMedium;
                 
             //Show day as rank
             var rankDayAmount = compRankInfo.GetDaysAsRank(currentlySelectedRank.rankDef);
             if (rankDayAmount > 0f)
             {
                 listingRankInfo.Gap(5);
-                scrollViewHeightRankInfo += 5f;
                 Text.Font = GameFont.Small;
                 listingRankInfo.Label("BEWH.Framework.RankSystem.DaysSinceRankGiven".Translate(rankDayAmount));
-                scrollViewHeightRankInfo += listingHeightIncreaseSmall;
                 Text.Font = GameFont.Medium;
             }
             //Unlock button
             else if (currentlySelectedRank.requirementsMet && !AlreadyUnlocked(currentlySelectedRank.rankDef))
             {   
                 listingRankInfo.Gap();
-                scrollViewHeightRankInfo += listingHeightIncreaseGap;
                 listingRankInfo.Indent(viewRect.width * 0.25f);
                 if (listingRankInfo.ButtonText("BEWH.Framework.RankSystem.UnlockRank".Translate(), widthPct: 0.5f))
                 {
@@ -488,7 +479,6 @@ public class ITab_RankSystem : ITab
                         Action();
                     }
                 }
-                scrollViewHeightRankInfo += 30f;
                 listingRankInfo.Outdent(viewRect.width * 0.25f);
             }
                 
@@ -497,47 +487,28 @@ public class ITab_RankSystem : ITab
             
             //Description
             listingRankInfo.Gap();
-            scrollViewHeightRankInfo += listingHeightIncreaseGap;
             Text.Anchor = TextAnchor.UpperLeft;
             listingRankInfo.Label("BEWH.Framework.RankSystem.RankDescription".Translate());
-            scrollViewHeightRankInfo += listingHeightIncreaseMedium;
             Text.Font = GameFont.Small;
             listingRankInfo.Label(currentlySelectedRank.rankDef.description);
-            scrollViewHeightRankInfo += listingHeightIncreaseSmall * (currentlySelectedRank.rankDef.description.Split('\n').Length - 1);
 
             //Requirements
             listingRankInfo.Gap();
-            scrollViewHeightRankInfo += listingHeightIncreaseGap;
             Text.Font = GameFont.Medium;
             listingRankInfo.Label("BEWH.Framework.RankSystem.RankRequirements".Translate());
-            scrollViewHeightRankInfo += listingHeightIncreaseMedium;
             Text.Font = GameFont.Small;
             listingRankInfo.Label(currentlySelectedRank.rankText);
-            scrollViewHeightRankInfo += listingHeightIncreaseSmall * (currentlySelectedRank.rankText.Split('\n').Length - 1);
                 
             //Given stats
             listingRankInfo.Gap();
-            scrollViewHeightRankInfo += listingHeightIncreaseGap;
             Text.Font = GameFont.Medium;
             listingRankInfo.Label("BEWH.Framework.RankSystem.RankBonuses".Translate());
-            scrollViewHeightRankInfo += listingHeightIncreaseMedium;
             Text.Font = GameFont.Small;
-            //Built in BuildRankInfoForCategory now: it allocates five StringBuilders and walks stat
-            //offsets, factors, abilities, hediffs and passions with several Translate calls, and it
-            //was doing all of that on every OnGUI pass.
-            var rankBonusText = currentlySelectedRank.rankBonusText;
-            listingRankInfo.Label(rankBonusText);
-            scrollViewHeightRankInfo += listingHeightIncreaseSmall * (rankBonusText.Split('\n').Length - 1);
+            listingRankInfo.Label(currentlySelectedRank.rankBonusText);
 
-            scrollViewHeightRankInfo *= Prefs.UIScale;
-            
-            if (scrollViewHeightRankInfo < rectRankInfo.height - 4)
-            {
-                scrollViewHeightRankInfo = rectRankInfo.height - 4;
-            }
-            
             //End
             listingRankInfo.Outdent(viewRect.width * 0.02f);
+            scrollViewHeightRankInfo = listingRankInfo.CurHeight + rankIconMargin;
             listingRankInfo.End();
             Widgets.EndScrollView();
         }

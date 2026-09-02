@@ -8,7 +8,6 @@ public class CompMultiColor : CompGraphicParent
 {
     public CompProperties_MultiColor Props => (CompProperties_MultiColor)props; 
     
-    private BodyTypeDef originalBodyType = null;
         
     private Color drawColorOne = Color.white;
     private Color originalColorOne = Color.white;
@@ -212,9 +211,7 @@ public class CompMultiColor : CompGraphicParent
         maskDef = originalMaskDef;
         Notify_GraphicChanged();
     }
-
-    //Deferred changes. Recolouring is charged the flat per item appearance work, so it has to wait
-    //for the pawn to finish at the station like everything else.
+    
     private Color pendingColorOne = Color.white;
     private Color pendingColorTwo = Color.white;
     private Color pendingColorThree = Color.white;
@@ -307,7 +304,6 @@ public class CompMultiColor : CompGraphicParent
         Scribe_Values.Look(ref pendingColorTwo, "pendingColorTwo", Color.white);
         Scribe_Values.Look(ref pendingColorThree, "pendingColorThree", Color.white);
         Scribe_Defs.Look(ref pendingMaskDef, "pendingMaskDef");
-        Scribe_Defs.Look(ref originalBodyType, "originalBodyType");
         
         base.PostExposeData();
         

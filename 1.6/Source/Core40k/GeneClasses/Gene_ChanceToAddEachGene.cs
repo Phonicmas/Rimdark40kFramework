@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Verse;
 
 namespace Core40k;
@@ -73,11 +72,9 @@ public class Gene_ChanceToAddEachGene : Gene
 
     private void SelectGeneToGive()
     {
-        var random = new Random();
-
         foreach (var gene in GeneDefMod.possibleGenesToGive)
         {
-            if (random.Next(0, 100) > gene.Value)
+            if (Rand.RangeInclusive(1, 100) > gene.Value)
             {
                 continue;
             }

@@ -6,28 +6,16 @@ using Verse;
 
 namespace Core40k;
 
-//Implemented by both customization dialogs so the job driver can wait for whichever one it opened
-//without caring which.
 public interface ICustomizationDialog
 {
     bool Closed { get; }
 }
 
-//Totals up what a sitting at the styling station costs, and drives the capture / commit / discard
-//of deferred changes across everything the pawn is wearing and holding.
-//
-//Work model:
-//  adding a decoration or upgrade   workAmount, in full, unlocked or not
-//  removing one                     workAmount * removalWorkFactor
-//  any colour / mask / base texture change   a flat charge, once per item
-//  anything at all changed          never less than the configured minimum
 public static class DecorationWorkUtility
 {
     private static Core40kModSettings modSettings;
     private static Core40kModSettings ModSettings => modSettings ??= LoadedModManager.GetMod<Core40kMod>().GetSettings<Core40kModSettings>();
-
-    //The two switches are independent. Work off does not make upgrades free, cost off does not make
-    //them instant. Single point of truth so the tab, the def tooltip and the comps all agree.
+    
     public static bool WorkEnabled => ModSettings.decorationWorkEnabled;
     public static bool CostEnabled => ModSettings.decorationCostEnabled;
 
@@ -74,8 +62,6 @@ public static class DecorationWorkUtility
         }
     }
 
-    //The appearance charge is per item rather than per comp, so an item whose colour and whose
-    //decoration masks both changed is billed once, not twice.
     private static float AppearanceWork(IEnumerable<CompGraphicParent> comps, bool pending)
     {
         var items = comps
@@ -101,9 +87,6 @@ public static class DecorationWorkUtility
         return Mathf.Max(work, ModSettings.minimumWorkAmount);
     }
 
-    //Price of the live edits, for the confirm dialog. Nothing has been captured yet at this point.
-    //Scoped to the comps the dialog actually edits rather than everything the pawn is carrying:
-    //a comp no tab touched this session has no meaningful live-versus-committed diff to read.
     public static float PreviewWork(List<CompGraphicParent> comps)
     {
         return Total(comps, pending: false);
@@ -119,7 +102,6 @@ public static class DecorationWorkUtility
         return cost;
     }
 
-    //Price of the captured change, for the job.
     public static float PendingWork(Pawn pawn)
     {
         return Total(GraphicComps(pawn), pending: true);
@@ -171,8 +153,6 @@ public static class DecorationWorkUtility
         }
     }
 
-    //Used when there is no work to do at all, so edits (a dev mode draw data tweak, for instance)
-    //still stick the way they always did.
     public static void CommitImmediately(Pawn pawn, List<CompGraphicParent> comps)
     {
         foreach (var comp in comps)
@@ -183,20 +163,13 @@ public static class DecorationWorkUtility
         pawn?.Drawer?.renderer?.SetAllGraphicsDirty();
     }
 
-    //Accept handler shared by both customization dialogs.
-    //Either commits straight away, or prices the change and asks for confirmation before capturing
-    //it for the pawn to work off. `closeDialog` only runs on the paths that actually go through.
     public static void TryAccept(Pawn pawn, IEnumerable<CompGraphicParent> dialogComps, System.Action closeDialog)
     {
-        //Distinct because the Decoration tab and the Upgrades tab hold the same comps, and
-        //capturing one twice would let the second pass wipe the first snapshot.
         var comps = dialogComps.Distinct().ToList();
 
-        //CollectEditCost already returns nothing when cost is switched off, so this is empty then.
         var cost = PreviewCost(comps);
         var work = WorkEnabled ? PreviewWork(comps) : 0f;
 
-        //Nothing to pay and nothing to work off: behave exactly as the dialog always did.
         if (work <= 0f && cost.NullOrEmpty())
         {
             CommitImmediately(pawn, comps);
@@ -210,7 +183,6 @@ public static class DecorationWorkUtility
                 "BEWH.Framework.Customization.MissingResource".Translate(missing.thingDef.LabelCap, missing.count),
                 MessageTypeDefOf.RejectInput,
                 false);
-            //Dialog stays open so the player can drop whatever they cannot pay for.
             return;
         }
 
@@ -226,8 +198,6 @@ public static class DecorationWorkUtility
         {
             CaptureAll(comps);
 
-            //With work switched off there is no job to run the commit, so settle here. Going
-            //through capture/commit rather than CommitImmediately is what records the unlocks.
             if (work <= 0f)
             {
                 SettleFromMap(pawn);
@@ -237,14 +207,11 @@ public static class DecorationWorkUtility
         }));
     }
 
-    //Take the materials straight out of storage and commit. Only for the work-disabled path, where
-    //there is no job and so nothing to haul with.
     public static void SettleFromMap(Pawn pawn)
     {
         Settle(pawn, UpgradeCostUtility.Consume(pawn, PendingCost(pawn)));
     }
 
-    //Spend what the pawn hauled into its inventory, then commit. Used by the job.
     public static void SettleFromInventory(Pawn pawn)
     {
         Settle(pawn, UpgradeCostUtility.ConsumeFromInventory(pawn, PendingCost(pawn)));

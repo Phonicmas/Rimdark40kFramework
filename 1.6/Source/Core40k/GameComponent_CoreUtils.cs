@@ -11,9 +11,6 @@ public class GameComponent_CoreUtils : GameComponent
     
     public Dictionary<Pawn, CachedDecoratives> cachedAlternateTexture = new ();
 
-    //Which texture flag toggles the player has switched on, per pawn and per item. Unlike the two
-    //caches above this is a player decision rather than something rebuilt from the comps, so it is
-    //saved. Tuples cannot be scribed directly, hence the three parallel lists below.
     public Dictionary<(Pawn, Thing), bool> cachedGizmoToggles = new();
 
     private List<Pawn> gizmoTogglePawns;
@@ -27,8 +24,6 @@ public class GameComponent_CoreUtils : GameComponent
     public override void LoadedGame()
     {
         base.LoadedGame();
-        //The voidfaring crew cache is keyed on thing ids, which are reassigned per game. It had no
-        //caller for this and was relying on a "the tick went backwards" heuristic to notice.
         VoidfaringUtility.ClearCache();
     }
 
@@ -52,8 +47,7 @@ public class GameComponent_CoreUtils : GameComponent
             {
                 var pawn = toggle.Key.Item1;
                 var thing = toggle.Key.Item2;
-
-                //A dead pawn or a destroyed item would come back as a null reference on load.
+                
                 if (pawn == null || thing == null || pawn.Destroyed || thing.Destroyed)
                 {
                     continue;
@@ -84,7 +78,6 @@ public class GameComponent_CoreUtils : GameComponent
         var count = Math.Min(gizmoTogglePawns.Count, Math.Min(gizmoToggleThings.Count, gizmoToggleValues.Count));
         for (var i = 0; i < count; i++)
         {
-            //References that failed to resolve come back null.
             if (gizmoTogglePawns[i] == null || gizmoToggleThings[i] == null)
             {
                 continue;

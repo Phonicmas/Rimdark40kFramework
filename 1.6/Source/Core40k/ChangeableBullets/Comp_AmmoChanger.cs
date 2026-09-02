@@ -43,16 +43,18 @@ public class Comp_AmmoChanger : ThingComp
             return cachedExtension;
         }
     }
-
-    //The vanilla value of the verb that is actually being asked about is passed in as the fallback.
-    //Reading it off the def's first verb instead was wrong on any weapon with more than one verb,
-    //and for range it also discarded VerbProperties.AdjustedRange, dropping every other modifier.
+    
     public int ShotsPerBurstOr(int vanilla) => DefModExtensionAmmoChanger?.shotsPerBurst ?? vanilla;
     public float EffectiveRangeOr(float vanilla) => DefModExtensionAmmoChanger?.effectiveRange ?? vanilla;
     public float WarmupTimeOr(float vanilla) => DefModExtensionAmmoChanger?.warmupTime ?? vanilla;
     
     public void LoadNextProjectile()
     {
+        if (nextProjectile == null)
+        {
+            return;
+        }
+
         currentlySelectedProjectile = nextProjectile;
         nextProjectile = null;
         cachedExtensionFor = null;

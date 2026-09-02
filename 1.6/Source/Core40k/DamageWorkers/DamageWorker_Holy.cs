@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using RimWorld;
 using Verse;
 
@@ -20,11 +19,19 @@ public class DamageWorker_Holy : DamageWorker_AddInjury
         }
 
         var defMod = def.GetModExtension<DefModExtension_HolyDamageExtension>();
-
-        if (victimPawn.HostileTo(Faction.OfPlayer))
+        if (defMod == null)
         {
-            var rnd = new Random();
-            var hitAmount = rnd.Next(defMod.minHitAmount, defMod.maxHitAmount);
+            return damageResult;
+        }
+
+        var instigatorFaction = dinfo.Instigator?.Faction;
+        var hostileToWielder = instigatorFaction != null
+            ? victimPawn.HostileTo(instigatorFaction)
+            : victimPawn.HostileTo(Faction.OfPlayer);
+
+        if (hostileToWielder)
+        {
+            var hitAmount = Rand.RangeInclusive(defMod.minHitAmount, defMod.maxHitAmount);
                 
             var damageAmount = dinfo.Amount;
                 
@@ -32,29 +39,39 @@ public class DamageWorker_Holy : DamageWorker_AddInjury
             {
                 if (victimPawn.Dead || victimPawn.Destroyed)
                 {
-                    continue;
+                    break;
                 }
-                    
-                damageResult = base.Apply(new DamageInfo(dinfo.Def, damageAmount, 999f, instigator: dinfo.Instigator), victimPawn);
+                var extraDamage = new DamageInfo(dinfo.Def, damageAmount, 999f, dinfo.Angle,
+                    dinfo.Instigator, null, dinfo.Weapon, dinfo.Category, dinfo.IntendedTarget);
+
+                var hitResult = base.Apply(extraDamage, victimPawn);
+
+                if (hitResult != null)
+                {
+                    damageResult.totalDamageDealt += hitResult.totalDamageDealt;
+                    damageResult.deflected = hitResult.deflected;
+                }
             }
 
-            if (rnd.Next(0, 100) < defMod.chanceToIgnite)
+            if (Rand.RangeInclusive(1, 100) <= defMod.chanceToIgnite)
             {
                 victimPawn.TryAttachFire(1, dinfo.Instigator);
             }
+
+            return damageResult;
         }
-        else
+
+        var injuries = victimPawn.health?.hediffSet?.hediffs?.OfType<Hediff_Injury>().ToList();
+        if (injuries.NullOrEmpty())
         {
-            var healAmount = dinfo.Amount * defMod.healPercentOfDamageToAllies;
+            return damageResult;
+        }
 
-            var injuries = victimPawn.health.hediffSet.hediffs.Where(hediff => hediff is Hediff_Injury).Cast<Hediff_Injury>().ToList();
+        var healAmount = dinfo.Amount * defMod.healPercentOfDamageToAllies / injuries.Count;
 
-            healAmount /= injuries.Count;
-
-            foreach (var injury in injuries)
-            {
-                injury.Heal(healAmount);
-            }
+        foreach (var injury in injuries)
+        {
+            injury.Heal(healAmount);
         }
             
         return damageResult;

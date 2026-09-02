@@ -6,8 +6,6 @@ namespace Core40k;
 
 public class PawnRenderNode_FlagEdit : PawnRenderNode_Apparel
 {
-    //Resolved per access rather than held in a static: a static survives quitting to the menu and
-    //loading a different save, which would leave this reading the previous game's toggles.
     private static GameComponent_CoreUtils CoreUtils => Current.Game?.GetComponent<GameComponent_CoreUtils>();
     
     public PawnRenderNode_FlagEdit(Pawn pawn, PawnRenderNodeProperties props, PawnRenderTree tree) : base(pawn, props, tree)
@@ -64,9 +62,6 @@ public class PawnRenderNode_FlagEdit : PawnRenderNode_Apparel
         return flag.pathExpansion;
     }
 
-    //A missing entry just means the toggle has never been touched on this item, so it reads as off.
-    //Indexing the dictionary directly threw inside graphic resolution, which took the pawn's whole
-    //render tree down with it.
     private bool GizmoToggledOn(Pawn pawn)
     {
         if (pawn == null || apparel == null)

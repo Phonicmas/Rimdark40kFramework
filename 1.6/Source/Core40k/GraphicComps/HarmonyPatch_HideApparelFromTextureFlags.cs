@@ -15,8 +15,6 @@ public class HideApparelFromTextureFlags
             return;
         }
 
-        //This is a getter that gets read a lot, and it used to walk every worn item and every one
-        //of its flags even after it had already found a match.
         foreach (var apparel in wornApparel)
         {
             var defMod = apparel.def.GetModExtension<DefModExtension_TextureFlags>();

@@ -76,7 +76,7 @@ public static class DecorationIndex
             }
         }
 
-        //Alternate base forms deliberately do not honour appliesToAll, matching previous behaviour.
+        //Alternate base forms deliberately do not honour appliesToAll.
         foreach (var alternate in DefDatabase<AlternateBaseFormDef>.AllDefs)
         {
             foreach (var name in alternate.appliesTo)

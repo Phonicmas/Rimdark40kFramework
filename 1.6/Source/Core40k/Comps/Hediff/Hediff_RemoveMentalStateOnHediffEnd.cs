@@ -13,7 +13,7 @@ public class Hediff_RemoveMentalStateOnHediffEnd : HediffComp
             
         if (Props.specificMentalState == null || Props.specificMentalState == Pawn.MentalStateDef)
         {
-            Pawn.mindState.mentalStateHandler.Reset();
+            Pawn.MentalState?.RecoverFromState();
         }
     }
 }

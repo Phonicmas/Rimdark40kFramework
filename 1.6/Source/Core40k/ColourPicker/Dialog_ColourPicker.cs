@@ -184,7 +184,7 @@ namespace ColourPicker
                 var color = tempColour;
                 color.a = Mathf.Clamp(value, 0f, 1f);
                 tempColour = color;
-                NotifyRGBUpdated();
+                NotifyAlphaUpdated();
             }
         }
         public float R
@@ -275,6 +275,20 @@ namespace ColourPicker
             HueField.Value = H;
             SaturationField.Value = S;
             ValueField.Value = V;
+            Alpha1Field.Value = A;
+            Alpha2Field.Value = A;
+            HexField.Value = Hex;
+        }
+
+        //Alpha is dragged, so this runs on every OnGUI pass while the mouse is held. It used to go
+        //through NotifyRGBUpdated, which rebuilds the hue strip (constant) and the alpha strip
+        //(built from the RGB channels only) as well - neither of which alpha can change.
+        public void NotifyAlphaUpdated()
+        {
+            CreateColourPickerBG();
+            CreatePreviewBG( ref _tempPreviewBG, tempColour );
+            SetPickerPositions();
+
             Alpha1Field.Value = A;
             Alpha2Field.Value = A;
             HexField.Value = Hex;
@@ -410,6 +424,38 @@ namespace ColourPicker
             tex = newTex;
         }
 
+        //SwapTexture only ever destroyed the texture it was replacing, so the last set of eight -
+        //three of them 300x300 - was leaked on every close, and the picker opens once per colour
+        //box click.
+        public override void PostClose()
+        {
+            base.PostClose();
+
+            DestroyTexture( ref _colourPickerBG );
+            DestroyTexture( ref _huePickerBG );
+            DestroyTexture( ref _alphaPickerBG );
+            DestroyTexture( ref _tempPreviewBG );
+            DestroyTexture( ref _previewBG );
+            DestroyTexture( ref _pickerAlphaBG );
+            DestroyTexture( ref _sliderAlphaBG );
+            DestroyTexture( ref _previewAlphaBG );
+
+            _pickerPixelBuffer = null;
+        }
+
+        private static void DestroyTexture( ref Texture2D tex )
+        {
+            if ( tex == null )
+            {
+                return;
+            }
+
+            Object.Destroy( tex );
+            tex = null;
+        }
+
+        private Color[] _pickerPixelBuffer;
+
         private void CreateColourPickerBG()
         {
             float S, V;
@@ -420,16 +466,23 @@ namespace ColourPicker
 
             Texture2D tex = new Texture2D( w, h );
 
+            //One SetPixels upload off a reused buffer. This is 90,000 pixels and it used to be
+            //90,000 individual SetPixel calls, re-run on every frame the player dragged a slider.
+            _pickerPixelBuffer ??= new Color[w * h];
+
             // HSV colours, H in slider, S horizontal, V vertical.
-            for ( int x = 0; x < w; x++ )
+            for ( int y = 0; y < h; y++ )
             {
-                for ( int y = 0; y < h; y++ )
+                V = y * hu;
+                int rowStart = y * w;
+                for ( int x = 0; x < w; x++ )
                 {
                     S = x * wu;
-                    V = y * hu;
-                    tex.SetPixel( x, y, HSVAToRGB( H, S, V, A ) );
+                    _pickerPixelBuffer[rowStart + x] = HSVAToRGB( H, S, V, A );
                 }
             }
+
+            tex.SetPixels( _pickerPixelBuffer );
             tex.Apply();
 
             SwapTexture( ref _colourPickerBG, tex );
@@ -437,6 +490,12 @@ namespace ColourPicker
 
         private void CreateHuePickerBG()
         {
+            //The hue strip is the same picture whatever the current colour is, so it is built once.
+            if ( _huePickerBG != null )
+            {
+                return;
+            }
+
             Texture2D tex = new Texture2D( 1, _pickerSize );
 
             var h = _pickerSize;

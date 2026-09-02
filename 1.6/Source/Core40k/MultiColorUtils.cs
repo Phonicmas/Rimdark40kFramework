@@ -51,15 +51,10 @@ public static class MultiColorUtils
 
         if (graphic != null)
         {
-            //GraphicDatabase holds these forever anyway, so tracking them leaks nothing.
             ownGraphics.Add(graphic);
             return graphic;
         }
-
-        //GraphicDatabase.Get swallows exceptions and hands back BaseContent.BadGraphic, which is a
-        //Graphic_Single - so the cast above silently yields null when T is Graphic_Multi. Returning
-        //null from here poisons ApparelGraphicRecord and NREs deep inside the pawn render tree,
-        //so build a graphic of the right type instead.
+        
         Log.ErrorOnce(
             $"[Core40k] Failed to build {typeof(T).Name} at '{path}' (mask '{maskPath ?? "none"}'). Using fallback graphic.",
             ("Core40kGraphicFail" + path + maskPath).GetHashCode());

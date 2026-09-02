@@ -1,5 +1,4 @@
 ﻿using HarmonyLib;
-using System;
 using VEF.Genes;
 using Verse;
 
@@ -43,10 +42,8 @@ public class GenderDistributionPatch
         {
             return;
         }
-            
-        var rand = new Random();
-        var rando = rand.Next(1, 100);
-        pawn.gender = rando <= male ? Gender.Male : Gender.Female;
+
+        pawn.gender = Rand.RangeInclusive(1, 100) <= male ? Gender.Male : Gender.Female;
 
     }
 }

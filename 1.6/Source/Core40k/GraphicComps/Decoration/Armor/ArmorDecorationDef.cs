@@ -13,9 +13,7 @@ public class ExtraDecorationDef : DecorationDef
     public bool decoSizeMatchesThingSize = false;
     
     public List<Rot4> defaultShowRotation = [Rot4.North, Rot4.South, Rot4.East, Rot4.West];
-
-    //CanDrawNow runs per render node, per pawn, per frame. It used to allocate a List<Rot4> on
-    //every call, and run a LINQ projection to build the flipped set from scratch each time.
+    
     [Unsaved]
     private List<Rot4> flippedShowRotation;
 
@@ -52,7 +50,6 @@ public class ExtraDecorationDef : DecorationDef
         {
             return requirementFulfilled;
         }
-        //Same reason as the base checks: no apparel tracker means there is nothing to measure against.
         if (pawn?.apparel == null)
         {
             return requirementFulfilled;

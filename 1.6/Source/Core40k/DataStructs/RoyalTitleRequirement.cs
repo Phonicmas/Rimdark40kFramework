@@ -7,16 +7,11 @@ namespace Core40k;
 public class RoyalTitleRequirement
 {
     public RoyalTitleDef title;
-
-    //Restrict the requirement to a single factions titles. Null means any faction.
+    
     public FactionDef faction;
-
-    //False: this title, or anything more senior, fulfills the requirement.
-    //True: the pawn has to hold exactly this title.
+    
     public bool exactTitle = false;
 
-    //Only look at titles that are currently in effect,
-    //ignoring titles suspended by faction relations.
     public bool inEffectOnly = true;
 
     public bool MetBy(Pawn pawn)

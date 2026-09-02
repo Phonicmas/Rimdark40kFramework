@@ -122,27 +122,29 @@ public class DecorationDrawData : IExposable
 
             return data;
         }
-
+        
         public bool DifferentFromDefault(out string text)
         {
             text = string.Empty;
+            var any = false;
+
             if (offset != Vector3.zero)
             {
                 text += $"<offset>{offset}</offset>";
-                return true;
+                any = true;
             }
             if (layer != 0)
             {
                 text += $"<layer>{layer}</layer>";
-                return true;
+                any = true;
             }
             if (!Mathf.Approximately(scale, 1f))
             {
                 text += $"<scale>{scale}</scale>";
-                return true;
+                any = true;
             }
             
-            return false;
+            return any;
         }
         
         public void ExposeData()

@@ -7,7 +7,6 @@ using Verse.AI;
 
 namespace Core40k;
 
-//One stack, and how much of it to take.
 public readonly struct ThingCountToHaul
 {
     public readonly Thing Thing;
@@ -20,16 +19,6 @@ public readonly struct ThingCountToHaul
     }
 }
 
-//Resource side of fitting decorations and upgrades.
-//
-//Materials come out of colony storage only - loose items lying around the map are ignored, the same
-//way a bill at a workbench ignores them. The pawn hauls what the change needs to the station before
-//starting work, carrying it in its inventory, and it is consumed from there when the work finishes.
-//An interrupted refit therefore costs nothing: the materials are still in the pawn's inventory and
-//get returned to storage by the usual haul behaviour.
-//
-//The price is checked when the change is accepted and again when it is committed, because the
-//resources can disappear in between.
 public static class UpgradeCostUtility
 {
     public static void AddCost(List<ThingDefCountClass> into, List<ThingDefCountClass> cost)
@@ -57,9 +46,6 @@ public static class UpgradeCostUtility
         }
     }
 
-    //Candidates for paying a cost: in colony storage, not forbidden, reachable, nearest first.
-    //Everything that prices, reserves or spends walks this same list, so the confirm dialog, the
-    //haul queue and the final deduction can never disagree about what is available.
     private static List<Thing> Candidates(Pawn pawn, ThingDef thingDef)
     {
         var result = new List<Thing>();
@@ -75,8 +61,7 @@ public static class UpgradeCostUtility
             {
                 continue;
             }
-
-            //Storage only. A stack sitting on the floor outside a stockpile is not colony stock.
+            
             if (!thing.IsInValidStorage())
             {
                 continue;
@@ -93,12 +78,7 @@ public static class UpgradeCostUtility
         result.SortBy(thing => thing.Position.DistanceToSquared(pawn.Position));
         return result;
     }
-
-    //CanAfford is asked once per decoration icon per frame by the customization tab, and again on
-    //every Accept press, and each call walked the map's thing lister and ran a reachability query
-    //per stack. The count is memoised for the frame it was computed in. Only the read-only pricing
-    //path uses this - Consume and FindIngredients walk Candidates directly, and Consume drops the
-    //memo first so nothing can price a refit against stock it has already spent.
+    
     private static Pawn availableCachePawn;
     private static int availableCacheFrame = -1;
     private static readonly Dictionary<ThingDef, int> availableCache = new();
@@ -157,8 +137,6 @@ public static class UpgradeCostUtility
         return CanAfford(pawn, cost, out _);
     }
 
-    //All or nothing. Verifies the whole bill first so a half paid refit can never happen.
-    //Used by the work-disabled path, where there is no job and therefore no hauling.
     public static bool Consume(Pawn pawn, List<ThingDefCountClass> cost)
     {
         if (cost.NullOrEmpty())
@@ -166,7 +144,6 @@ public static class UpgradeCostUtility
             return true;
         }
 
-        //Spending changes what is available, so this never runs off a memoised count.
         InvalidateAvailability();
 
         if (!CanAfford(pawn, cost))
@@ -193,8 +170,6 @@ public static class UpgradeCostUtility
         return true;
     }
 
-    //Which stacks to haul, and how much from each. Null when storage cannot cover the whole bill,
-    //so the caller can bail before the pawn walks anywhere.
     public static List<ThingCountToHaul> FindIngredients(Pawn pawn, List<ThingDefCountClass> cost)
     {
         var result = new List<ThingCountToHaul>();
@@ -227,7 +202,6 @@ public static class UpgradeCostUtility
         return result;
     }
 
-    //Spend what the pawn hauled. All or nothing, same as Consume.
     public static bool ConsumeFromInventory(Pawn pawn, List<ThingDefCountClass> cost)
     {
         if (cost.NullOrEmpty())

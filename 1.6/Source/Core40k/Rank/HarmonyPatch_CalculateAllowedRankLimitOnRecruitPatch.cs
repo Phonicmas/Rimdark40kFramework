@@ -28,8 +28,6 @@ public class CalculateAllowedRankLimitOnRecruit
         var toRemove = new List<RankDef>();
         foreach (var rankDef in comp.UnlockedRanks)
         {
-            //Ranks the pawn already occupies a slot with, for example ranks
-            //granted on generation to a player faction pawn.
             if (comp.LimitCountedRanks.Contains(rankDef))
             {
                 continue;

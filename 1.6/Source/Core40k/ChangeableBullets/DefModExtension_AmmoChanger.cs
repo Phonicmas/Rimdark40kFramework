@@ -11,10 +11,7 @@ public class DefModExtension_AmmoChanger : DefModExtension
     public float? effectiveRange;
     public float? warmupTime;
     public int? shotsPerBurst;
-
-    //Applied to the weapons own stats while this ammo is loaded.
-    //Meant for AccuracyTouch, AccuracyShort, AccuracyMedium and AccuracyLong,
-    //but any weapon stat works.
+    
     public List<StatModifier> statOffsets = [];
     public List<StatModifier> statFactors = [];
 

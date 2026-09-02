@@ -17,8 +17,8 @@ namespace Core40k;
 /// on Verse.PawnRenderNode_Apparel.GraphicsFor, and it returns false - it builds its own
 /// Graphic_Multi through GraphicDatabase with ShaderDatabase.Cutout/CutoutComplex and no mask, then
 /// skips the original. That means ApparelGraphicRecordGetter.TryGetGraphicApparel never runs, and
-/// with it neither ApparelGraphicPatch (CompMultiColor masks, the three-colour shader,
-/// CompAlternateTexture) nor ForceBodyPatch. The visible symptom is armour rendering with flat
+/// with it neither branch of ApparelGraphicPatch (CompMultiColor masks, the three-colour shader,
+/// CompAlternateTexture, forced body types). The visible symptom is armour rendering with flat
 /// colours and no mask whenever FAV is installed.
 ///
 /// The fix is not to fight FAV over the graphic but to stand it down for the apparel Core40k owns:
@@ -110,7 +110,7 @@ public static class FemaleApparelVariantsCompat
             return true;
         }
 
-        //ForceBodyPatch territory - the forcing apparel itself...
+        //ApparelGraphicPatch forced body type branch - the forcing apparel itself...
         if (apparel.def.HasModExtension<DefModExtension_ForcesBodyType>())
         {
             return true;

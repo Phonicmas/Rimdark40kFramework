@@ -51,6 +51,10 @@ namespace ColourPicker
             finally
             {
                 Scribe.loader.FinalizeLoading();
+
+                //Scribe nulls the ref when the node is missing, and a truncated or hand edited
+                //config leaves it null too - which then threw on the next Count/indexer/Add.
+                _colors ??= [];
             }
         }
 

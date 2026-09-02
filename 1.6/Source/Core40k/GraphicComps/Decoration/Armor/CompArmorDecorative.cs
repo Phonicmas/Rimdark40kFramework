@@ -33,7 +33,10 @@ public class CompDecorative : CompDecorativeBase
         //TODO: Remove at later point
         Scribe_Collections.Look(ref originalExtraDecorations, "originalExtraDecorations");
         Scribe_Collections.Look(ref extraDecorations, "extraDecorations");
-        if (Scribe.mode == LoadSaveMode.PostLoadInit && !extraDecorations.NullOrEmpty() && !originalExtraDecorations.NullOrEmpty())
+        //Either one on its own is still worth migrating: an old save where the item was never
+        //opened in the customization dialog has decorations but no originals snapshot, and the "and"
+        //here meant those were silently dropped on the next save.
+        if (Scribe.mode == LoadSaveMode.PostLoadInit && (!extraDecorations.NullOrEmpty() || !originalExtraDecorations.NullOrEmpty()))
         {
             FixDecos();
         }

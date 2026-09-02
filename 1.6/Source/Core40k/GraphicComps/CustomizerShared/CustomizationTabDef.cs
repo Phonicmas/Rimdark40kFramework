@@ -8,16 +8,11 @@ public class CustomizationTabDef : Def
 {
     public Type tabDrawerClass;
     public int sortOrder = 1;
-
-    //Decides which items this tab shows up on. See CustomizationTabWorker.
+    
     public Type workerClass = typeof(CustomizationTabWorker_Comp);
-
-    //Comps the tab's drawer operates on. Matched against subclasses too, so listing
-    //CompDecorativeBase also matches CompDecorative and CompWeaponDecoration.
+    
     public List<Type> requiredComps = [];
 
-    //Needed because the armor and weapon coloring tabs both require only CompMultiColor and are
-    //otherwise indistinguishable. Also keeps weapon tabs out of the apparel dialog.
     public TabTargetKind targetKind = TabTargetKind.Any;
 
     [Unsaved]

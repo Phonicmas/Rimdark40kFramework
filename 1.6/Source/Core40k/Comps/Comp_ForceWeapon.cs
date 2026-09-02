@@ -9,16 +9,11 @@ namespace Core40k;
 public class Comp_ForceWeapon : ThingComp
 {
     public CompProperties_ForceWeapon Props => (CompProperties_ForceWeapon)props;
-
-    //Last scaling stat value seen for the pawn holding this weapon. -1 means nobody is holding it,
-    //which is what makes the bonus go away again on unequip. Scribed so a loaded save keeps the
-    //bonus instead of losing it until the weapon is re-equipped.
+    
     private float statValue = -1f;
 
     public const string ExtraDamageName = "Custom extra damage";
 
-    //Per instance tool copies. Rebuilt when the list handed to us changes (a decoration was added
-    //or removed) or when the stat moved.
     private List<Tool> cachedTools;
     private List<Tool> cachedSourceTools;
     private float cachedStatValue = -1f;
@@ -71,11 +66,7 @@ public class Comp_ForceWeapon : ThingComp
         cachedSourceTools = null;
         cachedStatValue = -1f;
     }
-
-    //Returns a per instance copy of the given tool list carrying the scaled extra damage.
-    //The list handed in is never written to: for an undecorated weapon it is parent.def.tools,
-    //which every other weapon of that def shares, so mutating it leaks one pawn's bonus onto all
-    //of them (including weapons in storage and weapons held by enemies) for the rest of the session.
+    
     public List<Tool> ApplyExtraDamage(List<Tool> sourceTools)
     {
         if (sourceTools.NullOrEmpty() || Props.damageDef == null || Props.capacitiesToApplyOn.NullOrEmpty())

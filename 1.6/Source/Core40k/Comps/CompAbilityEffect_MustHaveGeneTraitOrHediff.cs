@@ -11,15 +11,26 @@ public class CompAbilityEffect_MustHaveGene : CompAbilityEffect
     {
         base.Valid(target, throwMessages);
 
-        return target.Pawn.genes != null && target.Pawn.genes.HasActiveGene(Props.geneDef);
+        if (target.Pawn is not { } pawn)
+        {
+            return false;
+        }
+
+        return pawn.genes != null && pawn.genes.HasActiveGene(Props.geneDef);
     }
         
     public override string ExtraLabelMouseAttachment(LocalTargetInfo target)
     {
         base.ExtraLabelMouseAttachment(target);
-        if (target.Pawn.genes == null || !target.Pawn.genes.HasActiveGene(Props.geneDef))
+
+        if (target.Pawn is not { } pawn)
         {
-            return "BEWH.Framework.Comp.PawnDoesNotHaveRequiredGene".Translate(target.Pawn, Props.geneDef.label);
+            return null;
+        }
+
+        if (pawn.genes == null || !pawn.genes.HasActiveGene(Props.geneDef))
+        {
+            return "BEWH.Framework.Comp.PawnDoesNotHaveRequiredGene".Translate(pawn, Props.geneDef.label);
         }
             
         return null;

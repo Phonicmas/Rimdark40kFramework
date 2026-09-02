@@ -4,7 +4,6 @@ using Verse;
 
 namespace Core40k;
 
-//Thanks to VE for letting me repurpose code from VE ancients
 public class Comp_DeteriorateOutsideBuilding : ThingComp
 {
     public CompProperties_DeteriorateOutsideBuilding Props => props as CompProperties_DeteriorateOutsideBuilding;

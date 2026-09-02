@@ -19,8 +19,7 @@ public class DecorationBaseTab : CustomizerTabDrawer
     protected Dictionary<(DecorationDef, Rot4), string> layerStringBuffers = new();
     
     protected List<CompDecorativeBase> decorativeComps = new ();
-    //Ordered rather than a dictionary: internal upgrades are drawn after everything else, under
-    //their own header.
+
     private Dictionary<CompDecorativeBase, List<KeyValuePair<DecorationTypeDef, List<DecorationDef>>>> decorationByTypeForComp = new();
     private Dictionary<DecorationDef, List<MaskDef>> masksForDeco = new ();
     private List<DecorationPresetDef> decorationPresets = [];
@@ -63,35 +62,35 @@ public class DecorationBaseTab : CustomizerTabDrawer
         selPawn = pawn;
         SetupHook();
         ClearRequirementCaches();
-
+        
+        decorationPresets.Clear();
         var tempPreset = DefDatabase<DecorationPresetDef>.AllDefs.ToList();
         foreach (var decorativeComp in decorativeComps)
         {
-            decorationPresets.AddRangeFast(tempPreset.Where(def => def.appliesTo.Contains(decorativeComp.parent.def)));
+            foreach (var presetDef in tempPreset.Where(def => def.appliesTo.Contains(decorativeComp.parent.def)))
+            {
+                if (!decorationPresets.Contains(presetDef))
+                {
+                    decorationPresets.Add(presetDef);
+                }
+            }
         }
-
-        //Content comes from the startup index rather than a fresh scan of the def database on
-        //every dialog open, and is split by IsUpgrade so each tab only sees its own half.
+        
         var compsWithContent = new List<CompDecorativeBase>();
 
         foreach (var decorativeComp in decorativeComps)
         {
             var decorationsForItem = DecorationIndex.DecorationsFor(decorativeComp.parent.def, ShowUpgrades);
-
-            //Drop decorations the pawn no longer qualifies for BEFORE snapshotting, so that forced
-            //removal is part of the baseline and is not billed as work the player asked for.
+            
             decorativeComp.RemoveInvalidDecorations(pawn);
             decorativeComp.SetOriginals();
 
             if (decorationsForItem.Count == 0)
             {
-                //Nothing for this tab on this item, so it gets no header and no empty section.
                 continue;
             }
 
             var groups = new List<KeyValuePair<DecorationTypeDef, List<DecorationDef>>>();
-            //Non-internal categories first, internal ones after, so the Internal header sits at the
-            //bottom of the tab.
             foreach (var internalGroup in new[] { false, true })
             {
                 var decoGroupings = decorationsForItem
@@ -386,9 +385,6 @@ public class DecorationBaseTab : CustomizerTabDrawer
             drawDataChanged |= DrawPrecisionOptions(rotRect, ref drawData.GetData(rotToDraw), rotToDraw);
         }
         
-        //SetDrawData dirties the item's graphics, which for worn apparel rebuilds the pawn's whole
-        //render tree and re-resolves every decoration graphic. Doing that unconditionally meant it
-        //happened on every single frame the precision panel was open.
         if (drawDataChanged)
         {
             selectedPrecisionComp.SetDrawData(selectedPrecisionDef, drawData);
@@ -434,8 +430,7 @@ public class DecorationBaseTab : CustomizerTabDrawer
         drawSizeStringBuffers = new Dictionary<(DecorationDef, Rot4), string>();
         layerStringBuffers = new Dictionary<(DecorationDef, Rot4), string>();
     }
-
-    //Returns true when the player actually changed something this frame.
+    
     private bool DrawPrecisionOptions(Rect rect, ref DecorationDrawData.RotationalData drawData, Rot4 rot4)
     {
         var changed = false;
@@ -504,8 +499,6 @@ public class DecorationBaseTab : CustomizerTabDrawer
             Text.Anchor = TextAnchor.UpperLeft;
         }
         
-        //GUI.changed is Unity's own "a control was edited this event" flag. Saved and restored so
-        //this does not eat a change another part of the window is watching for.
         var guiChangedBefore = GUI.changed;
         GUI.changed = false;
 
@@ -593,13 +586,9 @@ public class DecorationBaseTab : CustomizerTabDrawer
             var hasReq = HasRequirementsCached(decoDef, out var reason);
             var incompatibleDeco = DecoIsIncompatible(decoDef, decorativeComp);
 
-            //Cost is charged once per item. Anything already paid for, or already selected and so
-            //only being taken off again, is always clickable.
             var unlocked = !DecorationWorkUtility.CostEnabled || decorativeComp.IsUnlocked(decoDef);
             var affordable = unlocked || hasDeco || CanAfford(decoDef);
 
-            //Internal upgrades take up slots on the item. Something already fitted is always
-            //clickable so it can be taken back out.
             var noRoom = decoDef.isInternal && !hasDeco && !decorativeComp.HasRoomFor(decoDef);
 
             var color = Color.white;
@@ -696,8 +685,6 @@ public class DecorationBaseTab : CustomizerTabDrawer
         curY += 34f;
     }
 
-    //UpgradeCostUtility walks the map's thing list, so the answer is memoised for the frame
-    //rather than recomputed per icon.
     private readonly Dictionary<DecorationDef, bool> affordableCache = new();
     private int affordableCacheFrame = -1;
 
@@ -724,10 +711,6 @@ public class DecorationBaseTab : CustomizerTabDrawer
         return result;
     }
 
-    //HasRequirements walks ranks, genes, traits and hediffs and allocates a StringBuilder plus up
-    //to four lists; TooltipDescription builds a whole tooltip string. Both were being run once per
-    //icon on every OnGUI pass. The dialog pauses the game, so nothing they read can change while it
-    //is open except the decorations themselves, which clear the cache on click.
     private readonly Dictionary<DecorationDef, (bool met, string reason)> requirementCache = new();
     private readonly Dictionary<DecorationDef, string> tooltipCache = new();
 
@@ -769,9 +752,6 @@ public class DecorationBaseTab : CustomizerTabDrawer
 
     private bool DecoIsIncompatible(DecorationDef decoDef, CompDecorativeBase decorativeComp)
     {
-        //Read live from the item. This used to consult a field that was never assigned anywhere, so
-        //the base texture branch always won and every decoration flagged incompatible with the base
-        //texture stayed greyed out even while an alternate base form was selected.
         var alternateBaseForm = decorativeComp?.parent.TryGetComp<CompAlternateTexture>()?.CurrentAlternateBaseForm;
 
         //Alternate base form incompatible
@@ -996,7 +976,8 @@ public class DecorationBaseTab : CustomizerTabDrawer
         var armorCol2 = colorComp?.DrawColorTwo ?? decorativeComp.parent.DrawColor;
         var armorCol3 = colorComp?.DrawColorThree ?? decorativeComp.parent.DrawColor;
         
-        if (!decorativeComp.Decorations[decoDef].maskDef.setsNull)
+        //maskDef defaults to null, and DrawColorBoxes guards it explicitly - this did not.
+        if (decorativeComp.Decorations[decoDef].maskDef is not { setsNull: true })
         {
             colorAmount = decorativeComp.Decorations[decoDef].maskDef.colorAmount;
         }

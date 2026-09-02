@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Reflection.Emit;
 using HarmonyLib;
 using RimWorld;
@@ -8,29 +9,68 @@ using Verse;
 
 namespace Core40k;
 
-//Thanks VE Team for letting theirs as a base!
 [HarmonyPatch(typeof(StatWorker), "StatOffsetFromGear")]
 public static class StatWorker_StatOffsetFromGear_Patch
 {
-    public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> codeInstructions)
+    public static List<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> codeInstructions)
     {
-        var patched = false;
         var codes = codeInstructions.ToList();
-        foreach (var code in codes)
+
+        var injectAt = -1;
+
+        for (var i = 0; i < codes.Count && injectAt < 0; i++)
         {
-            yield return code;
-            if (patched || code.opcode != OpCodes.Stloc_0)
+            if (!CallsGetStatOffsetFromList(codes[i]))
             {
                 continue;
             }
 
-            yield return new CodeInstruction(OpCodes.Ldloc_0);
-            yield return new CodeInstruction(OpCodes.Ldarg_0);
-            yield return new CodeInstruction(OpCodes.Ldarg_1);
-            yield return new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(StatWorker_StatOffsetFromGear_Patch), "ChangeValueIfNeeded"));
-            yield return new CodeInstruction(OpCodes.Stloc_0);
-            patched = true;
+            for (var j = i + 1; j < codes.Count; j++)
+            {
+                if (codes[j].opcode != OpCodes.Stloc_0)
+                {
+                    continue;
+                }
+
+                injectAt = j;
+                break;
+            }
         }
+
+        if (injectAt < 0)
+        {
+            injectAt = codes.FindIndex(code => code.opcode == OpCodes.Stloc_0);
+            Log.Warning("[Core40k] Could not anchor the StatOffsetFromGear patch on GetStatOffsetFromList; falling back to the first local store.");
+        }
+
+        if (injectAt < 0)
+        {
+            Log.Error("[Core40k] Could not patch StatWorker.StatOffsetFromGear at all; move speed negation genes will not work.");
+            return codes;
+        }
+
+        codes.InsertRange(injectAt + 1,
+        [
+            new CodeInstruction(OpCodes.Ldloc_0),
+            new CodeInstruction(OpCodes.Ldarg_0),
+            new CodeInstruction(OpCodes.Ldarg_1),
+            new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(StatWorker_StatOffsetFromGear_Patch), nameof(ChangeValueIfNeeded))),
+            new CodeInstruction(OpCodes.Stloc_0),
+        ]);
+
+        return codes;
+    }
+
+    private static bool CallsGetStatOffsetFromList(CodeInstruction code)
+    {
+        if (code.opcode != OpCodes.Call && code.opcode != OpCodes.Callvirt)
+        {
+            return false;
+        }
+
+        return code.operand is MethodInfo method
+               && method.DeclaringType == typeof(StatUtility)
+               && method.Name == "GetStatOffsetFromList";
     }
 
     public static float ChangeValueIfNeeded(float val, Thing gear, StatDef stat)
@@ -46,11 +86,6 @@ public static class StatWorker_StatOffsetFromGear_Patch
 
 public static class IgnoreMovespeedDecreaseUtility
 {
-    //Shared by the numeric override above and by every place that decides whether the gear gets a
-    //line on a stat card, so the two can never disagree about what is being negated.
-    //Mirrors the check StatWorker.StatOffsetFromGear itself starts from (the def's own
-    //equippedStatOffsets) rather than re-deriving the final value, which by then has already been
-    //zeroed by our own transpiler.
     public static bool TryGetNegatingGene(Thing gear, StatDef stat, out Gene negatingGene)
     {
         negatingGene = null;
@@ -73,28 +108,13 @@ public static class IgnoreMovespeedDecreaseUtility
             .FirstOrDefault(gene => gene.def.HasModExtension<DefModExtension_IgnoreMovespeedDecrease>());
         return negatingGene != null;
     }
-
-    //The gene cancelled this gear's move speed penalty and nothing else on the item puts a value
-    //back, so there is nothing honest left to report: the item should not appear under Move Speed
-    //on either stat card at all, not even as a "+0" line.
-    //
-    //Asking StatOffsetFromGear for the final number (rather than assuming zero) keeps a decoration
-    //or upgrade that contributes its own offset visible - GetOffsetFromGearPatch adds those after
-    //the negation, so such an item still has something true to say.
+    
     public static bool HidesStatOffset(Thing gear, StatDef stat)
     {
         return TryGetNegatingGene(gear, stat, out _) && Mathf.Approximately(StatWorker.StatOffsetFromGear(gear, stat), 0f);
     }
 }
 
-//The equipment's own info card. ThingDef.SpecialDisplayStats emits one EquippedStatOffsets row per
-//entry in equippedStatOffsets; when the request carries the actual Thing it re-reads the value
-//through the already-patched StatOffsetFromGear, so the row reads "+0" instead of "-0.2". The row
-//is emitted unconditionally though, so it has to be filtered out here.
-//
-//Gated on req.HasThing, and TryGetNegatingGene additionally requires the item to be worn, so the
-//def-only card - a hyperlink, or the piece lying on the ground - still shows the honest penalty it
-//imposes on anyone without the gene.
 [HarmonyPatch(typeof(ThingDef), nameof(ThingDef.SpecialDisplayStats), typeof(StatRequest))]
 public static class SpecialDisplayStatsHidesNegatedMovespeedPatch
 {

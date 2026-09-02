@@ -51,7 +51,9 @@ public class Dialog_CustomizeApparel : Window, ICustomizationDialog
                     var tabRecord = new TabRecord(tabDef.label, delegate
                     {
                         curTab = tabDef;
-                    }, curTab == tabDef);
+                    //Func<bool> overload: the bool overload captures the value at construction time,
+                //and curTab is only assigned after this loop, so no tab ever rendered as selected.
+                }, () => curTab == tabDef);
                     tabRecords.Add(tabDef, tabRecord);
                 }
 
@@ -70,6 +72,14 @@ public class Dialog_CustomizeApparel : Window, ICustomizationDialog
 
     public override void DoWindowContents(Rect inRect)
     {
+        //curTab is null when the pawn resolved to no tabs at all, and Dictionary.TryGetValue throws
+        //on a null key rather than simply missing.
+        if (curTab == null || !tabDrawers.ContainsKey(curTab))
+        {
+            Close();
+            return;
+        }
+
         Text.Font = GameFont.Medium;
         var rect = new Rect(inRect)
         {
@@ -89,7 +99,7 @@ public class Dialog_CustomizeApparel : Window, ICustomizationDialog
         TabDrawer.DrawTabs(rect3, tabRecordsToRead);
         rect3 = rect3.ContractedBy(18f);
         
-        tabDrawers.TryGetValue(curTab).DrawTab(rect3, pawn, ref apparelColorScrollPosition);
+        tabDrawers[curTab].DrawTab(rect3, pawn, ref apparelColorScrollPosition);
         
         DrawBottomButtons(inRect);
     }

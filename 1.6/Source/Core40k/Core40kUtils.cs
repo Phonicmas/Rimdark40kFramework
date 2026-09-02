@@ -24,14 +24,10 @@ public static class Core40kUtils
     public static readonly Color RequirementMetColour = Color.white;
     public static readonly Color RequirementNotMetColour = new(1f, 0.0f, 0.0f, 0.8f);
 
-    //Background tint for a decoration that has a cost and has not been paid for on this item yet,
-    //but is affordable right now.
     public static readonly Color LockedColour = new(1f, 0.85f, 0.4f, 0.9f);
     
     public static DecorationDef GetDecoDefFromString(string defName)
     {
-        //Silent fail: presets are stored in mod settings and outlive the content that made them,
-        //so a missing decoration is an expected state, not an error worth a red log every draw.
         return DefDatabase<DecorationDef>.GetNamedSilentFail(defName);
     }
         
@@ -57,11 +53,7 @@ public static class Core40kUtils
         ModSettings.RemovePreset(preset);
         return true;
     }
-        
-    //Verb.EffectiveRange, BurstShotCount and WarmupTime are read inside AI targeting and cast
-    //position loops for every pawn on the map. Their postfixes were running two GetComp scans on
-    //every weapon in the game, vanilla ones included. Whether a def can carry either comp is fixed
-    //at load, so it is answered once per def and the scans only happen for weapons that can match.
+    
     private static readonly Dictionary<ThingDef, bool> verbModifyingDefCache = new();
 
     public static bool CanModifyVerbs(ThingWithComps equipment)
@@ -98,16 +90,13 @@ public static class Core40kUtils
         verbModifyingDefCache.Add(equipment.def, result);
         return result;
     }
-
-    //Colour Preview
-    //Every open of a preset float menu allocated a fresh Texture2D per entry and nothing ever
-    //destroyed them, so they accumulated for the session. Memoised by the colours they show.
+    
     private static readonly Dictionary<(Color, Color?, Color?, int), Texture2D> colourPreviewCache = new();
 
     public static Texture2D ThreeColourPreview(Color primaryColor, Color? secondaryColor, Color? tertiaryColor, int colorAmount)
     {
         var cacheKey = (primaryColor, secondaryColor, tertiaryColor, colorAmount);
-        //The null test also covers a texture Unity has destroyed under us.
+        
         if (colourPreviewCache.TryGetValue(cacheKey, out var cachedPreview) && cachedPreview != null)
         {
             return cachedPreview;
@@ -152,9 +141,7 @@ public static class Core40kUtils
     {
         return !b.Except(a).Any();
     }
-
-    //ThingDef.HasComp compares compClass by exact type equality, so it misses subclasses.
-    //Customization tab resolution needs to match e.g. CompDecorative against CompDecorativeBase.
+    
     public static bool HasCompAssignable(this ThingDef def, System.Type compType)
     {
         if (def?.comps == null || compType == null)

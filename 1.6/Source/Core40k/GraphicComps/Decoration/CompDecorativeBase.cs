@@ -18,10 +18,7 @@ public class CompDecorativeBase : CompGraphicParent
     protected Dictionary<DecorationDef, DecorationSettings> decorations = new ();
     
     public Dictionary<DecorationDef, DecorationSettings> Decorations => decorations ??= new Dictionary<DecorationDef, DecorationSettings>();
-
-    //Decorations that have been paid for on this specific item. Lives on the comp instance, so two
-    //identical power armours track their unlocks separately and the unlocks travel with the item
-    //when it is traded, stored or worn by someone else.
+    
     private List<DecorationDef> unlockedDecorations = [];
 
     public bool IsUnlocked(DecorationDef decoration)
@@ -37,16 +34,6 @@ public class CompDecorativeBase : CompGraphicParent
         }
     }
 
-    //Internal slots.
-    //
-    //The capacity is a stat on the ThingDef (BEWH_InternalUpgradeSlots, default 0), so each piece of
-    //armour or weapon decides for itself how much room it has, and an upgrade can grant more by
-    //carrying a statOffset for it.
-    //
-    //Computed straight from statBases plus the decoration offsets rather than through
-    //parent.GetStatValue, because the customization dialog needs a live answer as the player adds
-    //and removes upgrades and the stat system caches. StatPart_DecorationSlots mirrors this so the
-    //info card shows the same number.
     public int TotalInternalSlots
     {
         get
@@ -78,9 +65,7 @@ public class CompDecorativeBase : CompGraphicParent
     {
         return !decoration.isInternal || decoration.slotCost <= FreeInternalSlots;
     }
-
-    //Called whenever the decoration dictionary is replaced wholesale rather than through
-    //Add/RemoveDecoration. CompWeaponDecoration uses it to rebuild tools and verbs.
+    
     protected virtual void OnDecorationsChanged()
     {
     }
@@ -113,8 +98,6 @@ public class CompDecorativeBase : CompGraphicParent
         Notify_GraphicChanged();
     }
 
-    //`free` marks a decoration that came with the item rather than being bought at a station -
-    //comp props, pawnkind generation - so it is unlocked outright and never billed.
     protected virtual void AddDecoration(DecorationDef decoration, DecorationSettings decorationSettings = null, bool setDefaultColors = false, bool free = false)
     {
         if (!decorations.ContainsKey(decoration))
@@ -152,16 +135,20 @@ public class CompDecorativeBase : CompGraphicParent
 
         return true;
     }
+
     public virtual void RemoveAllDecorations()
     {
+        foreach (var decoration in decorations.Keys.ToList())
+        {
+            RemoveDecoration(decoration);
+        }
+
         decorations = new Dictionary<DecorationDef, DecorationSettings>();
         drawDatas = new Dictionary<DecorationDef, DecorationDrawData>();
+        OnDecorationsChanged();
         Notify_GraphicChanged();
     }
 
-    //Scoped version for the "Remove All" button, which lives on both the Decoration tab and the
-    //Upgrades tab and must only clear what the tab it was pressed on is showing.
-    //Goes through RemoveDecoration so abilities and weapon tools are cleaned up properly.
     public virtual void RemoveAllDecorations(bool upgrades)
     {
         var toRemove = decorations.Keys.Where(def => def.IsUpgrade == upgrades).ToList();
@@ -173,17 +160,39 @@ public class CompDecorativeBase : CompGraphicParent
     }
     public virtual void RemoveInvalidDecorations(Pawn pawn)
     {
-        decorations.RemoveAll(pair => !pair.Key.HasRequirements(pawn, out _));
-        drawDatas.RemoveAll(pair => !pair.Key.HasRequirements(pawn, out _));
+        var toRemove = decorations.Keys.Where(def => def == null || !def.HasRequirements(pawn, out _)).ToList();
+        RemoveEach(toRemove);
     }
     public virtual void RemoveDecorationsIncompatibleWithAlternate(AlternateBaseFormDef alternateBaseFormDef)
     {
-        decorations.RemoveAll(pair => 
-            (alternateBaseFormDef == null && pair.Key.isIncompatibleWithBaseTexture) || 
-            (alternateBaseFormDef != null && alternateBaseFormDef.incompatibleDecorations.Contains(pair.Key)));
-        drawDatas.RemoveAll(pair => 
-            (alternateBaseFormDef == null && pair.Key.isIncompatibleWithBaseTexture) || 
-            (alternateBaseFormDef != null && alternateBaseFormDef.incompatibleDecorations.Contains(pair.Key)));
+        var toRemove = decorations.Keys.Where(def =>
+            def == null ||
+            (alternateBaseFormDef == null && def.isIncompatibleWithBaseTexture) ||
+            (alternateBaseFormDef != null && alternateBaseFormDef.incompatibleDecorations.Contains(def))).ToList();
+        RemoveEach(toRemove);
+    }
+
+    private void RemoveEach(List<DecorationDef> toRemove)
+    {
+        if (toRemove.NullOrEmpty())
+        {
+            return;
+        }
+
+        foreach (var decoration in toRemove)
+        {
+            //Null keys can survive in the dictionary when a content mod is removed; drop them too.
+            if (decoration == null)
+            {
+                decorations.Remove(null);
+                drawDatas.Remove(null);
+                continue;
+            }
+
+            RemoveDecoration(decoration);
+        }
+
+        OnDecorationsChanged();
     }
     
     
@@ -232,10 +241,6 @@ public class CompDecorativeBase : CompGraphicParent
         Notify_GraphicChanged();
     }
     
-    //Preset Loads
-    //Locked upgrades in a preset are added like anything else and get billed on accept - loading a
-    //preset onto a fresh piece is a legitimate way to buy a whole loadout in one go. The pawnkind
-    //generation path passes free: true and is never billed.
     public virtual void LoadFromPreset(DecorationPreset preset, bool free = false)
     {
         foreach (var presetPart in preset.decorationPresetParts)
@@ -310,9 +315,6 @@ public class CompDecorativeBase : CompGraphicParent
     }
     public void SetOriginalDecorations()
     {
-        //Deep copy. AddRange would share the DecorationSettings instances with `decorations`, so a
-        //colour or mask change would silently write straight into the "original" state - cancelling
-        //could not undo it, and the pending diff could not see it.
         originalDecorations = new Dictionary<DecorationDef, DecorationSettings>();
         foreach (var decoration in decorations)
         {
@@ -331,7 +333,6 @@ public class CompDecorativeBase : CompGraphicParent
     }
     public void ResetDrawDatas()
     {
-        //Deep copy, for the same reason as SetOriginalDecorations.
         drawDatas = new Dictionary<DecorationDef, DecorationDrawData>();
         foreach (var drawData in originalDrawDatas)
         {
@@ -346,7 +347,7 @@ public class CompDecorativeBase : CompGraphicParent
         var drawData = new DecorationDrawData();
         if (originalDrawDatas.TryGetValue(decoDef, out var data))
         {
-            drawData = data;
+            drawData.CopyFrom(data);
         }
         drawDatas.Add(decoDef, drawData);
         Notify_GraphicChanged();
@@ -521,8 +522,6 @@ public class CompDecorativeBase : CompGraphicParent
         pendingUnlock = added.Where(def => !IsUnlocked(def)).ToList();
         hasPendingChange = true;
 
-        //Roll the live state back. Abilities were handed out or taken away while the dialog was
-        //open, so they have to follow the rollback.
         foreach (var decoration in added)
         {
             RemoveAbilitiesOf(decoration);
@@ -570,8 +569,6 @@ public class CompDecorativeBase : CompGraphicParent
 
     public override void DiscardPending()
     {
-        //The live state was already rolled back when the change was captured, so there is nothing
-        //to undo here.
         ClearPending();
     }
 
@@ -586,8 +583,6 @@ public class CompDecorativeBase : CompGraphicParent
         hasPendingChange = false;
     }
 
-    //Abilities and hediffs granted by a decoration are tied to the item being worn, not just to the
-    //decoration being attached - see Notify_Equipped / Notify_Unequipped.
     private void AddAbilitiesOf(DecorationDef decoration)
     {
         var pawn = Pawn;
@@ -621,8 +616,6 @@ public class CompDecorativeBase : CompGraphicParent
 
         foreach (var hediffDef in decoration.givesHediffs)
         {
-            //One instance per decoration granting it. Already having one from another source is
-            //fine; the removal below only ever takes one back off.
             pawn.health.AddHediff(hediffDef);
         }
     }
@@ -644,7 +637,6 @@ public class CompDecorativeBase : CompGraphicParent
         }
     }
 
-    //Everything currently attached, applied to or taken off the pawn in one go.
     private void ApplyGrantsToPawn(Pawn pawn, bool add)
     {
         if (pawn == null)
@@ -711,11 +703,7 @@ public class CompDecorativeBase : CompGraphicParent
     public override void Notify_Equipped(Pawn pawn)
     {
         RemoveInvalidDecorations(pawn);
-
-        //Abilities and hediffs from attached decorations belong to whoever is wearing the item, so
-        //they are granted here rather than only when a decoration is attached. Previously they were
-        //handed out on attach and never taken back on unequip, so they leaked onto the pawn
-        //permanently.
+        
         ApplyGrantsToPawn(pawn, add: true);
 
         TryAddCachedStat(pawn);
@@ -725,7 +713,6 @@ public class CompDecorativeBase : CompGraphicParent
     }
     public override void Notify_Unequipped(Pawn pawn)
     {
-        //Take back whatever the decorations granted while it was worn.
         ApplyGrantsToPawn(pawn, add: false);
 
         if (pawn != null && CoreUtils != null)
@@ -862,8 +849,6 @@ public class CompDecorativeBase : CompGraphicParent
             base.GetStatsExplanation(stat, sb, whitespace);
             return;
         }
-        //Two builders so internal upgrades get their own heading rather than being listed as if
-        //they were something visible bolted to the outside.
         var external = new StringBuilder();
         var internals = new StringBuilder();
         
@@ -902,8 +887,6 @@ public class CompDecorativeBase : CompGraphicParent
     }
     public override IEnumerable<StatDrawEntry> SpecialDisplayStats()
     {
-        //What is actually fitted, so the item's info card says so rather than only showing the
-        //summed offsets it produces.
         var decorationEntry = FittedEntry(false, "BEWH.Framework.Customization.FittedDecorations", 90);
         if (decorationEntry != null)
         {
@@ -936,13 +919,7 @@ public class CompDecorativeBase : CompGraphicParent
             yield return StatContributionEntry(Core40kDefOf.BEWH_DecorationFactors, pair.Key, pair.Value, true);
         }
     }
-    //One info card entry listing everything fitted of a given kind, with each entry's own
-    //contribution spelled out in the report text.
-    //
-    //Split on isInternal rather than IsUpgrade. IsUpgrade auto-detects from what a decoration does,
-    //so a visible pauldron badge that grants a stat counts as an upgrade and the whole card
-    //collapsed into "Upgrades fitted". The card is answering a different question - what is bolted
-    //on the outside, versus what is fitted inside - and that is exactly isInternal.
+
     private StatDrawEntry FittedEntry(bool internalUpgrades, string labelKey, int displayPriority)
     {
         var fitted = new List<DecorationDef>();
@@ -964,8 +941,6 @@ public class CompDecorativeBase : CompGraphicParent
         var report = new StringBuilder();
         foreach (var decoration in fitted)
         {
-            //No "(internal)" marker: every entry in a given report is now on the same side of
-            //that line already.
             report.AppendLine(decoration.LabelCap);
 
             foreach (var statOffset in decoration.statOffsets)
@@ -991,9 +966,7 @@ public class CompDecorativeBase : CompGraphicParent
             report.ToString().TrimEndNewlines(),
             displayPriority);
     }
-
-    //Keyed by stat, and each contribution keeps the label of the decoration it came from so the
-    //info card report can name what is granting what instead of only showing a lump sum.
+    
     private Dictionary<StatDef, List<StatContribution>> GetStatModifiersFromDecorations(bool factors)
     {
         var dict = new Dictionary<StatDef, List<StatContribution>>();
@@ -1009,9 +982,7 @@ public class CompDecorativeBase : CompGraphicParent
             {
                 continue;
             }
-
-            //Internal upgrades are reported under their own heading, so a hidden component never
-            //reads as if it were something visible on the outside.
+            
             var groupKey = decoration.Key.isInternal
                 ? "BEWH.Framework.StatReport.Internal"
                 : "BEWH.Framework.StatReport.Decoration";
@@ -1064,10 +1035,6 @@ public class CompDecorativeBase : CompGraphicParent
         pendingRemoved ??= [];
         pendingUnlock ??= [];
 
-        //Save compatibility. Anything already fitted to this item was, by definition, either paid
-        //for or came with it, so it is unlocked outright. Without this, an existing save would
-        //suddenly show every decoration the colony is already wearing as locked and unpaid.
-        //Also correct for new saves, where it is a no-op: whatever is applied is already unlocked.
         foreach (var decoration in decorations)
         {
             if (decoration.Key != null)
@@ -1076,22 +1043,14 @@ public class CompDecorativeBase : CompGraphicParent
             }
         }
 
-        //originalDecorations is not scribed, so after a load it is empty until a customization
-        //dialog calls SetOriginals. Anything asking for the live-versus-committed diff before that
-        //(the accept handler walks every comp on the pawn) would otherwise see every fitted
-        //decoration as newly added and bill for it. What is loaded IS the committed state.
         SetOriginalDecorations();
         SetOriginalDrawDatas();
 
-        //A pending change without its snapshot is not recoverable, so drop it rather than
-        //committing something half read.
         if (hasPendingChange && (pendingDecorations == null || pendingDrawDatas == null))
         {
             ClearPending();
         }
 
-        //Pawn, not Wearer: Wearer is only set for apparel, so an equipped weapon was never
-        //registered after a load and contributed none of its stat offsets until it was re-equipped.
         TryAddCachedStat(Pawn);
     }
 }

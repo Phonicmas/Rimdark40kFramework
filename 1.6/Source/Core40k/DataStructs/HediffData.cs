@@ -24,14 +24,17 @@ public class HediffData
     public void LoadDataFromXmlCustom(XmlNode xmlRoot)
     {
         DirectXmlCrossRefLoader.RegisterObjectWantsCrossRef(this, "hediffDef", xmlRoot.Name, null, null, typeof(HediffDef));
-        foreach (var xmlNode in xmlRoot.ChildNodes)
+        foreach (XmlNode xmlNode in xmlRoot.ChildNodes)
         {
-            var childNode = (XmlElement)xmlNode;
+            if (xmlNode is not XmlElement childNode)
+            {
+                continue;
+            }
 
             switch (childNode.Name)
             {
                 case "bodyPartDef":
-                    bodyPartDef = ParseHelper.FromString<BodyPartDef>(childNode.FirstChild.Value);
+                    DirectXmlCrossRefLoader.RegisterObjectWantsCrossRef(this, "bodyPartDef", childNode.InnerText);
                     break;
                 case "initialSeverity":
                     initialSeverity = ParseHelper.FromString<float>(childNode.FirstChild.Value);

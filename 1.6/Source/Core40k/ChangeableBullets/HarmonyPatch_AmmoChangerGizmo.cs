@@ -14,14 +14,16 @@ public static class AmmoChangerGizmo
             yield return gizmo;
         }
 
-        var comp = __instance.parent.GetComp<Comp_AmmoChanger>();
-        if (comp == null)
+        var comp = __instance.parent?.GetComp<Comp_AmmoChanger>();
+        if (comp?.CurrentlySelectedProjectile == null)
         {
             yield break;
         }
+
         var gizmo_AmmoChanger = new Gizmo_AmmoChanger(comp)
         {
-            defaultLabel = comp.Equippable.PrimaryVerb.verbProps.defaultProjectile.label,
+            defaultLabel = comp.Equippable?.PrimaryVerb?.verbProps?.defaultProjectile?.label
+                           ?? comp.CurrentlySelectedProjectile.label,
         };
 
         yield return gizmo_AmmoChanger;

@@ -28,7 +28,9 @@ public static class HideBodyPatch
             return;
         }
         
-        if (!parms.pawn.apparel.AnyApparel || !(parms.pawn.RaceProps?.Humanlike).GetValueOrDefault())
+        //Humanlike check first: apparel is null on races without an apparel tracker, and evaluating
+        //AnyApparel before the check that was meant to protect it NRE'd on every such pawn.
+        if (!(parms.pawn.RaceProps?.Humanlike).GetValueOrDefault() || parms.pawn.apparel == null || !parms.pawn.apparel.AnyApparel)
         {
             //No clothes or not human, dont care
             return;

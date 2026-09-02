@@ -17,17 +17,13 @@ public class Core40kModSettings : ModSettings
     public bool notifyOnRankEligibility = true;
 
     public bool showAllRankCategories = false;
-
-    //Decoration work.
-    //Master switch: when off, changes commit instantly and no resources are taken, exactly as
-    //before this feature existed.
+    
     public bool decorationWorkEnabled = true;
-    //Independent of the work switch: turning work off does not make upgrades free, and turning
-    //cost off does not make them instant.
+
     public bool decorationCostEnabled = true;
-    //Flat work for any colour, mask or base texture change, charged once per item.
+
     public float appearanceChangeWorkAmount = 200f;
-    //Floor for any sitting that changed anything at all.
+
     public float minimumWorkAmount = 50f;
         
     private List<ColourPreset> colourPresets = [];

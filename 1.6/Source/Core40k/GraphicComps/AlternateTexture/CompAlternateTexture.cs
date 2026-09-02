@@ -226,9 +226,7 @@ public class CompAlternateTexture : CompGraphicParent
         currentAlternateBaseForm = originalCurrentAlternateBaseForm;
         Notify_GraphicChanged();
     }
-
-    //Deferred changes. Switching the base texture is charged the same flat appearance work as a
-    //recolour, so it commits together with everything else rather than applying early.
+    
     private AlternateBaseFormDef pendingAlternateBaseForm;
     private bool hasPendingChange;
 
@@ -368,8 +366,7 @@ public class CompAlternateTexture : CompGraphicParent
             yield return StatContributionEntry(Core40kDefOf.BEWH_AlternateTextureFactors, pair.Key, pair.Value, true);
         }
     }
-    //Keyed by stat, each contribution labelled with the alternate form it came from, so the info
-    //card report names the source rather than only showing a lump sum.
+
     private Dictionary<StatDef, List<StatContribution>> GetStatModifiersFromAlternateForm(bool factors)
     {
         var dict = new Dictionary<StatDef, List<StatContribution>>();
@@ -409,8 +406,6 @@ public class CompAlternateTexture : CompGraphicParent
             return;
         }
         
-        //Pawn, not Wearer: Wearer is only set for apparel, so an equipped weapon was never
-        //registered after a load and contributed none of its stat offsets until it was re-equipped.
         TryAddCachedStat(Pawn);
         Notify_GraphicChanged();
     }

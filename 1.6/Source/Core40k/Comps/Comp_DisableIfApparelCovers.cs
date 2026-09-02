@@ -9,6 +9,11 @@ public class Comp_DisableIfApparelCovers : CompAbilityEffect
 
     public override bool GizmoDisabled(out string reason)
     {
+        if (parent.pawn?.apparel == null)
+        {
+            return base.GizmoDisabled(out reason);
+        }
+
         foreach (var apparel in parent.pawn.apparel.WornApparel)
         {
             foreach (var bodyPart in Props.disabledIfCovered)

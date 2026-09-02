@@ -5,14 +5,6 @@ using Verse;
 
 namespace Core40k;
 
-//Lets an attached upgrade grant the item more of a stat that lives on the item itself, rather than
-//on the pawn wearing it. Internal slots are the case this exists for: a chassis expansion upgrade
-//can raise how many internal slots the armour has.
-//
-//The pawn-facing path (StatOffsetFromGear) only covers stats read off the wearer, so without this
-//the item's own stat would show its base value only. CompDecorativeBase.TotalInternalSlots computes
-//the same sum directly, because the UI needs a live answer while the customization dialog is open
-//and the stat system caches; this part is what keeps the info card agreeing with it.
 public class StatPart_DecorationSlots : StatPart
 {
     public override void TransformValue(StatRequest req, ref float val)

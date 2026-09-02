@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using RimWorld;
 using UnityEngine;
 using Verse;
 
@@ -136,7 +137,7 @@ public class AlternateTextureBaseTab : CustomizerTabDrawer
                 
                     if (Widgets.ButtonInvisible(iconRect))
                     {
-                        alternateComp.SetAlternateBaseForm(alternateByType.Value[i], true);
+                        alternateComp.SetAlternateBaseForm(alternateByType.Value[i], alternateComp.parent is Apparel);
                     }
                 
                     if (i != 0 && (i+1) % 4 == 0 || i == alternateByType.Value.Count - 1)

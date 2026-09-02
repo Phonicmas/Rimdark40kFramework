@@ -10,9 +10,9 @@ public class Gene_GiveVEFAbility : Gene
         var comp = pawn.GetComp<CompAbilities>();
         if (comp != null)
         {
-            if (def.HasModExtension<DefModExtension_GivesVEFAbility>())
+            var defModExtension = def.GetModExtension<DefModExtension_GivesVEFAbility>();
+            if (!defModExtension?.abilityDefs.NullOrEmpty() ?? false)
             {
-                var defModExtension = def.GetModExtension<DefModExtension_GivesVEFAbility>();
                 foreach (var abilityDef in defModExtension.abilityDefs)
                 {
                     comp.GiveAbility(abilityDef);
@@ -26,19 +26,16 @@ public class Gene_GiveVEFAbility : Gene
     public override void PostRemove()
     {
         var comp = pawn.GetComp<CompAbilities>();
-        if (comp != null)
+        if (comp?.LearnedAbilities != null)
         {
-            if (def.HasModExtension<DefModExtension_GivesVEFAbility>())
+            var defModExtension = def.GetModExtension<DefModExtension_GivesVEFAbility>();
+            if (!defModExtension?.abilityDefs.NullOrEmpty() ?? false)
             {
-                var defModExtension = def.GetModExtension<DefModExtension_GivesVEFAbility>();
-                for (var i = 0; i < comp.LearnedAbilities.Count; i++)
+                for (var i = comp.LearnedAbilities.Count - 1; i >= 0; i--)
                 {
-                    foreach (var abilityDef in defModExtension.abilityDefs)
+                    if (defModExtension.abilityDefs.Contains(comp.LearnedAbilities[i].def))
                     {
-                        if (comp.LearnedAbilities[i].def == abilityDef)
-                        {
-                            comp.LearnedAbilities.RemoveAt(i);
-                        }
+                        comp.LearnedAbilities.RemoveAt(i);
                     }
                 }
             }

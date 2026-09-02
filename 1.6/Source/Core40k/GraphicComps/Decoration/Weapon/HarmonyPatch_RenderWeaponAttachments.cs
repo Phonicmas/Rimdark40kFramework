@@ -12,8 +12,6 @@ namespace Core40k;
 [HarmonyPatch(typeof(PawnRenderUtility), "DrawEquipmentAiming")]
 public static class RenderWeaponAttachments
 {
-    //One RimWorld altitude layer is 1/26th of a world unit. A decoration layer is a hundredth of
-    //that, so even a deep stack stays well inside the weapon's own altitude band.
     private const float AltitudePerDecorationLayer = 1f / 2600f;
     private const float MaxDecorationLayer = 99f;
 
@@ -23,10 +21,6 @@ public static class RenderWeaponAttachments
     {
         var codeInstructions = instructions.ToList();
 
-        //The injected call reads the mesh and the aim angle out of the method's own locals by slot.
-        //Check the slots still hold what we expect rather than trusting the numbers: a compiler
-        //change or another transpiler reordering them would otherwise produce invalid IL that only
-        //fails once the method is JITed, which is a much worse failure than not drawing.
         if (!LocalsMatch(original))
         {
             Log.Warning("[Core40k] DrawEquipmentAiming no longer has the expected locals, so weapon decorations will not be drawn. The framework needs updating for this RimWorld version.");
@@ -37,8 +31,6 @@ public static class RenderWeaponAttachments
             yield break;
         }
 
-        //Injected ahead of every return so whichever exit the method takes still draws the
-        //attachments. Only one of them runs per call, so this does not draw twice.
         foreach (var codeInstruction in codeInstructions)
         {
             if (codeInstruction.opcode == OpCodes.Ret)
@@ -67,8 +59,6 @@ public static class RenderWeaponAttachments
 
     private static void DrawAttachments(Thing eq, Vector3 drawLoc, float aimAngle, Mesh mesh, float num)
     {
-        //Anything thrown here escapes straight into PawnRenderer and takes the pawn's rendering with
-        //it, every frame. Report it once and let the pawn keep drawing without its decorations.
         try
         {
             DrawAttachmentsInner(eq, drawLoc, mesh, num);
@@ -87,7 +77,6 @@ public static class RenderWeaponAttachments
 
     private static void DrawAttachmentsInner(Thing eq, Vector3 drawLoc, Mesh mesh, float num)
     {
-        //DrawEquipmentAiming can return before the mesh local is assigned.
         if (mesh == null)
         {
             return;
@@ -109,11 +98,6 @@ public static class RenderWeaponAttachments
         if (decoComp == null)
         {
             return;
-        }
-        
-        if (decoComp.recacheGraphics)
-        {
-            decoComp.RecacheDecorationGraphics();
         }
         
         foreach (var decoCompGraphic in decoComp.Graphics)
@@ -154,11 +138,6 @@ public static class RenderWeaponAttachments
             var quaterion = Quaternion.AngleAxis(num, Vector3.up);
             var afterOffsetPos = drawLoc + quaterion * offset;
 
-            //Draw order on RimWorld's top down camera comes from the y component, the same way the
-            //armour side gets it from PawnRenderNodeWorker.LayerFor. The fourth argument of
-            //Graphics.DrawMesh is Unity's layer mask index (0-31), not a sort order: the accumulated
-            //layer used to go there, so it never affected ordering, and any value above 31 made
-            //Unity reject the call outright.
             afterOffsetPos.y += Mathf.Clamp(layer, -MaxDecorationLayer, MaxDecorationLayer) * AltitudePerDecorationLayer;
 
             var size = new Vector3(drawSize.x, 0f, drawSize.y);

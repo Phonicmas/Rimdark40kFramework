@@ -17,9 +17,6 @@ public class ArtificialPartsAffinity
             return;
         }
 
-        //CalculatePartEfficiency runs for every body part on every capacity recalculation, so the
-        //stat is read once and a factor of exactly 1 leaves early. It used to push an impactor into
-        //the health tab regardless, claiming an effect that was not there.
         var factor = diffSet.pawn.GetStatValue(Core40kDefOf.BEWH_ArtificialPartsAffinityFactor);
         if (Mathf.Approximately(factor, 1f))
         {
@@ -37,8 +34,6 @@ public class ArtificialPartsAffinity
         }
         else if (diffSet.IsBionicOrImplant(part.def))
         {
-            //Matched on the part record itself, not its def: on a pawn with one bionic arm, the
-            //other arm's evaluation was being attributed to the wrong hediff.
             var firstBionicOrImplant = Enumerable.FirstOrDefault(diffSet.hediffs, hediff => hediff.Part == part && hediff.def.countsAsAddedPartOrImplant);
             impactors?.Add(new PawnCapacityUtility.CapacityImpactorHediff
             {

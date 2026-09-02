@@ -9,8 +9,6 @@ namespace Core40k;
 [HarmonyPatch(typeof(Thing), "GetGizmos")]
 public class GizmoTextureTogglePatch
 {
-    //Resolved per access rather than held in a static: a static survives quitting to the menu and
-    //loading a different save, which would leave this reading the previous game's toggles.
     private static GameComponent_CoreUtils CoreUtils => Current.Game?.GetComponent<GameComponent_CoreUtils>();
     
     public static IEnumerable<Gizmo> Postfix(IEnumerable<Gizmo> __result, Thing __instance)
@@ -44,9 +42,7 @@ public class GizmoTextureTogglePatch
         }
 
         var pair = (pawn, __instance);
-
-        //Nothing else writes this dictionary, so the entry is created here the first time the item
-        //is selected. Without it the guard below used to bail and the gizmo never appeared at all.
+        
         if (!coreUtils.cachedGizmoToggles.ContainsKey(pair))
         {
             coreUtils.cachedGizmoToggles.Add(pair, false);
@@ -65,8 +61,6 @@ public class GizmoTextureTogglePatch
                 {
                     var current = coreUtils.cachedGizmoToggles.TryGetValue(pair, out var active) && active;
                     coreUtils.cachedGizmoToggles[pair] = !current;
-                    //The flag is baked into the resolved texture path, so the render tree has to be
-                    //rebuilt for the toggle to actually show on the pawn.
                     pawn.Drawer?.renderer?.SetAllGraphicsDirty();
                 },
             };

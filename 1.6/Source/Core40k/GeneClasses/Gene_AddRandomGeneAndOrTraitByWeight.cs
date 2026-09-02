@@ -133,9 +133,7 @@ public class Gene_AddRandomGeneAndOrTraitByWeight : Gene
 
     private void SelectTraitToGive()
     {
-        var random = new Random();
-           
-        if (random.Next(0, 100) > TraitDefMod.chanceToGrantTrait)
+        if (Rand.RangeInclusive(1, 100) > TraitDefMod.chanceToGrantTrait)
         {
             return;
         }
@@ -159,9 +157,9 @@ public class Gene_AddRandomGeneAndOrTraitByWeight : Gene
             chosenTrait = result.traitDef;
             chosenTraitDegree = result.degree;
         }
-        else if (TraitDefMod.amountToGive == TraitDefMod.possibleTraitsToGive.Count)
+        else if (TraitDefMod.amountToGive == possibleTraits.Count)
         {
-            foreach (var traitData in TraitDefMod.possibleTraitsToGive)
+            foreach (var traitData in possibleTraits)
             {
                 if (chosenTraits.ContainsKey(traitData.traitDef))
                 {
@@ -172,9 +170,15 @@ public class Gene_AddRandomGeneAndOrTraitByWeight : Gene
         }
         else
         {
-            for (var i = 0; i < TraitDefMod.amountToGive; i++)
+            var traitsToGive = Math.Min(TraitDefMod.amountToGive, possibleTraits.Count);
+            for (var i = 0; i < traitsToGive; i++)
             {
                 var result = weightedSelection.GetRandomUnique();
+                if (result?.traitDef == null || chosenTraits.ContainsKey(result.traitDef))
+                {
+                    continue;
+                }
+
                 chosenTraits.Add(result.traitDef, result.degree);
             }
         }
@@ -182,9 +186,7 @@ public class Gene_AddRandomGeneAndOrTraitByWeight : Gene
 
     private void SelectGeneToGive()
     {
-        var random = new Random();
-
-        if (random.Next(0, 100) > GeneDefMod.chanceToGrantGene)
+        if (Rand.RangeInclusive(1, 100) > GeneDefMod.chanceToGrantGene)
         {
             return;
         }
@@ -213,15 +215,21 @@ public class Gene_AddRandomGeneAndOrTraitByWeight : Gene
         {
             chosenGene = weightedSelection.GetRandom();
         }
-        else if (amountToGive == GeneDefMod.possibleGenesToGive.Count)
+        else if (amountToGive == possibleGenes.Count)
         {
-            chosenGenes.AddRangeUnique(GeneDefMod.possibleGenesToGive.Select(pair => pair.Key));
+            chosenGenes.AddRangeUnique(possibleGenes.Select(pair => pair.Key));
         }
         else
         {
-            for (var i = 0; i < amountToGive; i++)
+            var genesToGive = Math.Min(amountToGive, possibleGenes.Count);
+            for (var i = 0; i < genesToGive; i++)
             {
                 var result = weightedSelection.GetRandomUnique();
+                if (result == null || chosenGenes.Contains(result))
+                {
+                    continue;
+                }
+
                 chosenGenes.Add(result);
             }
         }

@@ -31,9 +31,12 @@ public class PresetData
     public void LoadDataFromXmlCustom(XmlNode xmlRoot)
     {
         DirectXmlCrossRefLoader.RegisterObjectWantsCrossRef(this, "decorationDef", xmlRoot.Name, null, null, typeof(DecorationDef));
-        foreach (var xmlNode in xmlRoot.ChildNodes)
+        foreach (XmlNode xmlNode in xmlRoot.ChildNodes)
         {
-            var childNode = (XmlElement)xmlNode;
+            if (xmlNode is not XmlElement childNode)
+            {
+                continue;
+            }
 
             switch (childNode.Name)
             {
@@ -50,7 +53,7 @@ public class PresetData
                     colourThree = ParseHelper.FromString<Color>(childNode.FirstChild.Value);
                     break;
                 case "maskDef":
-                    maskDef = ParseHelper.FromString<MaskDef>(childNode.FirstChild.Value);
+                    DirectXmlCrossRefLoader.RegisterObjectWantsCrossRef(this, "maskDef", childNode.InnerText);
                     break;
                 default:
                     Log.Warning("Error in DecorationPresetDef, " + childNode.Name + " not recognized as a valid field.");
