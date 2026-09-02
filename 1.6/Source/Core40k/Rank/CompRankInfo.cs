@@ -137,7 +137,7 @@ public class CompRankInfo : ThingComp
         
         rank.UnlockRank(this);
 
-        if (countTowardsLimit)
+        if (countTowardsLimit && RankUtils.IsLimited(rank))
         {
             GameComponentRankInfo.PawnGainedRank(rank);
             LimitCountedRanks.Add(rank);
@@ -200,8 +200,11 @@ public class CompRankInfo : ThingComp
             var skill = ParentPawn.skills.GetSkill(col.Key);
             if (col.Value.NullOrEmpty())
             {
-                skill.passion = originalPassions[col.Key];
-                originalPassions.Remove(col.Key);
+                if (originalPassions.TryGetValue(col.Key, out var original))
+                {
+                    skill.passion = original;
+                    originalPassions.Remove(col.Key);
+                }
                 continue;
             }
             
@@ -436,6 +439,7 @@ public class CompRankInfo : ThingComp
         if (UnlockedRanks.NullOrEmpty())
         {
             base.GetStatsExplanation(stat, sb, whitespace);
+            return;
         }
         var stringBuilder = new StringBuilder();
         

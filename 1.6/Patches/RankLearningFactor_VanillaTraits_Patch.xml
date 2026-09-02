@@ -1,35 +1,77 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Patch>
 
-    <Operation Class="PatchOperationAdd">
-        <xpath>Defs/TraitDef[defName="FastLearner"]/degreeDatas/li/statOffsets</xpath>
-        <value>
-            <BEWH_RankLearningFactor>0.4</BEWH_RankLearningFactor>
-        </value>
-    </Operation>
+    <!-- Each trait is wrapped twice: the outer conditional skips the whole thing when another mod
+         has removed the trait, and the inner one creates statOffsets when the degree data has none.
+         Without either, an unguarded PatchOperationAdd throws a red error on load. -->
 
-    <Operation Class="PatchOperationAdd">
-        <xpath>Defs/TraitDef[defName="TooSmart"]/degreeDatas/li/statOffsets</xpath>
-        <value>
-            <BEWH_RankLearningFactor>0.25</BEWH_RankLearningFactor>
-        </value>
+    <Operation Class="PatchOperationConditional">
+        <xpath>Defs/TraitDef[defName="FastLearner"]/degreeDatas/li</xpath>
+        <match Class="PatchOperationSequence">
+            <operations>
+                <li Class="PatchOperationConditional">
+                    <xpath>Defs/TraitDef[defName="FastLearner"]/degreeDatas/li/statOffsets</xpath>
+                    <nomatch Class="PatchOperationAdd">
+                        <xpath>Defs/TraitDef[defName="FastLearner"]/degreeDatas/li</xpath>
+                        <value>
+                            <statOffsets />
+                        </value>
+                    </nomatch>
+                </li>
+                <li Class="PatchOperationAdd">
+                    <xpath>Defs/TraitDef[defName="FastLearner"]/degreeDatas/li/statOffsets</xpath>
+                    <value>
+                        <BEWH_RankLearningFactor>0.4</BEWH_RankLearningFactor>
+                    </value>
+                </li>
+            </operations>
+        </match>
     </Operation>
 
     <Operation Class="PatchOperationConditional">
-        <xpath>Defs/TraitDef[defName="GreatMemory"]/degreeDatas/li/statOffsets</xpath>
-        <nomatch Class="PatchOperationAdd">
-            <xpath>Defs/TraitDef[defName="GreatMemory"]/degreeDatas/li</xpath>
-            <value>
-                <statOffsets />
-            </value>
-        </nomatch>
+        <xpath>Defs/TraitDef[defName="TooSmart"]/degreeDatas/li</xpath>
+        <match Class="PatchOperationSequence">
+            <operations>
+                <li Class="PatchOperationConditional">
+                    <xpath>Defs/TraitDef[defName="TooSmart"]/degreeDatas/li/statOffsets</xpath>
+                    <nomatch Class="PatchOperationAdd">
+                        <xpath>Defs/TraitDef[defName="TooSmart"]/degreeDatas/li</xpath>
+                        <value>
+                            <statOffsets />
+                        </value>
+                    </nomatch>
+                </li>
+                <li Class="PatchOperationAdd">
+                    <xpath>Defs/TraitDef[defName="TooSmart"]/degreeDatas/li/statOffsets</xpath>
+                    <value>
+                        <BEWH_RankLearningFactor>0.25</BEWH_RankLearningFactor>
+                    </value>
+                </li>
+            </operations>
+        </match>
     </Operation>
 
-    <Operation Class="PatchOperationAdd">
-        <xpath>Defs/TraitDef[defName="GreatMemory"]/degreeDatas/li/statOffsets</xpath>
-        <value>
-            <BEWH_RankLearningFactor>0.15</BEWH_RankLearningFactor>
-        </value>
+    <Operation Class="PatchOperationConditional">
+        <xpath>Defs/TraitDef[defName="GreatMemory"]/degreeDatas/li</xpath>
+        <match Class="PatchOperationSequence">
+            <operations>
+                <li Class="PatchOperationConditional">
+                    <xpath>Defs/TraitDef[defName="GreatMemory"]/degreeDatas/li/statOffsets</xpath>
+                    <nomatch Class="PatchOperationAdd">
+                        <xpath>Defs/TraitDef[defName="GreatMemory"]/degreeDatas/li</xpath>
+                        <value>
+                            <statOffsets />
+                        </value>
+                    </nomatch>
+                </li>
+                <li Class="PatchOperationAdd">
+                    <xpath>Defs/TraitDef[defName="GreatMemory"]/degreeDatas/li/statOffsets</xpath>
+                    <value>
+                        <BEWH_RankLearningFactor>0.15</BEWH_RankLearningFactor>
+                    </value>
+                </li>
+            </operations>
+        </match>
     </Operation>
 
 </Patch>

@@ -29,7 +29,7 @@ public class UnslaveablePatch
                 continue;
             }
                     
-            Find.LetterStack.ReceiveLetter("BEWH.Framework.Unbreakable.CannotRecruitLetter".Translate(), "BEWH.Framework.Unbreakable.CannotEnslaveMessage".Translate(recipient.Named("PAWN"), initiator.Named("PAWN")), LetterDefOf.NeutralEvent);
+            Find.LetterStack.ReceiveLetter("BEWH.Framework.Unbreakable.CannotEnslaveLetter".Translate(), "BEWH.Framework.Unbreakable.CannotEnslaveMessage".Translate(recipient.Named("PAWN"), initiator.Named("PAWN")), LetterDefOf.NeutralEvent);
             return false;
         }
         return true;

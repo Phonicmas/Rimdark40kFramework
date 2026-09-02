@@ -1,4 +1,5 @@
-﻿using Verse;
+﻿using RimWorld;
+using Verse;
 
 namespace Core40k;
 
@@ -28,10 +29,26 @@ public class Hediff_SendLetterAtSeverity : HediffComp
             return;
         }
 
-        var letter = LetterMaker.MakeLetter(Props.letter, Props.message, Props.letterDef, Pawn);
+        if (Props.onlyForPlayerPawns && !IsPlayerRelevant(Pawn))
+        {
+            return;
+        }
+
+        var letterDef = Props.letterDef ?? LetterDefOf.NeutralEvent;
+        var letter = LetterMaker.MakeLetter(Props.letter, Props.message, letterDef, Pawn);
 
         Find.LetterStack.ReceiveLetter(letter);
         hasSentLetter = true;
+    }
+
+    private static bool IsPlayerRelevant(Pawn pawn)
+    {
+        if (pawn == null || !pawn.Spawned)
+        {
+            return false;
+        }
+
+        return pawn.Faction == Faction.OfPlayer || pawn.IsPrisonerOfColony || pawn.IsSlaveOfColony;
     }
 
     public override void CompExposeData()

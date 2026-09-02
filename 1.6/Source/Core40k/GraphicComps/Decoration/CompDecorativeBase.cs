@@ -278,7 +278,7 @@ public class CompDecorativeBase : CompGraphicParent
                 Flipped = presetPart.flipped,
                 Color = presetPart.colour ?? (presetPart.decorationDef.useParentColourAsDefault ? multiColComp?.DrawColor ?? parent.DrawColor : Color.white),
                 ColorTwo = presetPart.colourTwo ?? (presetPart.decorationDef.useParentColourAsDefault ? multiColComp?.DrawColorTwo ?? parent.DrawColorTwo : Color.white),
-                ColorThree = presetPart.colourThree ?? (presetPart.decorationDef.useParentColourAsDefault ? multiColComp?.DrawColorThree ?? parent.DrawColorTwo : Color.white),
+                ColorThree = presetPart.colourThree ?? (presetPart.decorationDef.useParentColourAsDefault ? multiColComp?.DrawColorThree ?? Color.white : Color.white),
                 maskDef = presetPart.maskDef ?? Core40kDefOf.BEWH_DefaultMask,
             };
             

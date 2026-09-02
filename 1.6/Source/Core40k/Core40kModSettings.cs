@@ -111,7 +111,7 @@ public class Core40kModSettings : ModSettings
         Scribe_Values.Look(ref decorationWorkEnabled, "decorationWorkEnabled", true);
         Scribe_Values.Look(ref decorationCostEnabled, "decorationCostEnabled", true);
         Scribe_Values.Look(ref appearanceChangeWorkAmount, "appearanceChangeWorkAmount", 200f);
-        Scribe_Values.Look(ref minimumWorkAmount, "minimumWorkAmount", 200f);
+        Scribe_Values.Look(ref minimumWorkAmount, "minimumWorkAmount", 50f);
         Scribe_Collections.Look(ref colourPresets, "colourPresets");
         Scribe_Collections.Look(ref extraDecorationPresets, "extraDecorationPresets");
 

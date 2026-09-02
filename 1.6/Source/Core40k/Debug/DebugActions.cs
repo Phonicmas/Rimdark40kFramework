@@ -1,4 +1,5 @@
 ﻿using LudeonTK;
+using RimWorld;
 using Verse;
 
 namespace Core40k;
@@ -39,7 +40,10 @@ public static class DebugActions
         {
             return;
         }
-
-        p.GetComp<CompRankInfo>().ResetRanks(null);
+        
+        Find.WindowStack.Add(Dialog_MessageBox.CreateConfirmation(
+            "Reset every rank on " + p.LabelShortCap + "?",
+            () => p.GetComp<CompRankInfo>().ResetRanks(null),
+            destructive: true));
     }
 }

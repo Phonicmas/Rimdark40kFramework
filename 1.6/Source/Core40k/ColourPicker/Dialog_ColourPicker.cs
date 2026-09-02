@@ -118,8 +118,8 @@ namespace ColourPicker
             ValueField = TextField<float>.Float01(V, "Value", v => V = v);
             Alpha1Field = TextField<float>.Float01(A, "Alpha1", a => A = a);
             RedField = TextField<float>.Float01( color.r, "Red", r => R = r );
-            GreenField = TextField<float>.Float01( color.r, "Green", g => G = g );
-            BlueField = TextField<float>.Float01( color.r, "Blue", b => B = b );
+            GreenField = TextField<float>.Float01( color.g, "Green", g => G = g );
+            BlueField = TextField<float>.Float01( color.b, "Blue", b => B = b );
             Alpha2Field = TextField<float>.Float01(A, "Alpha2", a => A = a);
             HexField = TextField<string>.Hex( Hex, "Hex", hex => Hex = hex );
 

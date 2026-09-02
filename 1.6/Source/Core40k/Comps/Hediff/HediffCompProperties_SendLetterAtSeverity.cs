@@ -14,6 +14,8 @@ public class HediffCompProperties_SendLetterAtSeverity : HediffCompProperties
 
     public LetterDef letterDef = null;
 
+    public bool onlyForPlayerPawns = true;
+
     public HediffCompProperties_SendLetterAtSeverity()
     {
         compClass = typeof(Hediff_SendLetterAtSeverity);

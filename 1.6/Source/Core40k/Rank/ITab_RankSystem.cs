@@ -30,8 +30,6 @@ public class ITab_RankSystem : ITab
     private Core40kModSettings modSettings;
     private Core40kModSettings ModSettings => modSettings ??= LoadedModManager.GetMod<Core40kMod>().GetSettings<Core40kModSettings>();
         
-    private GameComponent_RankInfo gameCompRankInfo;
-        
     private static readonly CachedTexture LockedIcon = new CachedTexture("UI/Misc/LockedIcon");
         
     const float rankIconRectSize = 40f;
@@ -87,7 +85,6 @@ public class ITab_RankSystem : ITab
         }
         rankPos.Clear();
         cachedYAndX = null;
-        gameCompRankInfo ??= Current.Game.GetComponent<GameComponent_RankInfo>();
         UpdateRankCategoryList();
         if (compRankInfo.LastOpenedRankCategory != null && compRankInfo.LastOpenedRankCategory.RankCategoryUnlockedFor(SelPawn))
         {
@@ -95,11 +92,7 @@ public class ITab_RankSystem : ITab
         }
         else
         {
-            currentlySelectedRankCategory = null;
-            foreach (var availableCategory in availableCategories.Where(availableCategory => availableCategory.RankCategoryUnlockedFor(pawn)))
-            {
-                currentlySelectedRankCategory = availableCategory;
-            }
+            currentlySelectedRankCategory = availableCategories.FirstOrDefault(availableCategory => availableCategory.RankCategoryUnlockedFor(pawn));
         }
         GetRanksForCategory();
         if (!compRankInfo.UnlockedRanks.NullOrEmpty())

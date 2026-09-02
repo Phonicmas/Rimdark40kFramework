@@ -24,7 +24,7 @@ public class RankData
         DirectXmlCrossRefLoader.RegisterObjectWantsCrossRef(this, "rankDef", xmlRoot.Name, null, null, typeof(RankDef));
         if (xmlRoot.FirstChild != null)
         {
-            daysAs = ParseHelper.FromString<int>(xmlRoot.FirstChild.Value);
+            daysAs = ParseHelper.FromString<float>(xmlRoot.FirstChild.Value);
         }
     }
 }

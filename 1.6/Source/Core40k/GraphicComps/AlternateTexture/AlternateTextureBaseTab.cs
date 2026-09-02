@@ -12,10 +12,9 @@ public class AlternateTextureBaseTab : CustomizerTabDrawer
     public static Core40kModSettings ModSettings => modSettings ??= LoadedModManager.GetMod<Core40kMod>().GetSettings<Core40kModSettings>();
 
     protected List<CompAlternateTexture> alternateComps = [];
-    private Dictionary<CompAlternateTexture, List<AlternateBaseFormDef>> alternateBaseFormDefs = [];
     private Dictionary<CompAlternateTexture, Dictionary<DecorationTypeDef, List<AlternateBaseFormDef>>> alternateBaseFormByTypeForComp = new();//TODO: add type stuff for alternate to split them
-
-    private static float listScrollViewHeight = 0f;
+    
+    private float listScrollViewHeight;
     protected float curY;
     
     public override void Setup(Pawn pawn)
@@ -51,10 +50,6 @@ public class AlternateTextureBaseTab : CustomizerTabDrawer
             alternateBaseFormByTypeForComp.Add(alternateComp, tempDictionary);
             compsWithContent.Add(alternateComp);
 
-            var toAppendToApparel = new List<AlternateBaseFormDef> { null };
-            toAppendToApparel.AddRange(alternateBaseFormForApparel);
-
-            alternateBaseFormDefs.Add(alternateComp, toAppendToApparel);
         }
 
         alternateComps = compsWithContent;
@@ -139,8 +134,8 @@ public class AlternateTextureBaseTab : CustomizerTabDrawer
                     {
                         alternateComp.SetAlternateBaseForm(alternateByType.Value[i], alternateComp.parent is Apparel);
                     }
-                
-                    if (i != 0 && (i+1) % 4 == 0 || i == alternateByType.Value.Count - 1)
+
+                    if (i != 0 && (i + 1) % ModSettings.decorationsPerRow == 0 || i == alternateByType.Value.Count - 1)
                     {
                         curY += iconSize.x;
                         curX = viewRect.x;

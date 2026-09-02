@@ -29,10 +29,8 @@ public class PawnRenderNode_AttachmentExtraDecoration : PawnRenderNode
             texPath = BodyTypeUtils.BodyTypedPath(texPath, bodyType, gender);
         }
 
-        var additionalMaskPath = string.Empty;
         if (maskPath != string.Empty)
         {
-            maskPath += additionalMaskPath;
             if (useBodyType)
             {
                 maskPath = BodyTypeUtils.BodyTypedMaskPath(maskPath, bodyType, gender) ?? maskPath;
@@ -40,7 +38,7 @@ public class PawnRenderNode_AttachmentExtraDecoration : PawnRenderNode
         }
         else
         {
-            maskPath = propsMulti.texPath + additionalMaskPath;
+            maskPath = propsMulti.texPath;
             if (useBodyType)
             {
                 maskPath = BodyTypeUtils.BodyTypedMaskPath(maskPath, bodyType, gender) ?? maskPath;

@@ -77,7 +77,6 @@
     <Compile Include="ChangeableBullets\HarmonyPatch_IncreaseRangeFromVarious.cs" />
     <Compile Include="ChangeableBullets\HarmonyPatch_IncreaseWarmupTimeFromVarious.cs" />
     <Compile Include="ChangeableBullets\JobDriver_ChangeAmmo.cs" />
-    <Compile Include="ChangeableBullets\Verb_ShootChangeableBullets.cs" />
     <Compile Include="ColourPicker\Dialog_ColourPicker.cs" />
     <Compile Include="ColourPicker\RecentColours.cs" />
     <Compile Include="ColourPicker\TextField.cs" />
@@ -112,7 +111,6 @@
     <Compile Include="Core40kModSettings.cs" />
     <Compile Include="Core40kUtils.cs" />
     <Compile Include="DamageWorkers\DamageWorker_Holy.cs" />
-    <Compile Include="DataStructs\CachedGraphicRenderInfo.cs" />
     <Compile Include="DataStructs\HediffData.cs" />
     <Compile Include="DataStructs\NamedExtraDamage.cs" />
     <Compile Include="DataStructs\PresetData.cs" />
@@ -155,7 +153,6 @@
     <Compile Include="GraphicComps\CustomizerShared\Dialog_CustomizeWeapon.cs" />
     <Compile Include="GraphicComps\CustomizerShared\HarmonyPatch_CustomizerOnThing.cs" />
     <Compile Include="GraphicComps\CustomizerShared\MaskDef.cs" />
-    <Compile Include="GraphicComps\CustomizerShared\SharedDecoTab.cs" />
     <Compile Include="GraphicComps\Decoration\Armor\ArmorDecorationDef.cs" />
     <Compile Include="GraphicComps\Decoration\Armor\ArmorDecorationTab.cs" />
     <Compile Include="GraphicComps\Decoration\Armor\CompArmorDecorative.cs" />
@@ -163,9 +160,7 @@
     <Compile Include="GraphicComps\Decoration\Armor\DecorationColourPresetDef.cs" />
     <Compile Include="GraphicComps\Decoration\Armor\Dialog_ConfirmDecorationPresetOverride.cs" />
     <Compile Include="GraphicComps\Decoration\Armor\Dialog_EditExtraDecorationPresets.cs" />
-    <Compile Include="GraphicComps\Decoration\Armor\Dialog_ExtraDecorationMaskSelection.cs" />
     <Compile Include="GraphicComps\Decoration\Armor\DynamicPawnRenderNodeSetup_DecorativeAddons.cs" />
-    <Compile Include="GraphicComps\Decoration\Armor\HarmonyPatch_OutfitStandExtraDecos.cs" />
     <Compile Include="GraphicComps\Decoration\Armor\PawnRenderNodeWorker_AttachmentBackpack.cs" />
     <Compile Include="GraphicComps\Decoration\Armor\PawnRenderNodeWorker_AttachmentExtraDecoration.cs" />
     <Compile Include="GraphicComps\Decoration\Armor\PawnRenderNodeWorker_AttachmentExtraDecorationBody.cs" />

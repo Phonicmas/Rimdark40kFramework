@@ -134,13 +134,8 @@ public class PawnRenderNode_FlagEdit : PawnRenderNode_Apparel
             yield break;
         }
         
-        var flags = defMod.textureFlags.Where(t=> t.shouldAddInsteadOfSwap).OrderBy(t => t.order);
-
-        foreach (var flag in flags)
-        {
-            //TODO: Make graphic for added stuff and yield return;
-        }
-        
+        //TODO: build and yield a graphic per shouldAddInsteadOfSwap flag. The loop that used to
+        //stand here iterated defMod.textureFlags on every resolve purely to do nothing.
         yield return GraphicFor(pawn);
     }
 }
