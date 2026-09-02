@@ -15,13 +15,21 @@ public static class IncreaseShotBurstCountFromVarious
             return;
         }
 
-        var ammoChangerComp = __instance.EquipmentSource?.GetComp<Comp_AmmoChanger>();
+        var equipment = __instance.EquipmentSource;
+        if (!Core40kUtils.CanModifyVerbs(equipment))
+        {
+            return;
+        }
+
+        var ammoChangerComp = equipment.GetComp<Comp_AmmoChanger>();
         if (ammoChangerComp != null)
         {
             __result = ammoChangerComp.ShotsPerBurstOr(__result);
         }
-        var weaponDecoComp = __instance.EquipmentSource?.GetComp<CompWeaponDecoration>();
-        if (weaponDecoComp?.Decorations != null)
+        var weaponDecoComp = equipment.GetComp<CompWeaponDecoration>();
+        //Decorations lazily creates the dictionary, so the old null test was never false and every
+        //decorated weapon allocated one on the first read.
+        if (weaponDecoComp?.Decorations is { Count: > 0 })
         {
             foreach (var weaponDecoration in weaponDecoComp.Decorations)
             {

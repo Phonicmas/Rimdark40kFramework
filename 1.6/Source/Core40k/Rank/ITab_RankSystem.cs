@@ -87,6 +87,7 @@ public class ITab_RankSystem : ITab
             return;
         }
         rankPos.Clear();
+        cachedYAndX = null;
         gameCompRankInfo ??= Current.Game.GetComponent<GameComponent_RankInfo>();
         UpdateRankCategoryList();
         if (compRankInfo.LastOpenedRankCategory != null && compRankInfo.LastOpenedRankCategory.RankCategoryUnlockedFor(SelPawn))
@@ -255,21 +256,39 @@ public class ITab_RankSystem : ITab
         Text.Anchor = anchor;
     }
 
+    //Cached alongside rankPos, which is cleared on the same events. This allocated a list and ran
+    //three MaxBy/MinBy passes with dictionary lookups on every frame the tab was open.
+    private (float yMax, float yMin, float xMax)? cachedYAndX;
+
     private (float yMax, float yMin, float xMax) GetYAndX()
     {
+        if (cachedYAndX.HasValue)
+        {
+            return cachedYAndX.Value;
+        }
+
+        //MaxBy throws on an empty sequence, and a category with no ranks would have done that every
+        //frame the tab was open.
+        if (currentlySelectedRankCategory == null || availableRanksForCategory.NullOrEmpty())
+        {
+            cachedYAndX = (0f, 0f, 0f);
+            return cachedYAndX.Value;
+        }
+
         var ranks = availableRanksForCategory.Select(rank => rank.rankDef).ToList();
             
         var xMax = ranks.MaxBy(rank => currentlySelectedRankCategory.rankDict[rank].displayPosition.x);
         var yMax = ranks.MaxBy(rank => currentlySelectedRankCategory.rankDict[rank].displayPosition.y);
         var yMin = ranks.MinBy(rank => currentlySelectedRankCategory.rankDict[rank].displayPosition.y);
-                
-        return (currentlySelectedRankCategory.rankDict[yMax].displayPosition.y, currentlySelectedRankCategory.rankDict[yMin].displayPosition.y, currentlySelectedRankCategory.rankDict[xMax].displayPosition.x);
+
+        cachedYAndX = (currentlySelectedRankCategory.rankDict[yMax].displayPosition.y, currentlySelectedRankCategory.rankDict[yMin].displayPosition.y, currentlySelectedRankCategory.rankDict[xMax].displayPosition.x);
+        return cachedYAndX.Value;
     }
         
     private Vector2 scrollPosition;
     private void FillRankTree(Rect rectRankTree)
     {
-        if (currentlySelectedRankCategory == null)
+        if (currentlySelectedRankCategory == null || availableRanksForCategory.NullOrEmpty())
         {
             return;
         }
@@ -503,7 +522,10 @@ public class ITab_RankSystem : ITab
             listingRankInfo.Label("BEWH.Framework.RankSystem.RankBonuses".Translate());
             scrollViewHeightRankInfo += listingHeightIncreaseMedium;
             Text.Font = GameFont.Small;
-            var rankBonusText = currentlySelectedRank.rankDef.GetRankBonusString();
+            //Built in BuildRankInfoForCategory now: it allocates five StringBuilders and walks stat
+            //offsets, factors, abilities, hediffs and passions with several Translate calls, and it
+            //was doing all of that on every OnGUI pass.
+            var rankBonusText = currentlySelectedRank.rankBonusText;
             listingRankInfo.Label(rankBonusText);
             scrollViewHeightRankInfo += listingHeightIncreaseSmall * (rankBonusText.Split('\n').Length - 1);
 
@@ -536,6 +558,7 @@ public class ITab_RankSystem : ITab
     private void GetRanksForCategory()
     {
         availableRanksForCategory = [];
+        cachedYAndX = null;
 
         if (currentlySelectedRankCategory == null)
         {
@@ -558,6 +581,7 @@ public class ITab_RankSystem : ITab
             rankDef = rankDef,
             requirementsMet = reqMet,
             rankText = reason,
+            rankBonusText = rankDef.GetRankBonusString(),
         };
     }
         
@@ -590,4 +614,5 @@ internal class RankInfoForTab
     public RankDef rankDef;
     public bool requirementsMet;
     public string rankText;
+    public string rankBonusText;
 }

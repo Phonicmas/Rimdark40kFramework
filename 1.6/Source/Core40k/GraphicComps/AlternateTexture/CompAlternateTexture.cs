@@ -152,7 +152,7 @@ public class CompAlternateTexture : CompGraphicParent
     
     public override void Notify_Unequipped(Pawn pawn)
     {
-        if (pawn != null)
+        if (pawn != null && CoreUtils != null)
         {
             if (CoreUtils.cachedAlternateTexture.TryGetValue(pawn, out var alternateTexture))
             {
@@ -175,7 +175,7 @@ public class CompAlternateTexture : CompGraphicParent
 
     private void TryAddCachedStat(Pawn pawn)
     {
-        if (pawn != null)
+        if (pawn != null && CoreUtils != null)
         {
             cachedStatOffset = new Dictionary<StatDef, float>();
             cachedStatFactor = new Dictionary<StatDef, float>();
@@ -409,7 +409,9 @@ public class CompAlternateTexture : CompGraphicParent
             return;
         }
         
-        TryAddCachedStat(Wearer);
+        //Pawn, not Wearer: Wearer is only set for apparel, so an equipped weapon was never
+        //registered after a load and contributed none of its stat offsets until it was re-equipped.
+        TryAddCachedStat(Pawn);
         Notify_GraphicChanged();
     }
 }

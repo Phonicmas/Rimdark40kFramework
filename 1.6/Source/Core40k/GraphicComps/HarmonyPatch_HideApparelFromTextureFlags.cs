@@ -1,5 +1,6 @@
 ﻿using HarmonyLib;
 using RimWorld;
+using Verse;
 
 namespace Core40k;
 
@@ -8,14 +9,15 @@ public class HideApparelFromTextureFlags
 {
     public static void Postfix(ref string __result, Apparel __instance)
     {
-        if (__instance.Wearer?.apparel?.WornApparel == null)
+        var wornApparel = __instance?.Wearer?.apparel?.WornApparel;
+        if (wornApparel == null)
         {
             return;
         }
 
-        var texPath = __result;
-        
-        foreach (var apparel in __instance.Wearer.apparel.WornApparel)
+        //This is a getter that gets read a lot, and it used to walk every worn item and every one
+        //of its flags even after it had already found a match.
+        foreach (var apparel in wornApparel)
         {
             var defMod = apparel.def.GetModExtension<DefModExtension_TextureFlags>();
             if (defMod == null)
@@ -25,13 +27,14 @@ public class HideApparelFromTextureFlags
 
             foreach (var flag in defMod.textureFlags)
             {
-                if (flag.thingActivator == __instance.def && flag.hideThing)
+                if (!flag.hideThing || flag.thingActivator != __instance.def || flag.hideTexPath.NullOrEmpty())
                 {
-                    texPath = "Things/Armor/Imperium/PowerArmor/CommonIcons/BEWH_None";
+                    continue;
                 }
+
+                __result = flag.hideTexPath;
+                return;
             }
         }
-
-        __result = texPath;
     }
 }

@@ -728,7 +728,7 @@ public class CompDecorativeBase : CompGraphicParent
         //Take back whatever the decorations granted while it was worn.
         ApplyGrantsToPawn(pawn, add: false);
 
-        if (pawn != null)
+        if (pawn != null && CoreUtils != null)
         {
             if (CoreUtils.cachedDecoratives.TryGetValue(pawn, out var decoratives))
             {
@@ -750,7 +750,7 @@ public class CompDecorativeBase : CompGraphicParent
     }
     private void TryAddCachedStat(Pawn pawn)
     {
-        if (pawn != null)
+        if (pawn != null && CoreUtils != null)
         {
             cachedStatOffset = new Dictionary<StatDef, float>();
             cachedStatFactor = new Dictionary<StatDef, float>();
@@ -1090,6 +1090,8 @@ public class CompDecorativeBase : CompGraphicParent
             ClearPending();
         }
 
-        TryAddCachedStat(Wearer);
+        //Pawn, not Wearer: Wearer is only set for apparel, so an equipped weapon was never
+        //registered after a load and contributed none of its stat offsets until it was re-equipped.
+        TryAddCachedStat(Pawn);
     }
 }

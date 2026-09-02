@@ -21,15 +21,7 @@ public class PawnRenderNodeWorker_AttachmentExtraDecorationBody : PawnRenderNode
             return false;
         }
             
-        var showWhenFacing = new List<Rot4>();
-        if (node.Props.flipGraphic)
-        {
-            showWhenFacing.AddRange(extraDecoration.defaultShowRotation.Select(rotation => rotation.Opposite));
-        } 
-        else
-        {
-            showWhenFacing = extraDecoration.defaultShowRotation;
-        }
+        var showWhenFacing = extraDecoration.ShowRotation(node.Props.flipGraphic);
         if (parms.Portrait)
         {
             if (!showWhenFacing.Contains(parms.facing))

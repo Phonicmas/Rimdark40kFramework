@@ -51,7 +51,12 @@ public class TextureFlag
     public string pathExpansion = string.Empty;
     
     public bool shouldAddInsteadOfSwap = false;
-    public bool hideThing = false; 
+    public bool hideThing = false;
+
+    //Texture swapped in for an apparel this flag hides. The default belongs to one content pack, so
+    //framework logic no longer assumes it: a pack that ships its own blank can point at that.
+    [NoTranslate]
+    public string hideTexPath = "Things/Armor/Imperium/PowerArmor/CommonIcons/BEWH_None";
     
     public ThingDef thingActivator = null;
     public HediffDef hediffActivator = null;

@@ -94,9 +94,39 @@ public static class UpgradeCostUtility
         return result;
     }
 
+    //CanAfford is asked once per decoration icon per frame by the customization tab, and again on
+    //every Accept press, and each call walked the map's thing lister and ran a reachability query
+    //per stack. The count is memoised for the frame it was computed in. Only the read-only pricing
+    //path uses this - Consume and FindIngredients walk Candidates directly, and Consume drops the
+    //memo first so nothing can price a refit against stock it has already spent.
+    private static Pawn availableCachePawn;
+    private static int availableCacheFrame = -1;
+    private static readonly Dictionary<ThingDef, int> availableCache = new();
+
+    public static void InvalidateAvailability()
+    {
+        availableCache.Clear();
+        availableCacheFrame = -1;
+        availableCachePawn = null;
+    }
+
     private static int AvailableCount(Pawn pawn, ThingDef thingDef)
     {
-        return Candidates(pawn, thingDef).Sum(thing => thing.stackCount);
+        if (availableCacheFrame != Time.frameCount || availableCachePawn != pawn)
+        {
+            availableCache.Clear();
+            availableCacheFrame = Time.frameCount;
+            availableCachePawn = pawn;
+        }
+
+        if (availableCache.TryGetValue(thingDef, out var cached))
+        {
+            return cached;
+        }
+
+        var count = Candidates(pawn, thingDef).Sum(thing => thing.stackCount);
+        availableCache.Add(thingDef, count);
+        return count;
     }
 
     public static bool CanAfford(Pawn pawn, List<ThingDefCountClass> cost, out ThingDefCountClass missing)
@@ -135,6 +165,9 @@ public static class UpgradeCostUtility
         {
             return true;
         }
+
+        //Spending changes what is available, so this never runs off a memoised count.
+        InvalidateAvailability();
 
         if (!CanAfford(pawn, cost))
         {

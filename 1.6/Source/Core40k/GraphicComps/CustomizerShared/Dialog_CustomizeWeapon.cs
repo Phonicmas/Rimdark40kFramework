@@ -25,7 +25,10 @@ public class Dialog_CustomizeWeapon : Window, ICustomizationDialog
     
     private Dictionary<CustomizationTabDef, CustomizerTabDrawer>  tabDrawers = [];
     private Dictionary<CustomizationTabDef, TabRecord>  tabRecords = [];
-    private List<TabRecord> tabRecordsToRead => tabRecords.Values.ToList();
+    //Was a property materialising a new list from the dictionary on every access, once per
+    //DoWindowContents - i.e. several times per frame for as long as the dialog was open.
+    private List<TabRecord> cachedTabRecordsToRead;
+    private List<TabRecord> tabRecordsToRead => cachedTabRecordsToRead ??= tabRecords.Values.ToList();
 
     private CustomizationTabDef curTab;
     

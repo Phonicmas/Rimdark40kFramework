@@ -25,8 +25,6 @@ public class DecorationBaseTab : CustomizerTabDrawer
     private Dictionary<DecorationDef, List<MaskDef>> masksForDeco = new ();
     private List<DecorationPresetDef> decorationPresets = [];
     
-    private AlternateBaseFormDef selectedAlternateBaseForm = null;
-    
     private bool recache = true;
     private Dictionary<(DecorationDef, MaskDef), Material> cachedMaterials = new ();
     
@@ -64,6 +62,7 @@ public class DecorationBaseTab : CustomizerTabDrawer
     {
         selPawn = pawn;
         SetupHook();
+        ClearRequirementCaches();
 
         var tempPreset = DefDatabase<DecorationPresetDef>.AllDefs.ToList();
         foreach (var decorativeComp in decorativeComps)
@@ -264,15 +263,6 @@ public class DecorationBaseTab : CustomizerTabDrawer
             removeAllRect.x -= 2.5f;
             presetRect.x += 2.5f;
             
-            var alternateTexture = decorativeComp.parent.TryGetComp<CompAlternateTexture>();
-            if (alternateTexture?.CurrentAlternateBaseForm != null)
-            {
-                foreach (var decoList in decorationByTypeForComp[decorativeComp])
-                {
-                    decoList.Value.RemoveAll(def => alternateTexture.CurrentAlternateBaseForm.incompatibleDecorations.Contains(def));
-                }
-            }
-            
             //Select Preset
             if (Widgets.ButtonText(presetRect, "BEWH.Framework.Customization.DecorationPreset".Translate()))
             {
@@ -389,13 +379,20 @@ public class DecorationBaseTab : CustomizerTabDrawer
         
         var takeSize = precisionRect.height / rotsToDraw.Count;
         
+        var drawDataChanged = false;
         foreach (var rotToDraw in rotsToDraw)
         {
             var rotRect = precisionRect.TakeTopPart(takeSize);
-            DrawPrecisionOptions(rotRect, ref drawData.GetData(rotToDraw), rotToDraw);
+            drawDataChanged |= DrawPrecisionOptions(rotRect, ref drawData.GetData(rotToDraw), rotToDraw);
         }
         
-        selectedPrecisionComp.SetDrawData(selectedPrecisionDef, drawData);
+        //SetDrawData dirties the item's graphics, which for worn apparel rebuilds the pawn's whole
+        //render tree and re-resolves every decoration graphic. Doing that unconditionally meant it
+        //happened on every single frame the precision panel was open.
+        if (drawDataChanged)
+        {
+            selectedPrecisionComp.SetDrawData(selectedPrecisionDef, drawData);
+        }
         
         if (Widgets.ButtonText(acceptButton, "BEWH.Framework.Customization.Accept".Translate()))
         {
@@ -438,8 +435,10 @@ public class DecorationBaseTab : CustomizerTabDrawer
         layerStringBuffers = new Dictionary<(DecorationDef, Rot4), string>();
     }
 
-    private void DrawPrecisionOptions(Rect rect, ref DecorationDrawData.RotationalData drawData, Rot4 rot4)
+    //Returns true when the player actually changed something this frame.
+    private bool DrawPrecisionOptions(Rect rect, ref DecorationDrawData.RotationalData drawData, Rot4 rot4)
     {
+        var changed = false;
         var defaultRot = rot4 == Rot4.Invalid;
         var takeSize = rect.width / 5;
 
@@ -468,6 +467,7 @@ public class DecorationBaseTab : CustomizerTabDrawer
         
         if (Widgets.ButtonText(resetRect, "BEWH.Framework.CommonKeyword.Reset".Translate()))
         {
+            changed = true;
             selectedPrecisionComp.ResetDrawData(selectedPrecisionDef, rot4);
             xStringBuffers.Remove((selectedPrecisionDef, rot4));
             zStringBuffers.Remove((selectedPrecisionDef, rot4));
@@ -504,15 +504,25 @@ public class DecorationBaseTab : CustomizerTabDrawer
             Text.Anchor = TextAnchor.UpperLeft;
         }
         
+        //GUI.changed is Unity's own "a control was edited this event" flag. Saved and restored so
+        //this does not eat a change another part of the window is watching for.
+        var guiChangedBefore = GUI.changed;
+        GUI.changed = false;
+
         Core40kUtils.TextFieldWithHorizontalSlider(ref offsetXRect, ref drawData.offset.x, ref xStringBuffer, "X Offset", -2f, 2f);
         Core40kUtils.TextFieldWithHorizontalSlider(ref offsetZRect, ref drawData.offset.z, ref zStringBuffer, "Z Offset", -2f, 2f);
         Core40kUtils.TextFieldWithHorizontalSlider(ref drawSizeRect, ref drawData.scale, ref drawSizeStringBuffer, "Draw Size", 0, 3f);
         Core40kUtils.TextFieldWithHorizontalSlider(ref layerRect, ref drawData.layer, ref layerStringBuffer, "Layer", -100, 100, true);
+
+        changed |= GUI.changed;
+        GUI.changed = guiChangedBefore || GUI.changed;
         
         xStringBuffers[(selectedPrecisionDef, rot4)] = xStringBuffer;
         zStringBuffers[(selectedPrecisionDef, rot4)] = zStringBuffer;
         drawSizeStringBuffers[(selectedPrecisionDef, rot4)] = drawSizeStringBuffer;
         layerStringBuffers[(selectedPrecisionDef, rot4)] = layerStringBuffer;
+
+        return changed;
     }
     
     private DecorationPreset GetCurrentPreset(CompDecorativeBase decorativeComp)
@@ -580,7 +590,7 @@ public class DecorationBaseTab : CustomizerTabDrawer
                 Widgets.DrawStrongHighlight(iconRect.ExpandedBy(3f));
             }
 
-            var hasReq = decoDef.HasRequirements(selPawn, out var reason);
+            var hasReq = HasRequirementsCached(decoDef, out var reason);
             var incompatibleDeco = DecoIsIncompatible(decoDef, decorativeComp);
 
             //Cost is charged once per item. Anything already paid for, or already selected and so
@@ -593,7 +603,7 @@ public class DecorationBaseTab : CustomizerTabDrawer
             var noRoom = decoDef.isInternal && !hasDeco && !decorativeComp.HasRoomFor(decoDef);
 
             var color = Color.white;
-            var tipTooltip = decoDef.TooltipDescription();
+            var tipTooltip = TooltipCached(decoDef);
             if (Mouse.IsOver(iconRect))
             {
                 color = GenUI.MouseoverColor;
@@ -646,6 +656,7 @@ public class DecorationBaseTab : CustomizerTabDrawer
                 if (Widgets.ButtonInvisible(iconRect))
                 {
                     decorativeComp.AddOrRemoveDecoration(decoDef);
+                    ClearRequirementCaches();
                 }
                 if (decorativeComp.Decorations.ContainsKey(decoDef) && decoDef.HasVisual)
                 {
@@ -713,6 +724,44 @@ public class DecorationBaseTab : CustomizerTabDrawer
         return result;
     }
 
+    //HasRequirements walks ranks, genes, traits and hediffs and allocates a StringBuilder plus up
+    //to four lists; TooltipDescription builds a whole tooltip string. Both were being run once per
+    //icon on every OnGUI pass. The dialog pauses the game, so nothing they read can change while it
+    //is open except the decorations themselves, which clear the cache on click.
+    private readonly Dictionary<DecorationDef, (bool met, string reason)> requirementCache = new();
+    private readonly Dictionary<DecorationDef, string> tooltipCache = new();
+
+    private void ClearRequirementCaches()
+    {
+        requirementCache.Clear();
+        tooltipCache.Clear();
+    }
+
+    private bool HasRequirementsCached(DecorationDef decoDef, out string reason)
+    {
+        if (requirementCache.TryGetValue(decoDef, out var cached))
+        {
+            reason = cached.reason;
+            return cached.met;
+        }
+
+        var met = decoDef.HasRequirements(selPawn, out reason);
+        requirementCache.Add(decoDef, (met, reason));
+        return met;
+    }
+
+    private string TooltipCached(DecorationDef decoDef)
+    {
+        if (tooltipCache.TryGetValue(decoDef, out var cached))
+        {
+            return cached;
+        }
+
+        var tooltip = decoDef.TooltipDescription();
+        tooltipCache.Add(decoDef, tooltip);
+        return tooltip;
+    }
+
     private bool MatchesSearch(DecorationDef decoDef)
     {
         return searchWidget.filter.Matches(decoDef.label) || searchWidget.filter.Matches(decoDef.defName);
@@ -720,13 +769,18 @@ public class DecorationBaseTab : CustomizerTabDrawer
 
     private bool DecoIsIncompatible(DecorationDef decoDef, CompDecorativeBase decorativeComp)
     {
+        //Read live from the item. This used to consult a field that was never assigned anywhere, so
+        //the base texture branch always won and every decoration flagged incompatible with the base
+        //texture stayed greyed out even while an alternate base form was selected.
+        var alternateBaseForm = decorativeComp?.parent.TryGetComp<CompAlternateTexture>()?.CurrentAlternateBaseForm;
+
         //Alternate base form incompatible
-        if (selectedAlternateBaseForm != null && selectedAlternateBaseForm.incompatibleDecorations.Contains(decoDef))
+        if (alternateBaseForm != null && alternateBaseForm.incompatibleDecorations.Contains(decoDef))
         {
             return true;
         }
         //Deco incompatible with base texture
-        if (selectedAlternateBaseForm == null && decoDef.isIncompatibleWithBaseTexture)
+        if (alternateBaseForm == null && decoDef.isIncompatibleWithBaseTexture)
         {
             return true;
         }

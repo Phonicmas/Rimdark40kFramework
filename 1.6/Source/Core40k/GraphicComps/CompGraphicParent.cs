@@ -7,8 +7,27 @@ namespace Core40k;
 
 public class CompGraphicParent : ThingComp
 {
-    protected static GameComponent_CoreUtils coreUtils;
-    protected static GameComponent_CoreUtils CoreUtils => coreUtils ??= Current.Game.GetComponent<GameComponent_CoreUtils>();
+    //RankDef's pattern: these types outlive a game, so the cache has to be keyed on the game it
+    //came from. A plain ??= keeps handing out the previous save's component after loading a second
+    //save in the same session, which pins every pawn and item from the old game in memory and
+    //answers every lookup from the wrong colony.
+    private static Game cachedGameForCoreUtils;
+    private static GameComponent_CoreUtils coreUtils;
+
+    protected static GameComponent_CoreUtils CoreUtils => CoreUtilsFor();
+
+    private static GameComponent_CoreUtils CoreUtilsFor()
+    {
+        if (coreUtils != null && cachedGameForCoreUtils == Current.Game)
+        {
+            return coreUtils;
+        }
+
+        cachedGameForCoreUtils = Current.Game;
+        coreUtils = cachedGameForCoreUtils?.GetComponent<GameComponent_CoreUtils>();
+
+        return coreUtils;
+    }
     
     protected Dictionary<StatDef, float> cachedStatOffset = new();
     public Dictionary<StatDef, float> CachedStatOffset => cachedStatOffset ??= new Dictionary<StatDef, float>();

@@ -244,7 +244,6 @@
     <Compile Include="HarmonyPatch_GetOffsetFromGearPatch.cs" />
     <Compile Include="HarmonyPatch_GetValueUnfinalizedFromVariousFactorPatch.cs" />
     <Compile Include="HarmonyPatch_PopulateMutableStatsWithStatsPatch.cs" />
-    <Compile Include="HarmonyPatch_SkillRecordAptitudePatch.cs" />
     <Compile Include="ModSettings\CoreMod.cs" />
     <Compile Include="ModSettings\ModSettingTab.cs" />
     <Compile Include="ModSettings\ModSettingTab_CoreCustomization.cs" />

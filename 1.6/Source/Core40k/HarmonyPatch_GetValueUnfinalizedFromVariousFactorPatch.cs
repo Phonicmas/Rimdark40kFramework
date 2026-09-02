@@ -7,8 +7,27 @@ namespace Core40k;
 [HarmonyPatch(typeof(StatWorker), "GetValueUnfinalized")]
 public static class GetValueUnfinalizedFromVariousFactorPatch
 {
+    //RankDef's pattern: these types outlive a game, so the cache has to be keyed on the game it
+    //came from. A plain ??= keeps handing out the previous save's component after loading a second
+    //save in the same session, which pins every pawn and item from the old game in memory and
+    //answers every lookup from the wrong colony.
+    private static Game cachedGameForCoreUtils;
     private static GameComponent_CoreUtils coreUtils;
-    private static GameComponent_CoreUtils CoreUtils => coreUtils ??= Current.Game.GetComponent<GameComponent_CoreUtils>();
+
+    private static GameComponent_CoreUtils CoreUtils => CoreUtilsFor();
+
+    private static GameComponent_CoreUtils CoreUtilsFor()
+    {
+        if (coreUtils != null && cachedGameForCoreUtils == Current.Game)
+        {
+            return coreUtils;
+        }
+
+        cachedGameForCoreUtils = Current.Game;
+        coreUtils = cachedGameForCoreUtils?.GetComponent<GameComponent_CoreUtils>();
+
+        return coreUtils;
+    }
     
     public static void Postfix(ref float __result, StatWorker __instance, StatRequest req)
     {
@@ -24,7 +43,13 @@ public static class GetValueUnfinalizedFromVariousFactorPatch
     {
         var num = 1f;
 
-        if (CoreUtils.cachedDecoratives.TryGetValue(pawn, out var cachedDecoratives))
+        var coreUtilsComp = CoreUtils;
+        if (coreUtilsComp == null)
+        {
+            return num;
+        }
+
+        if (coreUtilsComp.cachedDecoratives.TryGetValue(pawn, out var cachedDecoratives))
         {
             var stat = statWorker.stat;
         
@@ -46,7 +71,7 @@ public static class GetValueUnfinalizedFromVariousFactorPatch
             }
         }
 
-        if (CoreUtils.cachedAlternateTexture.TryGetValue(pawn, out var cachedAlternateTexture))
+        if (coreUtilsComp.cachedAlternateTexture.TryGetValue(pawn, out var cachedAlternateTexture))
         {
             var stat = statWorker.stat;
         

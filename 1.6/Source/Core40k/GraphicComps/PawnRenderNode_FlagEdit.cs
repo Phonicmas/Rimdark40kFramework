@@ -6,9 +6,9 @@ namespace Core40k;
 
 public class PawnRenderNode_FlagEdit : PawnRenderNode_Apparel
 {
-    private static GameComponent_CoreUtils coreUtils;
-
-    private static GameComponent_CoreUtils CoreUtils => coreUtils ??= Current.Game.GetComponent<GameComponent_CoreUtils>();
+    //Resolved per access rather than held in a static: a static survives quitting to the menu and
+    //loading a different save, which would leave this reading the previous game's toggles.
+    private static GameComponent_CoreUtils CoreUtils => Current.Game?.GetComponent<GameComponent_CoreUtils>();
     
     public PawnRenderNode_FlagEdit(Pawn pawn, PawnRenderNodeProperties props, PawnRenderTree tree) : base(pawn, props, tree)
     {
@@ -32,16 +32,50 @@ public class PawnRenderNode_FlagEdit : PawnRenderNode_Apparel
 
     protected virtual string ModifyByFlag(TextureFlag flag, Pawn pawn)
     {
-        if ((flag.pathExpansion == string.Empty) 
-            || (flag.thingActivator != null && pawn?.apparel?.WornApparel != null && !pawn.apparel.WornApparel.Select(apparel1 => apparel1.def).Contains(flag.thingActivator) && pawn.equipment?.Primary?.def != flag.thingActivator) 
-            || (flag.hediffActivator != null && pawn?.health?.hediffSet?.hediffs != null && !pawn.health.hediffSet.hediffs.Select(hediff1 => hediff1.def ).Contains(flag.hediffActivator)) 
-            || (flag.geneActivator != null && pawn?.genes?.GenesListForReading != null && !pawn.genes.GenesListForReading.Where(gene1 => gene1.Active).Select(gene1 => gene1.def).Contains(flag.geneActivator))
-            || (flag.gizmoActivated && !CoreUtils.cachedGizmoToggles[(pawn, apparel)]))
+        if (flag.pathExpansion == string.Empty)
+        {
+            return string.Empty;
+        }
+
+        if (flag.thingActivator != null && pawn?.apparel?.WornApparel != null
+            && !pawn.apparel.WornApparel.Select(apparel1 => apparel1.def).Contains(flag.thingActivator)
+            && pawn.equipment?.Primary?.def != flag.thingActivator)
+        {
+            return string.Empty;
+        }
+
+        if (flag.hediffActivator != null && pawn?.health?.hediffSet?.hediffs != null
+            && !pawn.health.hediffSet.hediffs.Select(hediff1 => hediff1.def).Contains(flag.hediffActivator))
+        {
+            return string.Empty;
+        }
+
+        if (flag.geneActivator != null && pawn?.genes?.GenesListForReading != null
+            && !pawn.genes.GenesListForReading.Where(gene1 => gene1.Active).Select(gene1 => gene1.def).Contains(flag.geneActivator))
+        {
+            return string.Empty;
+        }
+
+        if (flag.gizmoActivated && !GizmoToggledOn(pawn))
         {
             return string.Empty;
         }
 
         return flag.pathExpansion;
+    }
+
+    //A missing entry just means the toggle has never been touched on this item, so it reads as off.
+    //Indexing the dictionary directly threw inside graphic resolution, which took the pawn's whole
+    //render tree down with it.
+    private bool GizmoToggledOn(Pawn pawn)
+    {
+        if (pawn == null || apparel == null)
+        {
+            return false;
+        }
+
+        var coreUtils = CoreUtils;
+        return coreUtils != null && coreUtils.cachedGizmoToggles.TryGetValue((pawn, apparel), out var toggledOn) && toggledOn;
     }
 
     public override Graphic GraphicFor(Pawn pawn)

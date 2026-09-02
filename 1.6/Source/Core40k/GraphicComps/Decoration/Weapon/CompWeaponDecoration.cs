@@ -43,37 +43,56 @@ public class CompWeaponDecoration : CompDecorativeBase
         }
         foreach (var weaponDecoration in sortedGraphics)
         {
+            //Null keys survive in the dictionary when the mod that added a decoration is removed.
+            //The base class skips them everywhere it walks Decorations, and this runs from inside
+            //pawn rendering, so it has to as well.
+            if (weaponDecoration == null)
+            {
+                continue;
+            }
+
             //Internal upgrades draw nothing, so they never get a graphic.
             if (!weaponDecoration.HasVisual)
             {
                 continue;
             }
 
+            var settings = decorations[weaponDecoration];
+
+            //The mask the player selected, falling back to the decoration's default. A mask that
+            //sets null, or carries no path, means no mask at all. The old code read the def default
+            //and inverted the test, so a real mask path was replaced by null and an empty one was
+            //passed through - the mask picker did nothing on weapons at all.
+            var mask = settings.maskDef ?? weaponDecoration.defaultMask;
+            var usesMask = mask is { setsNull: false };
+            var maskPath = usesMask && !mask.maskPath.NullOrEmpty() ? mask.maskPath : null;
+            var colorAmount = usesMask ? mask.colorAmount : weaponDecoration.colorAmount;
+
             Graphic graphic;
-            if (weaponDecoration.colorAmount > 2)
+            if (colorAmount > 2)
             {
                 graphic = MultiColorUtils.GetGraphic<Graphic_Single>(
-                    weaponDecoration.drawnTextureIconPath, 
-                    Core40kDefOf.BEWH_CutoutThreeColor.Shader, 
-                    weaponDecoration.drawSize, 
-                    decorations[weaponDecoration].Color, 
-                    decorations[weaponDecoration].ColorTwo, 
-                    decorations[weaponDecoration].ColorThree, 
+                    weaponDecoration.drawnTextureIconPath,
+                    Core40kDefOf.BEWH_CutoutThreeColor.Shader,
+                    weaponDecoration.drawSize,
+                    settings.Color,
+                    settings.ColorTwo,
+                    settings.ColorThree,
                     null,
-                    weaponDecoration.defaultMask.maskPath == string.Empty ? weaponDecoration.defaultMask.maskPath  : null);
+                    maskPath);
             }
             else
             {
                 graphic = GraphicDatabase.Get<Graphic_Single>(
-                    weaponDecoration.drawnTextureIconPath, 
-                    weaponDecoration.shaderType.Shader ?? ShaderTypeDefOf.Cutout.Shader, 
-                    weaponDecoration.drawSize, 
-                    decorations[weaponDecoration].Color, 
-                    decorations[weaponDecoration].ColorTwo, 
+                    weaponDecoration.drawnTextureIconPath,
+                    (usesMask ? mask.shaderType?.Shader : null) ?? weaponDecoration.shaderType?.Shader ?? ShaderTypeDefOf.Cutout.Shader,
+                    weaponDecoration.drawSize,
+                    settings.Color,
+                    settings.ColorTwo,
                     null,
-                    weaponDecoration.defaultMask.maskPath == string.Empty ? weaponDecoration.defaultMask.maskPath  : null);
+                    maskPath);
             }
-            
+
             cachedGraphics.Add(weaponDecoration, graphic);
         }
     }

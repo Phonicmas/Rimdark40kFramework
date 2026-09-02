@@ -58,9 +58,61 @@ public static class Core40kUtils
         return true;
     }
         
+    //Verb.EffectiveRange, BurstShotCount and WarmupTime are read inside AI targeting and cast
+    //position loops for every pawn on the map. Their postfixes were running two GetComp scans on
+    //every weapon in the game, vanilla ones included. Whether a def can carry either comp is fixed
+    //at load, so it is answered once per def and the scans only happen for weapons that can match.
+    private static readonly Dictionary<ThingDef, bool> verbModifyingDefCache = new();
+
+    public static bool CanModifyVerbs(ThingWithComps equipment)
+    {
+        if (equipment?.def == null)
+        {
+            return false;
+        }
+
+        if (verbModifyingDefCache.TryGetValue(equipment.def, out var cached))
+        {
+            return cached;
+        }
+
+        var result = false;
+        if (!equipment.def.comps.NullOrEmpty())
+        {
+            foreach (var compProperties in equipment.def.comps)
+            {
+                if (compProperties?.compClass == null)
+                {
+                    continue;
+                }
+
+                if (typeof(Comp_AmmoChanger).IsAssignableFrom(compProperties.compClass)
+                    || typeof(CompWeaponDecoration).IsAssignableFrom(compProperties.compClass))
+                {
+                    result = true;
+                    break;
+                }
+            }
+        }
+
+        verbModifyingDefCache.Add(equipment.def, result);
+        return result;
+    }
+
     //Colour Preview
+    //Every open of a preset float menu allocated a fresh Texture2D per entry and nothing ever
+    //destroyed them, so they accumulated for the session. Memoised by the colours they show.
+    private static readonly Dictionary<(Color, Color?, Color?, int), Texture2D> colourPreviewCache = new();
+
     public static Texture2D ThreeColourPreview(Color primaryColor, Color? secondaryColor, Color? tertiaryColor, int colorAmount)
     {
+        var cacheKey = (primaryColor, secondaryColor, tertiaryColor, colorAmount);
+        //The null test also covers a texture Unity has destroyed under us.
+        if (colourPreviewCache.TryGetValue(cacheKey, out var cachedPreview) && cachedPreview != null)
+        {
+            return cachedPreview;
+        }
+
         var texture2D = new Texture2D(3,3)
         {
             name = "SolidColorTex-" + primaryColor + secondaryColor
@@ -92,6 +144,7 @@ public static class Core40kUtils
         texture2D.filterMode = FilterMode.Point;
         texture2D.Apply();
 
+        colourPreviewCache[cacheKey] = texture2D;
         return texture2D;
     }
     

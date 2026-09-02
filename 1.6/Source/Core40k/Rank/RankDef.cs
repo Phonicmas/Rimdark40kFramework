@@ -252,6 +252,16 @@ public class RankDef : Def
         }
 
         //Ranks
+        //Hoisted: GetStatValue here is a full StatWorker evaluation (which runs this mod's own
+        //postfix), and it was being recomputed once per rank requirement entry - for every rank of
+        //every unlocked category, for every colonist, on every eligibility sweep.
+        var rankRequirementData = currentlySelectedRankCategory.rankDict[this];
+        var rankLearningFactor = 1f;
+        if (!rankRequirementData.rankRequirements.NullOrEmpty() || !rankRequirementData.rankRequirementsOneAmong.NullOrEmpty())
+        {
+            rankLearningFactor = pawn.GetStatValue(Core40kDefOf.BEWH_RankLearningFactor);
+        }
+
         //All
         var rankAllRequirementsMet = true;
         if (!currentlySelectedRankCategory.rankDict[this].rankRequirements.NullOrEmpty())
@@ -264,7 +274,7 @@ public class RankDef : Def
 
             foreach (var rank in currentlySelectedRankCategory.rankDict[this].rankRequirements)
             {
-                var requiredDaysAsRank = Math.Round(rank.daysAs / pawn.GetStatValue(Core40kDefOf.BEWH_RankLearningFactor));
+                var requiredDaysAsRank = Math.Round(rank.daysAs / rankLearningFactor);
                 var rankRequirementMet = rankComp.HasRank(rank.rankDef) &&
                                          rankComp.GetDaysAsRank(rank.rankDef) >= requiredDaysAsRank;
 
@@ -308,8 +318,11 @@ public class RankDef : Def
 
             foreach (var rank in currentlySelectedRankCategory.rankDict[this].rankRequirementsOneAmong)
             {
+                //Same adjusted figure the check uses is what gets displayed below. The two used to
+                //disagree: the check divided by the learning factor and the text printed raw days.
+                var requiredDaysAsRank = Math.Round(rank.daysAs / rankLearningFactor);
                 var rankRequirementMet = rankComp.HasRank(rank.rankDef) &&
-                                         rankComp.GetDaysAsRank(rank.rankDef) >= rank.daysAs / pawn.GetStatValue(Core40kDefOf.BEWH_RankLearningFactor);
+                                         rankComp.GetDaysAsRank(rank.rankDef) >= requiredDaysAsRank;
 
                 if (rankRequirementMet)
                 {
@@ -331,7 +344,7 @@ public class RankDef : Def
 
                 if (rank.daysAs > 0)
                 {
-                    stringBuilder.AppendLine(("    " + "BEWH.Framework.RankSystem.HaveBeenRankForDays".Translate(rank.rankDef.label.CapitalizeFirst(), rank.daysAs)).Colorize(requirementColour));
+                    stringBuilder.AppendLine(("    " + "BEWH.Framework.RankSystem.HaveBeenRankForDays".Translate(rank.rankDef.label.CapitalizeFirst(), requiredDaysAsRank)).Colorize(requirementColour));
                 }
                 else
                 {
