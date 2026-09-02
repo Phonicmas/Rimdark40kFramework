@@ -100,6 +100,8 @@
   <BEWH.Framework.Customization.AddedMeleeAttacks>Added melee attacks</BEWH.Framework.Customization.AddedMeleeAttacks>
 
   <BEWH.Framework.Customization.IncompatibleWithCurrentAltBase>Incompatible with currently selected texture</BEWH.Framework.Customization.IncompatibleWithCurrentAltBase>
+  <BEWH.Framework.Customization.IncompatibleWithCurrentDecoration>Incompatible with currently selected decoration: {0}</BEWH.Framework.Customization.IncompatibleWithCurrentDecoration>
+  <BEWH.Framework.Customization.IncompatibleWithCurrentDecorations>Incompatible with currently selected decorations: {0}</BEWH.Framework.Customization.IncompatibleWithCurrentDecorations>
   <BEWH.Framework.Customization.AlternativeBaseTexture>Alt. Textures</BEWH.Framework.Customization.AlternativeBaseTexture>
   <BEWH.Framework.Customization.BaseTexture>Base Texture: </BEWH.Framework.Customization.BaseTexture>
 

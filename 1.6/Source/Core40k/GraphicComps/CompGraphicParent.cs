@@ -53,6 +53,7 @@ public class CompGraphicParent : ThingComp
         cachedStatOffset = new Dictionary<StatDef, float>();
         cachedStatFactor = new Dictionary<StatDef, float>();
         parent.Notify_ColorChanged();
+        OutfitStandDecorationRenderer.Notify_ItemGraphicChanged(parent);
     }
     
     public readonly struct StatContribution

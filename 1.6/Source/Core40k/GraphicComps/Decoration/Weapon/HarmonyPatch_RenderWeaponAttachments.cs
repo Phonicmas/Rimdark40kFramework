@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using HarmonyLib;
+using RimWorld;
 using UnityEngine;
 using Verse;
 
@@ -85,14 +86,19 @@ public static class RenderWeaponAttachments
         {
             return;
         }
-        if (weapon.ParentHolder is not Pawn_EquipmentTracker equipmentTracker)
+        Rot4 rotation;
+        switch (weapon.ParentHolder)
         {
-            return;
+            case Pawn_EquipmentTracker { pawn: not null } equipmentTracker:
+                rotation = equipmentTracker.pawn.Rotation;
+                break;
+            case Building_OutfitStand outfitStand:
+                rotation = outfitStand.Rotation;
+                break;
+            default:
+                return;
         }
-        if (equipmentTracker.pawn == null)
-        {
-            return;
-        }
+
         var decoComp = weapon.GetComp<CompWeaponDecoration>();
 
         if (decoComp == null)
@@ -118,13 +124,13 @@ public static class RenderWeaponAttachments
             var layer = weaponDecoration.layerPlacement;
             if (weaponDecoration.weaponSpecificDrawData != null && weaponDecoration.weaponSpecificDrawData.TryGetValue(eq.def.defName, out var value))
             {
-                offset = value.OffsetForRot(equipmentTracker.pawn.Rotation);
+                offset = value.OffsetForRot(rotation);
                 drawSize *= value.scale;
-                layer = value.LayerForRot(equipmentTracker.pawn.Rotation, layer);
+                layer = value.LayerForRot(rotation, layer);
             }
             else if(decoCompGraphic.Key.drawData != null)
             {
-                offset = decoCompGraphic.Key.drawData.OffsetForRot(equipmentTracker.pawn.Rotation);
+                offset = decoCompGraphic.Key.drawData.OffsetForRot(rotation);
                 drawSize *= decoCompGraphic.Key.drawData.scale;
             }
 

@@ -584,7 +584,7 @@ public class DecorationBaseTab : CustomizerTabDrawer
             }
 
             var hasReq = HasRequirementsCached(decoDef, out var reason);
-            var incompatibleDeco = DecoIsIncompatible(decoDef, decorativeComp);
+            var incompatibleDeco = DecoIsIncompatible(decoDef, decorativeComp, out var incompatibleReason);
 
             var unlocked = !DecorationWorkUtility.CostEnabled || decorativeComp.IsUnlocked(decoDef);
             var affordable = unlocked || hasDeco || CanAfford(decoDef);
@@ -615,7 +615,7 @@ public class DecorationBaseTab : CustomizerTabDrawer
             }
             if (incompatibleDeco)
             {
-                tipTooltip += "\n" +"BEWH.Framework.Customization.IncompatibleWithCurrentAltBase".Translate();
+                tipTooltip += "\n" + incompatibleReason;
                 color = Color.gray;
             }
             if (noRoom)
@@ -750,26 +750,60 @@ public class DecorationBaseTab : CustomizerTabDrawer
         return searchWidget.filter.Matches(decoDef.label) || searchWidget.filter.Matches(decoDef.defName);
     }
 
-    private bool DecoIsIncompatible(DecorationDef decoDef, CompDecorativeBase decorativeComp)
+    /// <summary>
+    /// Checks whether a decoration can currently be applied, and if not, returns the reason to show in the tooltip.
+    /// Texture based incompatibilities report the current base/alternate texture, decoration based ones name the conflicting decorations.
+    /// </summary>
+    private bool DecoIsIncompatible(DecorationDef decoDef, CompDecorativeBase decorativeComp, out string reason)
     {
-        var alternateBaseForm = decorativeComp?.parent.TryGetComp<CompAlternateTexture>()?.CurrentAlternateBaseForm;
+        reason = null;
+
+        if (decorativeComp == null)
+        {
+            return false;
+        }
+
+        var alternateBaseForm = decorativeComp.parent.TryGetComp<CompAlternateTexture>()?.CurrentAlternateBaseForm;
 
         //Alternate base form incompatible
         if (alternateBaseForm != null && alternateBaseForm.incompatibleDecorations.Contains(decoDef))
         {
+            reason = "BEWH.Framework.Customization.IncompatibleWithCurrentAltBase".Translate();
             return true;
         }
         //Deco incompatible with base texture
         if (alternateBaseForm == null && decoDef.isIncompatibleWithBaseTexture)
         {
-            return true;
-        }
-        if (!decoDef.incompatibleDecorations.NullOrEmpty() && decoDef.incompatibleDecorations.Any(def => decorativeComp.Decorations.ContainsKey(def)))
-        {
+            reason = "BEWH.Framework.Customization.IncompatibleWithCurrentAltBase".Translate();
             return true;
         }
 
-        return decorativeComp.Decorations.Any(decoration => decoration.Key.incompatibleDecorations.Contains(decoDef));
+        List<DecorationDef> conflictingDecorations = null;
+        foreach (var decoration in decorativeComp.Decorations)
+        {
+            var appliedDeco = decoration.Key;
+            var conflicts = decoDef.incompatibleDecorations?.Contains(appliedDeco) == true
+                            || appliedDeco.incompatibleDecorations?.Contains(decoDef) == true;
+
+            if (!conflicts)
+            {
+                continue;
+            }
+
+            conflictingDecorations ??= [];
+            conflictingDecorations.Add(appliedDeco);
+        }
+
+        if (conflictingDecorations.NullOrEmpty())
+        {
+            return false;
+        }
+
+        var decorationList = conflictingDecorations.Select(deco => deco.label.CapitalizeFirst()).ToCommaList(useAnd: true);
+        reason = conflictingDecorations.Count == 1
+            ? "BEWH.Framework.Customization.IncompatibleWithCurrentDecoration".Translate(decorationList)
+            : "BEWH.Framework.Customization.IncompatibleWithCurrentDecorations".Translate(decorationList);
+        return true;
     }
 
     private void DrawColorPresetAndMaskOptions(ref Rect bottomRect, DecorationDef decoDef, CompDecorativeBase decorativeComp)

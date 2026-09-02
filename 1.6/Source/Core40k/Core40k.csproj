@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="packages\Krafs.Publicizer.2.3.0\build\Krafs.Publicizer.props" Condition="Exists('packages\Krafs.Publicizer.2.3.0\build\Krafs.Publicizer.props')" />
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
@@ -162,6 +162,13 @@
     <Compile Include="GraphicComps\Decoration\Armor\Dialog_ConfirmDecorationPresetOverride.cs" />
     <Compile Include="GraphicComps\Decoration\Armor\Dialog_EditExtraDecorationPresets.cs" />
     <Compile Include="GraphicComps\Decoration\Armor\DynamicPawnRenderNodeSetup_DecorativeAddons.cs" />
+    <Compile Include="GraphicComps\Decoration\Armor\HarmonyPatch_OutfitStandDecorations.cs" />
+    <Compile Include="GraphicComps\Decoration\Armor\OutfitStandDecorationRenderer.cs" />
+    <Compile Include="GraphicComps\Decoration\Armor\OutfitStandDraw.cs" />
+    <Compile Include="GraphicComps\Decoration\Armor\OutfitStandDrawContext.cs" />
+    <Compile Include="GraphicComps\Decoration\Armor\OutfitStandDrawProvider.cs" />
+    <Compile Include="GraphicComps\Decoration\Armor\OutfitStandDrawProvider_Decorations.cs" />
+    <Compile Include="GraphicComps\Decoration\Armor\OutfitStandDrawProvider_MultiColorAttachments.cs" />
     <Compile Include="GraphicComps\Decoration\Armor\PawnRenderNodeWorker_AttachmentBackpack.cs" />
     <Compile Include="GraphicComps\Decoration\Armor\PawnRenderNodeWorker_AttachmentExtraDecoration.cs" />
     <Compile Include="GraphicComps\Decoration\Armor\PawnRenderNodeWorker_AttachmentExtraDecorationBody.cs" />
