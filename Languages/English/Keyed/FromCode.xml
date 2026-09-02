@@ -170,6 +170,19 @@
   <BEWH.Framework.RankSystem.RequirementsGeneAll>All of the following genes</BEWH.Framework.RankSystem.RequirementsGeneAll>
   <BEWH.Framework.RankSystem.RequirementsGeneAtLeastOne>At least one of the following genes</BEWH.Framework.RankSystem.RequirementsGeneAtLeastOne>
 
+  <BEWH.Framework.RankSystem.RequirementsHediffAll>All of the following hediffs</BEWH.Framework.RankSystem.RequirementsHediffAll>
+  <BEWH.Framework.RankSystem.RequirementsHediffAtLeastOne>At least one of the following hediffs</BEWH.Framework.RankSystem.RequirementsHediffAtLeastOne>
+
+  <BEWH.Framework.RankSystem.RequirementsAge>Biological age</BEWH.Framework.RankSystem.RequirementsAge>
+  <BEWH.Framework.RankSystem.MinimumBiologicalAge>Minimum: {0} years</BEWH.Framework.RankSystem.MinimumBiologicalAge>
+  <BEWH.Framework.RankSystem.MaximumBiologicalAge>Maximum: {0} years</BEWH.Framework.RankSystem.MaximumBiologicalAge>
+
+  <BEWH.Framework.RankSystem.RequirementsGender>Gender</BEWH.Framework.RankSystem.RequirementsGender>
+  <BEWH.Framework.RankSystem.MustBeGender>Must be {0}</BEWH.Framework.RankSystem.MustBeGender>
+
+  <BEWH.Framework.RankSystem.RequirementsStatus>Status</BEWH.Framework.RankSystem.RequirementsStatus>
+  <BEWH.Framework.RankSystem.MustBeSlaveOfColony>Slave of the colony</BEWH.Framework.RankSystem.MustBeSlaveOfColony>
+
   <BEWH.Framework.RankSystem.UnlockRankConfirm>Are you sure you want {0} to unlock the rank {1}?</BEWH.Framework.RankSystem.UnlockRankConfirm>
 
   <!-- "Every{2} colonist" from the text below is on purpose and should stay as so -->

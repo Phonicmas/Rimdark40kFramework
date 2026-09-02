@@ -24,7 +24,16 @@ public class RankDef : Def
         
     public List<RoyalTitleRequirement> requiredTitlesAll = [];
     public List<RoyalTitleRequirement> requiredTitlesOneAmong = [];
-        
+
+    public List<HediffDef> requiredHediffsAll = [];
+    public List<HediffDef> requiredHediffsOneAmong = [];
+
+    public Vector2 requiredAgeRange = new Vector2(-1, -1);
+
+    public Gender requiredGender = Gender.None;
+
+    public bool slaveRank = false;
+
     public List<StatModifier> statOffsets = [];
     public List<StatModifier> statFactors = [];
         
@@ -568,6 +577,181 @@ public class RankDef : Def
             return false;
         }
 
+        //Hediffs
+        var hediffsAllRequirementsMet = true;
+        var hediffsAtLeastOneRequirementsMet = requiredHediffsOneAmong.NullOrEmpty();
+        if (pawn.health != null)
+        {
+            //All
+            if (!requiredHediffsAll.NullOrEmpty())
+            {
+                if (buildText)
+                {
+                    stringBuilder.Append("\n");
+                    stringBuilder.AppendLine("BEWH.Framework.RankSystem.RequirementsHediffAll".Translate());
+                }
+
+                foreach (var hediff in requiredHediffsAll)
+                {
+                    var hediffsAllRequirementMet = pawn.health.hediffSet.HasHediff(hediff);
+
+                    if (!hediffsAllRequirementMet)
+                    {
+                        hediffsAllRequirementsMet = false;
+
+                        if (!buildText)
+                        {
+                            return false;
+                        }
+                    }
+
+                    if (!buildText)
+                    {
+                        continue;
+                    }
+
+                    var requirementColour = hediffsAllRequirementMet ? Core40kUtils.RequirementMetColour : Core40kUtils.RequirementNotMetColour;
+
+                    stringBuilder.AppendLine(("    " + hediff.label.CapitalizeFirst()).Colorize(requirementColour));
+                }
+            }
+            //One Among
+            if (!hediffsAtLeastOneRequirementsMet)
+            {
+                if (buildText)
+                {
+                    stringBuilder.Append("\n");
+                    stringBuilder.AppendLine("BEWH.Framework.RankSystem.RequirementsHediffAtLeastOne".Translate());
+                }
+
+                foreach (var hediff in requiredHediffsOneAmong)
+                {
+                    var hediffsAtLeastOneRequirementMet = pawn.health.hediffSet.HasHediff(hediff);
+
+                    if (hediffsAtLeastOneRequirementMet)
+                    {
+                        hediffsAtLeastOneRequirementsMet = true;
+
+                        if (!buildText)
+                        {
+                            break;
+                        }
+                    }
+
+                    if (!buildText)
+                    {
+                        continue;
+                    }
+
+                    var requirementColour = hediffsAtLeastOneRequirementMet ? Core40kUtils.RequirementMetColour : Core40kUtils.RequirementNotMetColour;
+                    stringBuilder.AppendLine(("    " + hediff.label.CapitalizeFirst()).Colorize(requirementColour));
+                }
+            }
+        }
+
+        if (!buildText && !hediffsAtLeastOneRequirementsMet)
+        {
+            return false;
+        }
+
+        //Age
+        var ageRequirementsMet = true;
+        if (requiredAgeRange.x >= 0 || requiredAgeRange.y >= 0)
+        {
+            if (buildText)
+            {
+                stringBuilder.Append("\n");
+                stringBuilder.AppendLine("BEWH.Framework.RankSystem.RequirementsAge".Translate());
+            }
+
+            var age = pawn.ageTracker.AgeBiologicalYears;
+
+            //Minimum
+            if (requiredAgeRange.x >= 0)
+            {
+                var minAgeRequirementMet = age >= requiredAgeRange.x;
+
+                if (!minAgeRequirementMet)
+                {
+                    ageRequirementsMet = false;
+
+                    if (!buildText)
+                    {
+                        return false;
+                    }
+                }
+
+                if (buildText)
+                {
+                    var requirementColour = minAgeRequirementMet ? Core40kUtils.RequirementMetColour : Core40kUtils.RequirementNotMetColour;
+                    stringBuilder.AppendLine(("    " + "BEWH.Framework.RankSystem.MinimumBiologicalAge".Translate(Mathf.RoundToInt(requiredAgeRange.x))).Colorize(requirementColour));
+                }
+            }
+            //Maximum
+            if (requiredAgeRange.y >= 0)
+            {
+                var maxAgeRequirementMet = age <= requiredAgeRange.y;
+
+                if (!maxAgeRequirementMet)
+                {
+                    ageRequirementsMet = false;
+
+                    if (!buildText)
+                    {
+                        return false;
+                    }
+                }
+
+                if (buildText)
+                {
+                    var requirementColour = maxAgeRequirementMet ? Core40kUtils.RequirementMetColour : Core40kUtils.RequirementNotMetColour;
+                    stringBuilder.AppendLine(("    " + "BEWH.Framework.RankSystem.MaximumBiologicalAge".Translate(Mathf.RoundToInt(requiredAgeRange.y))).Colorize(requirementColour));
+                }
+            }
+        }
+
+        //Gender
+        var genderRequirementMet = true;
+        if (requiredGender != Gender.None)
+        {
+            genderRequirementMet = pawn.gender == requiredGender;
+
+            if (!genderRequirementMet && !buildText)
+            {
+                return false;
+            }
+
+            if (buildText)
+            {
+                stringBuilder.Append("\n");
+                stringBuilder.AppendLine("BEWH.Framework.RankSystem.RequirementsGender".Translate());
+
+                var requirementColour = genderRequirementMet ? Core40kUtils.RequirementMetColour : Core40kUtils.RequirementNotMetColour;
+                stringBuilder.AppendLine(("    " + "BEWH.Framework.RankSystem.MustBeGender".Translate(requiredGender.GetLabel().CapitalizeFirst())).Colorize(requirementColour));
+            }
+        }
+
+        //Slave
+        var slaveRequirementMet = true;
+        if (slaveRank)
+        {
+            slaveRequirementMet = pawn.IsSlaveOfColony;
+
+            if (!slaveRequirementMet && !buildText)
+            {
+                return false;
+            }
+
+            if (buildText)
+            {
+                stringBuilder.Append("\n");
+                stringBuilder.AppendLine("BEWH.Framework.RankSystem.RequirementsStatus".Translate());
+
+                var requirementColour = slaveRequirementMet ? Core40kUtils.RequirementMetColour : Core40kUtils.RequirementNotMetColour;
+                stringBuilder.AppendLine(("    " + "BEWH.Framework.RankSystem.MustBeSlaveOfColony".Translate()).Colorize(requirementColour));
+            }
+        }
+
         //Incompatible Ranks
         var noIncompatibleRanks = true;
         if (!incompatibleRanks.NullOrEmpty())
@@ -613,7 +797,12 @@ public class RankDef : Def
                               && genesAllRequirementsMet 
                               && genesAtLeastOneRequirementsMet
                               && titlesAllRequirementsMet
-                              && titlesAtLeastOneRequirementsMet;
+                              && titlesAtLeastOneRequirementsMet
+                              && hediffsAllRequirementsMet
+                              && hediffsAtLeastOneRequirementsMet
+                              && ageRequirementsMet
+                              && genderRequirementMet
+                              && slaveRequirementMet;
 
         if (buildText)
         {
