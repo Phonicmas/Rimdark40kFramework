@@ -8,6 +8,10 @@ public class PawnRenderNodeWorker_AttachmentBackpack : PawnRenderNodeWorker
     public override bool CanDrawNow(PawnRenderNode node, PawnDrawParms parms)
     {
         var pawn = parms.pawn;
+        if (pawn == null)
+        {
+            return true;
+        }
 
         if (parms.Portrait)
         {

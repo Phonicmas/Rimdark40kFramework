@@ -11,6 +11,8 @@ public class ExtraDecorationDef : DecorationDef
     public bool drawInHeadSpace = false;
     
     public bool decoSizeMatchesThingSize = false;
+
+    public bool showOnGround = true;
     
     public List<Rot4> defaultShowRotation = [Rot4.North, Rot4.South, Rot4.East, Rot4.West];
     

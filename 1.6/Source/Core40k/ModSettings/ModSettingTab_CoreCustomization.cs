@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+using RimWorld;
+using UnityEngine;
 using Verse;
 
 namespace Core40k;
@@ -34,6 +35,17 @@ public class ModSettingTab_CoreCustomization : ModSettingTab
 
         listingStandard.CheckboxLabeled("BEWH.Framework.ModSettings.DecorationCostEnabled".Translate(), ref core40KModSettings.decorationCostEnabled, "BEWH.Framework.ModSettings.DecorationCostEnabledTooltip".Translate());
         scrollViewHeight += ListingHeightIncrease;
+
+        var showOnGroundBefore = core40KModSettings.showDecorationsOnGround;
+        listingStandard.CheckboxLabeled("BEWH.Framework.ModSettings.ShowDecorationsOnGround".Translate(), ref core40KModSettings.showDecorationsOnGround, "BEWH.Framework.ModSettings.ShowDecorationsOnGroundTooltip".Translate());
+        scrollViewHeight += ListingHeightIncrease;
+        if (showOnGroundBefore != core40KModSettings.showDecorationsOnGround && Current.Game != null)
+        {
+            foreach (var map in Find.Maps)
+            {
+                map.mapDrawer.WholeMapChanged(MapMeshFlagDefOf.Things);
+            }
+        }
 
         if (core40KModSettings.decorationWorkEnabled)
         {

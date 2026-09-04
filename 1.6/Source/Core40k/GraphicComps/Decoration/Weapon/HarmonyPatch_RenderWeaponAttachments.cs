@@ -99,21 +99,94 @@ public static class RenderWeaponAttachments
                 return;
         }
 
-        var decoComp = weapon.GetComp<CompWeaponDecoration>();
+        DrawDecorations(weapon, drawLoc, mesh, num, rotation);
+    }
 
-        if (decoComp == null)
+    private static bool loggedGroundDrawFailure;
+
+    /// <summary>
+    /// Draws a carried weapon's decorations. The ground texture is the held texture, so the held
+    /// placement applies unchanged; only the item's ground rotation is added.
+    /// </summary>
+    public static void DrawOnGround(ThingWithComps weapon, Vector3 drawLoc)
+    {
+        try
+        {
+            DrawDecorations(weapon, drawLoc, MeshPool.plane10, GroundRotationUtility.GroundAngleFor(weapon), Rot4.South);
+        }
+        catch (Exception exception)
+        {
+            LogGroundFailure(weapon, exception);
+        }
+    }
+
+    /// <summary>
+    /// Prints a spawned weapon's decorations into the map mesh, the way the item itself is printed.
+    /// </summary>
+    public static void PrintOnGround(ThingWithComps weapon, SectionLayer layer)
+    {
+        try
+        {
+            var groundAngle = GroundRotationUtility.GroundAngleFor(weapon);
+            var groundRotation = Quaternion.AngleAxis(groundAngle, Vector3.up);
+            var sizeMult = weapon.MultipleItemsPerCellDrawn() ? 0.8f : 1f;
+            var drawPos = weapon.DrawPos;
+
+            foreach (var placement in Placements(weapon, Rot4.South))
+            {
+                var center = drawPos + groundRotation * (placement.offset * sizeMult);
+                center.y += Mathf.Clamp(placement.layer, -MaxDecorationLayer, MaxDecorationLayer) * AltitudePerDecorationLayer;
+                Printer_Plane.PrintPlane(layer, center, placement.drawSize * sizeMult, placement.material, groundAngle);
+            }
+        }
+        catch (Exception exception)
+        {
+            LogGroundFailure(weapon, exception);
+        }
+    }
+
+    private static void LogGroundFailure(ThingWithComps weapon, Exception exception)
+    {
+        if (loggedGroundDrawFailure)
         {
             return;
         }
-        
+
+        loggedGroundDrawFailure = true;
+        Log.Error("[Core40k] Failed to draw ground weapon decorations on " + (weapon?.def?.defName ?? "null") + ", further failures will not be logged: " + exception);
+    }
+
+    private readonly struct Placement
+    {
+        public readonly Material material;
+        public readonly Vector3 offset;
+        public readonly Vector2 drawSize;
+        public readonly float layer;
+
+        public Placement(Material material, Vector3 offset, Vector2 drawSize, float layer)
+        {
+            this.material = material;
+            this.offset = offset;
+            this.drawSize = drawSize;
+            this.layer = layer;
+        }
+    }
+
+    private static IEnumerable<Placement> Placements(ThingWithComps weapon, Rot4 rotation)
+    {
+        var decoComp = weapon.GetComp<CompWeaponDecoration>();
+        if (decoComp == null)
+        {
+            yield break;
+        }
+
         foreach (var decoCompGraphic in decoComp.Graphics)
         {
             if (decoCompGraphic.Key is not WeaponDecorationDef weaponDecoration)
             {
                 continue;
             }
-            var graphic = decoCompGraphic.Value;
-            var material = graphic?.MatSingle;
+            var material = decoCompGraphic.Value?.MatSingle;
             if (material == null)
             {
                 continue;
@@ -122,13 +195,13 @@ public static class RenderWeaponAttachments
             var offset = Vector3.zero;
             var drawSize = decoCompGraphic.Key.drawSize;
             var layer = weaponDecoration.layerPlacement;
-            if (weaponDecoration.weaponSpecificDrawData != null && weaponDecoration.weaponSpecificDrawData.TryGetValue(eq.def.defName, out var value))
+            if (weaponDecoration.weaponSpecificDrawData != null && weaponDecoration.weaponSpecificDrawData.TryGetValue(weapon.def.defName, out var value))
             {
                 offset = value.OffsetForRot(rotation);
                 drawSize *= value.scale;
                 layer = value.LayerForRot(rotation, layer);
             }
-            else if(decoCompGraphic.Key.drawData != null)
+            else if (decoCompGraphic.Key.drawData != null)
             {
                 offset = decoCompGraphic.Key.drawData.OffsetForRot(rotation);
                 drawSize *= decoCompGraphic.Key.drawData.scale;
@@ -140,16 +213,22 @@ public static class RenderWeaponAttachments
                 drawSize *= drawData.defaultData.scale;
                 layer += drawData.defaultData.layer;
             }
-            
-            var quaterion = Quaternion.AngleAxis(num, Vector3.up);
-            var afterOffsetPos = drawLoc + quaterion * offset;
 
-            afterOffsetPos.y += Mathf.Clamp(layer, -MaxDecorationLayer, MaxDecorationLayer) * AltitudePerDecorationLayer;
+            yield return new Placement(material, offset, drawSize, layer);
+        }
+    }
 
-            var size = new Vector3(drawSize.x, 0f, drawSize.y);
-            
-            var matrix = Matrix4x4.TRS(s: size, pos: afterOffsetPos, q: quaterion);
-            Graphics.DrawMesh(mesh, matrix, material, 0);
+    private static void DrawDecorations(ThingWithComps weapon, Vector3 drawLoc, Mesh mesh, float num, Rot4 rotation)
+    {
+        var quaternion = Quaternion.AngleAxis(num, Vector3.up);
+        foreach (var placement in Placements(weapon, rotation))
+        {
+            var afterOffsetPos = drawLoc + quaternion * placement.offset;
+            afterOffsetPos.y += Mathf.Clamp(placement.layer, -MaxDecorationLayer, MaxDecorationLayer) * AltitudePerDecorationLayer;
+
+            var size = new Vector3(placement.drawSize.x, 0f, placement.drawSize.y);
+            var matrix = Matrix4x4.TRS(s: size, pos: afterOffsetPos, q: quaternion);
+            Graphics.DrawMesh(mesh, matrix, placement.material, 0);
         }
     }
 }

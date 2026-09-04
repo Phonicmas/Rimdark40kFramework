@@ -8,6 +8,10 @@ public class PawnRenderNodeWorker_AttachmentShoulderPad : PawnRenderNodeWorker
     public override bool CanDrawNow(PawnRenderNode node, PawnDrawParms parms)
     {
         var pawn = parms.pawn;
+        if (pawn == null)
+        {
+            return parms.facing.IsHorizontal;
+        }
 
         if (parms.Portrait)
         {

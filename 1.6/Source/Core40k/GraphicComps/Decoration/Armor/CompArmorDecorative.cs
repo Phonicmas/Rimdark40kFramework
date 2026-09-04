@@ -1,5 +1,6 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
+using UnityEngine;
 using Verse;
 
 namespace Core40k;
@@ -24,6 +25,51 @@ public class CompDecorative : CompDecorativeBase
             Core40kUtils.SetupCustomizationForPawn(pawn, false, true);
         }
         base.Notify_Equipped(pawn);
+    }
+
+    private GroundDecorationRenderer.GroundCache groundCache;
+    private bool groundCacheDirty = true;
+
+    public GroundDecorationRenderer.GroundCache GroundCache
+    {
+        get
+        {
+            if (groundCacheDirty)
+            {
+                groundCacheDirty = false;
+                groundCache = GroundDecorationRenderer.Build(this);
+            }
+            return groundCache;
+        }
+    }
+
+    public override void Notify_ColorChanged()
+    {
+        groundCacheDirty = true;
+        base.Notify_ColorChanged();
+    }
+
+    public override bool DontDrawParent()
+    {
+        return GroundDecorationRenderer.Enabled && GroundCache is { replacesParent: true };
+    }
+
+    public override void DrawAt(Vector3 drawLoc, bool flip = false)
+    {
+        if (!GroundDecorationRenderer.Enabled)
+        {
+            return;
+        }
+        GroundDecorationRenderer.Draw(this, drawLoc);
+    }
+
+    public override void PostPrintOnto(SectionLayer layer)
+    {
+        if (!GroundDecorationRenderer.Enabled)
+        {
+            return;
+        }
+        GroundDecorationRenderer.Print(this, layer);
     }
 
     public override void PostExposeData()

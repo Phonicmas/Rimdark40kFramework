@@ -64,7 +64,7 @@ public class OutfitStandDrawProvider_MultiColorAttachments : OutfitStandDrawProv
     }
 
     /// <summary>The same resolution PawnRenderNode_FlagEdit.GraphicFor does, with no wearer.</summary>
-    private static Graphic BuildGraphic(Thing apparel, CompMultiColor multiColor, DefModExtension_TextureFlags textureFlags, PawnRenderNodeProperties props)
+    internal static Graphic BuildGraphic(Thing apparel, CompMultiColor multiColor, DefModExtension_TextureFlags textureFlags, PawnRenderNodeProperties props)
     {
         string maskPath = null;
         if (multiColor.MaskDef != null && textureFlags != null && textureFlags.ShouldExpandMaskPath(multiColor.MaskDef, props.texSeed))

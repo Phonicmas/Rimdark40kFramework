@@ -22,6 +22,8 @@ public class Core40kModSettings : ModSettings
 
     public bool decorationCostEnabled = true;
 
+    public bool showDecorationsOnGround = true;
+
     public float appearanceChangeWorkAmount = 200f;
 
     public float minimumWorkAmount = 50f;
@@ -110,6 +112,7 @@ public class Core40kModSettings : ModSettings
         Scribe_Values.Look(ref showAllRankCategories, "showAllRankCategories", false);
         Scribe_Values.Look(ref decorationWorkEnabled, "decorationWorkEnabled", true);
         Scribe_Values.Look(ref decorationCostEnabled, "decorationCostEnabled", true);
+        Scribe_Values.Look(ref showDecorationsOnGround, "showDecorationsOnGround", true);
         Scribe_Values.Look(ref appearanceChangeWorkAmount, "appearanceChangeWorkAmount", 200f);
         Scribe_Values.Look(ref minimumWorkAmount, "minimumWorkAmount", 50f);
         Scribe_Collections.Look(ref colourPresets, "colourPresets");

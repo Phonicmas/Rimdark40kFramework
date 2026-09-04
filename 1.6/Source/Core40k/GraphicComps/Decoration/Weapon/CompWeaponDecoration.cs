@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using RimWorld;
+using UnityEngine;
 using Verse;
 
 namespace Core40k;
@@ -27,6 +28,24 @@ public class CompWeaponDecoration : CompDecorativeBase
     {
         RecacheDecorationGraphics();
         base.Notify_GraphicChanged();
+    }
+
+    public override void DrawAt(Vector3 drawLoc, bool flip = false)
+    {
+        if (Decorations.Count == 0 || !GroundDecorationRenderer.Enabled)
+        {
+            return;
+        }
+        RenderWeaponAttachments.DrawOnGround(parent, drawLoc);
+    }
+
+    public override void PostPrintOnto(SectionLayer layer)
+    {
+        if (Decorations.Count == 0 || !GroundDecorationRenderer.Enabled)
+        {
+            return;
+        }
+        RenderWeaponAttachments.PrintOnGround(parent, layer);
     }
     
     public bool recacheGraphics = true;
