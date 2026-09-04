@@ -148,7 +148,24 @@ public class CompWeaponDecoration : CompDecorativeBase
         toolsAndVerbsCached = false;
         cachedTools = null;
         cachedVerbProperties = null;
-        parent.GetComp<CompEquippable>()?.verbTracker?.VerbsNeedReinitOnLoad();
+
+        var equippable = parent.GetComp<CompEquippable>();
+        if (equippable?.verbTracker == null)
+        {
+            return;
+        }
+
+        equippable.verbTracker.VerbsNeedReinitOnLoad();
+
+        if (parent.ParentHolder is not Pawn_EquipmentTracker { pawn: not null } tracker)
+        {
+            return;
+        }
+
+        foreach (var verb in equippable.AllVerbs)
+        {
+            verb.caster = tracker.pawn;
+        }
     }
 
     private void RecacheToolsAndVerbs()

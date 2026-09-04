@@ -131,12 +131,11 @@ public static class RenderWeaponAttachments
             var groundRotation = Quaternion.AngleAxis(groundAngle, Vector3.up);
             var sizeMult = weapon.MultipleItemsPerCellDrawn() ? 0.8f : 1f;
             var drawPos = weapon.DrawPos;
+            var baseLength = (weapon.Graphic?.drawSize.y ?? 1f) * sizeMult;
 
             foreach (var placement in Placements(weapon, Rot4.South))
             {
-                var center = drawPos + groundRotation * (placement.offset * sizeMult);
-                center.y += Mathf.Clamp(placement.layer, -MaxDecorationLayer, MaxDecorationLayer) * AltitudePerDecorationLayer;
-                Printer_Plane.PrintPlane(layer, center, placement.drawSize * sizeMult, placement.material, groundAngle);
+                GroundDecorationRenderer.PrintOverBase(layer, drawPos, baseLength, groundAngle, groundRotation, placement.offset * sizeMult, placement.drawSize * sizeMult, placement.material, 0f, false, placement.layer);
             }
         }
         catch (Exception exception)

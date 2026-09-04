@@ -50,6 +50,8 @@ public static class GroundDecorationRenderer
         public float groundAngle;
         //True when the worn look is drawn, so the item's own icon graphic must not be.
         public bool replacesParent;
+        //Extent along z of the quad everything else is layered over: the worn base or the icon.
+        public float baseLength;
     }
 
     private static Core40kModSettings modSettings;
@@ -125,15 +127,35 @@ public static class GroundDecorationRenderer
         var groundRotation = Quaternion.AngleAxis(cache.groundAngle, Vector3.up);
         var sizeMult = comp.parent.MultipleItemsPerCellDrawn() ? 0.8f : 1f;
         var drawPos = comp.parent.DrawPos;
+        var baseLength = cache.baseLength * sizeMult;
 
         foreach (var draw in cache.draws)
         {
-            var center = drawPos + groundRotation * (draw.offset * sizeMult);
-            center.y += Mathf.Clamp(draw.layer, -MaxLayer, MaxLayer) * AltitudePerLayer;
-
             var size = new Vector2(draw.scale.x * sizeMult, draw.scale.z * sizeMult);
-            Printer_Plane.PrintPlane(layer, center, size, draw.material, cache.groundAngle + draw.angle, draw.flip);
+            PrintOverBase(layer, drawPos, baseLength, cache.groundAngle, groundRotation, draw.offset * sizeMult, size, draw.material, draw.angle, draw.flip, draw.layer);
         }
+    }
+
+    //Vanilla prints an item quad tilted, south edge at its altitude and north edge BaseAltitudeBias
+    //higher, so map mesh items sort against each other. A quad printed over it has to follow the
+    //same slope or it dips under the base wherever the two planes cross.
+    private const float BaseAltitudeBias = 0.01f;
+
+    /// <summary>
+    /// Prints a quad parallel to the base item quad it sits on, a layer step above or below it.
+    /// localOffset is in the item's unrotated frame; baseLength is the base quad's extent along z.
+    /// </summary>
+    public static void PrintOverBase(SectionLayer layer, Vector3 basePos, float baseLength, float groundAngle, Quaternion groundRotation, Vector3 localOffset, Vector2 size, Material material, float extraAngle, bool flip, float decorationLayer)
+    {
+        var slope = baseLength > 0f ? BaseAltitudeBias / baseLength : 0f;
+        var southEdgeLocalZ = localOffset.z - size.y / 2f;
+
+        var center = basePos + groundRotation * localOffset;
+        center.y = basePos.y
+                   + slope * (southEdgeLocalZ + baseLength / 2f)
+                   + Mathf.Clamp(decorationLayer, -MaxLayer, MaxLayer) * AltitudePerLayer;
+
+        Printer_Plane.PrintPlane(layer, center, size, material, groundAngle + extraAngle, flip, topVerticesAltitudeBias: slope * size.y);
     }
 
     public static GroundCache Build(CompDecorative comp)
@@ -165,6 +187,7 @@ public static class GroundDecorationRenderer
             //Pawn space, uniformly scaled: the worn texture, the nodes and the decorations all keep
             //the positions they have on a pawn.
             cache.replacesParent = true;
+            cache.baseLength = props.groundDrawSize;
             var factor = props.groundDrawSize / PawnMeshSize;
             offsetFactor = new Vector3(factor, 1f, factor);
             sizeFactor = new Vector3(props.groundDrawSize, 1f, props.groundDrawSize);
@@ -184,6 +207,7 @@ public static class GroundDecorationRenderer
             {
                 iconDrawSize *= ApparelIconDrawMult;
             }
+            cache.baseLength = iconDrawSize.y;
             offsetFactor = new Vector3(iconDrawSize.x / PawnMeshSize, 1f, iconDrawSize.y / PawnMeshSize) * props.groundDecorationScale;
             sizeFactor = new Vector3(iconDrawSize.x, 1f, iconDrawSize.y) * props.groundDecorationScale;
         }
