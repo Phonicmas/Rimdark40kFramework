@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq;
 using RimWorld;
 using UnityEngine;
@@ -89,6 +90,42 @@ public static class Core40kUtils
 
         verbModifyingDefCache.Add(equipment.def, result);
         return result;
+    }
+
+    private static class CompDefCache<T> where T : ThingComp
+    {
+        public static readonly ConcurrentDictionary<ThingDef, bool> Cache = new();
+    }
+
+    /// <summary>
+    /// Whether the def lists a comp of type T (or a subclass), memoised per def so hot paths can
+    /// skip the per-instance comp scan on things that can never carry it. Safe to call from the
+    /// parallel render phase.
+    /// </summary>
+    public static bool DefHasComp<T>(ThingDef def) where T : ThingComp
+    {
+        if (def == null)
+        {
+            return false;
+        }
+
+        return CompDefCache<T>.Cache.GetOrAdd(def, static thingDef =>
+        {
+            if (thingDef.comps.NullOrEmpty())
+            {
+                return false;
+            }
+
+            foreach (var compProperties in thingDef.comps)
+            {
+                if (compProperties?.compClass != null && typeof(T).IsAssignableFrom(compProperties.compClass))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        });
     }
     
     private static readonly Dictionary<(Color, Color?, Color?, int), Texture2D> colourPreviewCache = new();
@@ -247,22 +284,51 @@ public static class Core40kUtils
         }
     }
     
-    public static void SetupCustomizationForPawn(Pawn pawn, bool setupMultiColor, bool setupDecoration)
+    private static Dictionary<ColourPresetDef, ColorSelectionType> ResolveColorSelection(Pawn pawn, out DefModExtension_PawnKindCustomization pawnModExtension)
     {
         var factionSelection = pawn.Faction?.def?.GetModExtension<DefModExtension_PawnKindCustomization>()?.defaultColorSelection;
-        var pawnModExtension = pawn.kindDef?.GetModExtension<DefModExtension_PawnKindCustomization>();
+        pawnModExtension = pawn.kindDef?.GetModExtension<DefModExtension_PawnKindCustomization>();
         var pawnKindSelection = pawnModExtension?.defaultColorSelection;
-        
-        Dictionary<ColourPresetDef, ColorSelectionType> finalSelection = null;
+
         if (!pawnKindSelection.NullOrEmpty())
         {
-            finalSelection = pawnKindSelection;
-        }
-        else if (!factionSelection.NullOrEmpty())
-        {
-            finalSelection = factionSelection;
+            return pawnKindSelection;
         }
 
+        return !factionSelection.NullOrEmpty() ? factionSelection : null;
+    }
+
+    /// <summary>
+    /// Applies the pawn kind or faction defaults to one item. Each customizable item runs this from
+    /// its own first equip, so the pawn's whole outfit is covered without re-walking it per item.
+    /// </summary>
+    public static void SetupCustomizationForThing(Pawn pawn, ThingWithComps thing, bool setupMultiColor, bool setupDecoration)
+    {
+        if (pawn == null || thing == null)
+        {
+            return;
+        }
+
+        var finalSelection = ResolveColorSelection(pawn, out var pawnModExtension);
+        if (finalSelection == null)
+        {
+            return;
+        }
+
+        if (setupMultiColor)
+        {
+            SetupMultiColorCustomization(thing, finalSelection, pawn);
+        }
+
+        if (setupDecoration)
+        {
+            SetupDecorationCustomization(thing, pawnModExtension);
+        }
+    }
+
+    public static void SetupCustomizationForPawn(Pawn pawn, bool setupMultiColor, bool setupDecoration)
+    {
+        var finalSelection = ResolveColorSelection(pawn, out var pawnModExtension);
         if (finalSelection == null)
         {
             return;

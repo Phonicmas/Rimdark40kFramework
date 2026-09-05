@@ -19,6 +19,10 @@ namespace ColourPicker
     private Action<T> _callback;
     private bool _spinner;
 
+    //The validator parses the text; it only needs to run when the text changes.
+    private bool _valid = true;
+    private string _validatedFor;
+
     public TextField( T value, string id, Action<T> callback, Func<string, T> parser = null,
         Func<string, bool> validator = null, Func<T, string> toString = null, bool spinner = false )
     {
@@ -52,10 +56,20 @@ namespace ColourPicker
         return new TextField<string>( value, id, callback, hex => hex, ValidateHex );
     }
 
+    private bool IsValid()
+    {
+        if ( !ReferenceEquals( _validatedFor, _temp ) )
+        {
+            _validatedFor = _temp;
+            _valid = _validator?.Invoke( _temp ) ?? true;
+        }
+
+        return _valid;
+    }
+
     public void Draw( Rect rect )
     {
-        var valid = _validator?.Invoke( _temp ) ?? true;
-        GUI.color = valid ? Color.white : Color.red;
+        GUI.color = IsValid() ? Color.white : Color.red;
         GUI.SetNextControlName( _id );
         var temp = Widgets.TextField( rect, _temp );
         GUI.color = Color.white;
@@ -63,7 +77,7 @@ namespace ColourPicker
         if ( temp != _temp )
         {
             _temp = temp;
-            if ( _validator?.Invoke( _temp ) ?? true )
+            if ( IsValid() )
             {
                 _value = _parser( _temp );
                 _callback?.Invoke( _value );

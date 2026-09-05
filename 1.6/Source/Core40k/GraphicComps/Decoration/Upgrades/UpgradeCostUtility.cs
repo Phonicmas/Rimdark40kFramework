@@ -79,6 +79,9 @@ public static class UpgradeCostUtility
         return result;
     }
     
+    //The dialog pauses the game, so a tick based window would never expire; a short frame window
+    //keeps the listerThings and reachability sweep off the per-frame path while staying current.
+    private const int AvailableCacheFrames = 30;
     private static Pawn availableCachePawn;
     private static int availableCacheFrame = -1;
     private static readonly Dictionary<ThingDef, int> availableCache = new();
@@ -92,10 +95,11 @@ public static class UpgradeCostUtility
 
     private static int AvailableCount(Pawn pawn, ThingDef thingDef)
     {
-        if (availableCacheFrame != Time.frameCount || availableCachePawn != pawn)
+        var frame = Time.frameCount;
+        if (availableCachePawn != pawn || frame - availableCacheFrame >= AvailableCacheFrames || frame < availableCacheFrame)
         {
             availableCache.Clear();
-            availableCacheFrame = Time.frameCount;
+            availableCacheFrame = frame;
             availableCachePawn = pawn;
         }
 

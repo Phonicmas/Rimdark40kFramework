@@ -23,6 +23,8 @@ namespace ColourPicker
 
         public int Count => _colors.Count;
 
+        private static bool _dirty;
+
         public void Add( Color color )
         {
             _colors.RemoveAll( c => c == color );
@@ -31,6 +33,16 @@ namespace ColourPicker
             while (_colors.Count > max )
                 _colors.RemoveAt( _colors.Count - 1 );
 
+            _dirty = true;
+        }
+
+        //Written once when the picker closes rather than on every colour it records.
+        public static void Flush()
+        {
+            if ( !_dirty )
+                return;
+
+            _dirty = false;
             Write();
         }
 

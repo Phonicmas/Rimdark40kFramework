@@ -29,6 +29,9 @@ public class Dialog_CustomizeWeapon : Window, ICustomizationDialog
     private List<TabRecord> tabRecordsToRead => cachedTabRecordsToRead ??= tabRecords.Values.ToList();
 
     private CustomizationTabDef curTab;
+
+    private string cachedTitle;
+    private string Title => cachedTitle ??= "StylePawn".Translate().CapitalizeFirst() + ": " + weapon.def.LabelCap;
     
     public Dialog_CustomizeWeapon()
     {
@@ -80,7 +83,7 @@ public class Dialog_CustomizeWeapon : Window, ICustomizationDialog
         {
             height = Text.LineHeight * 2f
         };
-        Widgets.Label(rect, "StylePawn".Translate().CapitalizeFirst() + ": " + weapon.def.LabelCap);
+        Widgets.Label(rect, Title);
         Text.Font = GameFont.Small;
         inRect.yMin = rect.yMax + 4f;
         var rect2 = inRect;

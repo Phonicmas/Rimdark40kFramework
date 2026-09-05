@@ -91,9 +91,42 @@ public class GameComponent_CoreUtils : GameComponent
         gizmoToggleValues = null;
     }
     
+    /// <summary>
+    /// The framework comps currently contributing stats to a pawn, held as comp references so the
+    /// StatWorker postfix never has to scan a comp list.
+    /// </summary>
     public class CachedDecoratives
     {
-        public List<Apparel> apparels = [];
-        public ThingWithComps weapon;
+        public List<ThingComp> apparelComps = [];
+        public ThingComp weaponComp;
+
+        public bool IsEmpty => apparelComps.Count == 0 && weaponComp == null;
+
+        public void Add(ThingComp comp)
+        {
+            if (comp.parent is Apparel)
+            {
+                if (!apparelComps.Contains(comp))
+                {
+                    apparelComps.Add(comp);
+                }
+            }
+            else
+            {
+                weaponComp = comp;
+            }
+        }
+
+        public void Remove(ThingComp comp)
+        {
+            if (comp.parent is Apparel)
+            {
+                apparelComps.Remove(comp);
+            }
+            else if (weaponComp == comp)
+            {
+                weaponComp = null;
+            }
+        }
     }
 }

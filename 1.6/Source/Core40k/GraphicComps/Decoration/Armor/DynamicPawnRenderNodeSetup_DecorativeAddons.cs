@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using RimWorld;
 using Verse;
 
@@ -17,13 +15,17 @@ public class DynamicPawnRenderNodeSetup_DecorativeAddons : DynamicPawnRenderNode
             yield break;
         }
 
-        var decorativeApparels = pawn.apparel.WornApparel.Where(apparel => apparel.HasComp<CompDecorative>()).ToList();
-        
         var baseBodyType = BodyTypeUtils.SafeBodyType(pawn);
 
-        foreach (var decorativeApparel in decorativeApparels)
+        var wornApparel = pawn.apparel.WornApparel;
+        for (var i = 0; i < wornApparel.Count; i++)
         {
+            var decorativeApparel = wornApparel[i];
             var decorativeComp = decorativeApparel.GetComp<CompDecorative>();
+            if (decorativeComp == null)
+            {
+                continue;
+            }
 
             //Scoped to this apparel - a forced bodytype must not leak into the next iteration.
             var pawnBodyType = decorativeApparel.def.GetModExtension<DefModExtension_ForcesBodyType>()?.forcedBodyType
@@ -61,7 +63,7 @@ public class DynamicPawnRenderNodeSetup_DecorativeAddons : DynamicPawnRenderNode
                         continue;
                 }
                 
-                var pawnRenderNode = (PawnRenderNode_AttachmentExtraDecoration)Activator.CreateInstance(typeof(PawnRenderNode_AttachmentExtraDecoration), pawn, pawnRenderNodeProperty, tree);
+                var pawnRenderNode = new PawnRenderNode_AttachmentExtraDecoration(pawn, pawnRenderNodeProperty, tree);
                 
                 pawnRenderNode.decorativeComp = decorativeComp;
                 pawnRenderNode.decorationDef = decoration.Key;

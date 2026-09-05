@@ -22,7 +22,7 @@ public class CompDecorative : CompDecorativeBase
         {
             pawnKindDefSetupDone = true;
 
-            Core40kUtils.SetupCustomizationForPawn(pawn, false, true);
+            Core40kUtils.SetupCustomizationForThing(pawn, parent, false, true);
         }
         base.Notify_Equipped(pawn);
     }

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
@@ -77,8 +78,7 @@ public static class StatWorker_StatOffsetFromGear_Patch
     {
         if (stat == StatDefOf.MoveSpeed && val < 0f && IgnoreMovespeedDecreaseUtility.TryGetNegatingGene(gear, stat, out _))
         {
-            var defMod = gear.def.GetModExtension<DefModExtension_IgnoreMovespeedDecrease>();
-            return defMod?.newMoveSpeedOffset ?? 0f;
+            return IgnoreMovespeedDecreaseUtility.NewMoveSpeedOffsetFor(gear.def);
         }
         return val;
     }
@@ -86,6 +86,39 @@ public static class StatWorker_StatOffsetFromGear_Patch
 
 public static class IgnoreMovespeedDecreaseUtility
 {
+    private static HashSet<GeneDef> negatingGeneDefs;
+
+    private static readonly ConcurrentDictionary<ThingDef, float> newMoveSpeedOffsets = new();
+
+    //Built on first use so the def database is complete, then shared by every MoveSpeed evaluation.
+    private static HashSet<GeneDef> NegatingGeneDefs
+    {
+        get
+        {
+            if (negatingGeneDefs != null)
+            {
+                return negatingGeneDefs;
+            }
+
+            var result = new HashSet<GeneDef>();
+            foreach (var geneDef in DefDatabase<GeneDef>.AllDefsListForReading)
+            {
+                if (geneDef.HasModExtension<DefModExtension_IgnoreMovespeedDecrease>())
+                {
+                    result.Add(geneDef);
+                }
+            }
+
+            negatingGeneDefs = result;
+            return result;
+        }
+    }
+
+    public static float NewMoveSpeedOffsetFor(ThingDef gearDef)
+    {
+        return newMoveSpeedOffsets.GetOrAdd(gearDef, static def => def.GetModExtension<DefModExtension_IgnoreMovespeedDecrease>()?.newMoveSpeedOffset ?? 0f);
+    }
+
     public static bool TryGetNegatingGene(Thing gear, StatDef stat, out Gene negatingGene)
     {
         negatingGene = null;
@@ -104,9 +137,23 @@ public static class IgnoreMovespeedDecreaseUtility
             return false;
         }
 
-        negatingGene = pawnApparelTracker.pawn.genes.GenesListForReading
-            .FirstOrDefault(gene => gene.def.HasModExtension<DefModExtension_IgnoreMovespeedDecrease>());
-        return negatingGene != null;
+        var negatingDefs = NegatingGeneDefs;
+        if (negatingDefs.Count == 0)
+        {
+            return false;
+        }
+
+        var genes = pawnApparelTracker.pawn.genes.GenesListForReading;
+        for (var i = 0; i < genes.Count; i++)
+        {
+            if (negatingDefs.Contains(genes[i].def))
+            {
+                negatingGene = genes[i];
+                return true;
+            }
+        }
+
+        return false;
     }
     
     public static bool HidesStatOffset(Thing gear, StatDef stat)

@@ -20,13 +20,16 @@ public class CompWeaponDecoration : CompDecorativeBase
     public override void Reset()
     {
         cachedGraphics = [];
+        cachedPlacements = null;
         base.Reset();
         InvalidateToolsAndVerbs();
     }
 
     public override void Notify_GraphicChanged()
     {
-        RecacheDecorationGraphics();
+        //Rebuilt lazily by the Graphics getter; one user action can raise this several times.
+        recacheGraphics = true;
+        cachedPlacements = null;
         base.Notify_GraphicChanged();
     }
 
@@ -36,7 +39,7 @@ public class CompWeaponDecoration : CompDecorativeBase
         {
             return;
         }
-        RenderWeaponAttachments.DrawOnGround(parent, drawLoc);
+        RenderWeaponAttachments.DrawOnGround(this, drawLoc);
     }
 
     public override void PostPrintOnto(SectionLayer layer)
@@ -45,7 +48,7 @@ public class CompWeaponDecoration : CompDecorativeBase
         {
             return;
         }
-        RenderWeaponAttachments.PrintOnGround(parent, layer);
+        RenderWeaponAttachments.PrintOnGround(this, layer);
     }
     
     public bool recacheGraphics = true;
@@ -66,6 +69,7 @@ public class CompWeaponDecoration : CompDecorativeBase
     {
         recacheGraphics = false;
         cachedGraphics = [];
+        cachedPlacements = null;
         var sortedGraphics = Decorations.Keys.ToList();
         if (!sortedGraphics.NullOrEmpty())
         {
@@ -118,6 +122,68 @@ public class CompWeaponDecoration : CompDecorativeBase
             cachedGraphics.Add(weaponDecoration, graphic);
         }
     }
+
+    private List<WeaponDecorationPlacement>[] cachedPlacements;
+
+    /// <summary>
+    /// The material, offset, size and layer of every drawn decoration at the given rotation. Built
+    /// once per rotation and dropped whenever the graphics are recached, so the per-frame draw is a
+    /// plain loop over a list.
+    /// </summary>
+    public List<WeaponDecorationPlacement> PlacementsFor(Rot4 rotation)
+    {
+        var graphics = Graphics;
+        cachedPlacements ??= new List<WeaponDecorationPlacement>[4];
+
+        var rotationIndex = rotation.IsValid ? rotation.AsInt : Rot4.South.AsInt;
+        var placements = cachedPlacements[rotationIndex];
+        if (placements != null)
+        {
+            return placements;
+        }
+
+        placements = [];
+        var weaponDefName = parent.def.defName;
+        foreach (var decoCompGraphic in graphics)
+        {
+            if (decoCompGraphic.Key is not WeaponDecorationDef weaponDecoration)
+            {
+                continue;
+            }
+            var material = decoCompGraphic.Value?.MatSingle;
+            if (material == null)
+            {
+                continue;
+            }
+
+            var offset = Vector3.zero;
+            var drawSize = weaponDecoration.drawSize;
+            var layer = weaponDecoration.layerPlacement;
+            if (weaponDecoration.weaponSpecificDrawData != null && weaponDecoration.weaponSpecificDrawData.TryGetValue(weaponDefName, out var value))
+            {
+                offset = value.OffsetForRot(rotation);
+                drawSize *= value.scale;
+                layer = value.LayerForRot(rotation, layer);
+            }
+            else if (weaponDecoration.drawData != null)
+            {
+                offset = weaponDecoration.drawData.OffsetForRot(rotation);
+                drawSize *= weaponDecoration.drawData.scale;
+            }
+
+            if (drawDatas.TryGetValue(weaponDecoration, out var drawData))
+            {
+                offset += drawData.defaultData.offset;
+                drawSize *= drawData.defaultData.scale;
+                layer += drawData.defaultData.layer;
+            }
+
+            placements.Add(new WeaponDecorationPlacement(material, offset, drawSize, layer));
+        }
+
+        cachedPlacements[rotationIndex] = placements;
+        return placements;
+    }
     
     private List<Tool> cachedTools;
     private List<VerbProperties> cachedVerbProperties;
@@ -143,8 +209,70 @@ public class CompWeaponDecoration : CompDecorativeBase
 
     public bool AnyDecorationChangesToolsOrVerbs => Decorations.Keys.OfType<WeaponDecorationDef>().Any(deco => deco.ChangesToolsOrVerbs);
 
+    private bool verbModifiersCached;
+    private int cachedAdditionalBurstShotCount;
+    private float cachedAdditionalRange;
+    private float cachedAdditionalWarmupTime;
+
+    public int AdditionalBurstShotCount
+    {
+        get
+        {
+            RecacheVerbModifiers();
+            return cachedAdditionalBurstShotCount;
+        }
+    }
+
+    public float AdditionalRange
+    {
+        get
+        {
+            RecacheVerbModifiers();
+            return cachedAdditionalRange;
+        }
+    }
+
+    public float AdditionalWarmupTime
+    {
+        get
+        {
+            RecacheVerbModifiers();
+            return cachedAdditionalWarmupTime;
+        }
+    }
+
+    /// <summary>
+    /// Sums the verb modifiers of the fitted decorations once, so the Verb getter postfixes read a
+    /// field instead of walking the decoration dictionary on every call.
+    /// </summary>
+    private void RecacheVerbModifiers()
+    {
+        if (verbModifiersCached)
+        {
+            return;
+        }
+
+        verbModifiersCached = true;
+        cachedAdditionalBurstShotCount = 0;
+        cachedAdditionalRange = 0f;
+        cachedAdditionalWarmupTime = 0f;
+
+        foreach (var decoration in Decorations.Keys)
+        {
+            if (decoration is not WeaponDecorationDef { verbModifier: not null } weaponDecoration)
+            {
+                continue;
+            }
+
+            cachedAdditionalBurstShotCount += weaponDecoration.verbModifier.additionalBurstShotCount;
+            cachedAdditionalRange += weaponDecoration.verbModifier.additionalRange;
+            cachedAdditionalWarmupTime += weaponDecoration.verbModifier.additionalWarmupTime;
+        }
+    }
+
     public void InvalidateToolsAndVerbs()
     {
+        verbModifiersCached = false;
         toolsAndVerbsCached = false;
         cachedTools = null;
         cachedVerbProperties = null;
@@ -399,5 +527,21 @@ public class CompWeaponDecoration : CompDecorativeBase
 
         weaponDecorations = new Dictionary<WeaponDecorationDef, ExtraDecorationSettings>();
         originalWeaponDecorations = new Dictionary<WeaponDecorationDef, ExtraDecorationSettings>();
+    }
+}
+
+public readonly struct WeaponDecorationPlacement
+{
+    public readonly Material material;
+    public readonly Vector3 offset;
+    public readonly Vector2 drawSize;
+    public readonly float layer;
+
+    public WeaponDecorationPlacement(Material material, Vector3 offset, Vector2 drawSize, float layer)
+    {
+        this.material = material;
+        this.offset = offset;
+        this.drawSize = drawSize;
+        this.layer = layer;
     }
 }

@@ -1,4 +1,5 @@
-﻿using RimWorld;
+﻿using System.Runtime.CompilerServices;
+using RimWorld;
 using UnityEngine;
 using Verse;
 
@@ -6,9 +7,28 @@ namespace Core40k;
 
 public class PawnRenderNodeWorker_AlternateFormCompatible : PawnRenderNodeWorker
 {
+    private sealed class CompHolder
+    {
+        public CompAlternateTexture comp;
+    }
+
+    //A node's apparel never changes, so the comp is looked up once per node. The table drops the
+    //entry with the node, and GetValue is safe from the parallel render phase.
+    private static readonly ConditionalWeakTable<PawnRenderNode, CompHolder> compCache = new();
+
+    private static CompAlternateTexture AlternateTextureFor(PawnRenderNode node)
+    {
+        if (node?.apparel == null)
+        {
+            return null;
+        }
+
+        return compCache.GetValue(node, static n => new CompHolder { comp = n.apparel.GetComp<CompAlternateTexture>() }).comp;
+    }
+
     public override Vector3 OffsetFor(PawnRenderNode node, PawnDrawParms parms, out Vector3 pivot)
     {
-        var alternateTexture = node.apparel?.GetComp<CompAlternateTexture>();
+        var alternateTexture = AlternateTextureFor(node);
         if (alternateTexture?.CurrentAlternateBaseForm == null)
         {
             return base.OffsetFor(node, parms, out pivot);
@@ -54,7 +74,7 @@ public class PawnRenderNodeWorker_AlternateFormCompatible : PawnRenderNodeWorker
     
     protected override Vector3 PivotFor(PawnRenderNode node, PawnDrawParms parms)
     {
-        var alternateTexture = node.apparel?.GetComp<CompAlternateTexture>();
+        var alternateTexture = AlternateTextureFor(node);
         if (alternateTexture?.CurrentAlternateBaseForm == null)
         {
             return base.PivotFor(node, parms);

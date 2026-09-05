@@ -13,32 +13,18 @@ public static class IncreaseWarmupTimeFromVarious
             return;
         }
 
-        var equipment = __instance.EquipmentSource;
-        if (!Core40kUtils.CanModifyVerbs(equipment))
+        if (!WeaponVerbCompCache.TryGet(__instance.EquipmentSource, out var ammoChangerComp, out var weaponDecoComp))
         {
             return;
         }
 
-        var ammoChangerComp = equipment.GetComp<Comp_AmmoChanger>();
         if (ammoChangerComp != null)
         {
             __result = ammoChangerComp.WarmupTimeOr(__result);
         }
-        var weaponDecoComp = equipment.GetComp<CompWeaponDecoration>();
-        if (weaponDecoComp?.Decorations is { Count: > 0 })
+        if (weaponDecoComp != null)
         {
-            foreach (var weaponDecoration in weaponDecoComp.Decorations)
-            {
-                if (weaponDecoration.Key is not WeaponDecorationDef weaponDecorationDef)
-                {
-                    continue;
-                }
-                
-                if (weaponDecorationDef.verbModifier != null)
-                {
-                    __result += weaponDecorationDef.verbModifier.additionalWarmupTime;
-                }
-            }
+            __result += weaponDecoComp.AdditionalWarmupTime;
         }
     }
 }

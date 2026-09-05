@@ -281,7 +281,7 @@ public class CompMultiColor : CompGraphicParent
         {
             pawnKindDefSetupDone = true;
             
-            Core40kUtils.SetupCustomizationForPawn(pawn, true, false);
+            Core40kUtils.SetupCustomizationForThing(pawn, parent, true, false);
         }
 
         Notify_GraphicChanged();

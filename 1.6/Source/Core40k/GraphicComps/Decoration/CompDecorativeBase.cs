@@ -118,7 +118,7 @@ public class CompDecorativeBase : CompGraphicParent
 
         if (setDefaultColors)
         {
-            SetDefaultColors(decoration);
+            ApplyDefaultColors(decoration, resetMaskDef: true);
         }
     }
 
@@ -160,7 +160,15 @@ public class CompDecorativeBase : CompGraphicParent
     }
     public virtual void RemoveInvalidDecorations(Pawn pawn)
     {
-        var toRemove = decorations.Keys.Where(def => def == null || !def.HasRequirements(pawn, out _)).ToList();
+        List<DecorationDef> toRemove = null;
+        foreach (var def in decorations.Keys)
+        {
+            if (def == null || !def.MeetsRequirements(pawn))
+            {
+                toRemove ??= [];
+                toRemove.Add(def);
+            }
+        }
         RemoveEach(toRemove);
     }
     public virtual void RemoveDecorationsIncompatibleWithAlternate(AlternateBaseFormDef alternateBaseFormDef)
@@ -224,16 +232,32 @@ public class CompDecorativeBase : CompGraphicParent
         decorations[decoration].ColorThree = MultiColor.DrawColorThree;
         Notify_GraphicChanged();
     }
+    /// <summary>
+    /// Sets all three colours with a single graphic change notification.
+    /// </summary>
+    public void SetDecorationColours(DecorationDef decoration, Color colour, Color colourTwo, Color colourThree)
+    {
+        var settings = decorations[decoration];
+        settings.Color = colour;
+        settings.ColorTwo = colourTwo;
+        settings.ColorThree = colourThree;
+        Notify_GraphicChanged();
+    }
     public virtual void SetDefaultColors(DecorationDef decoration, bool resetMaskDef = true)
     {
-        decorations[decoration].Color = decoration.defaultColour ?? (decoration.useParentColourAsDefault ? MultiColor.DrawColor : Color.white);
-        decorations[decoration].ColorTwo = decoration.defaultColourTwo ?? (decoration.useParentColourAsDefault ? MultiColor.DrawColorTwo : Color.white);
-        decorations[decoration].ColorThree = decoration.defaultColourThree ?? (decoration.useParentColourAsDefault ? MultiColor.DrawColorThree : Color.white);
+        ApplyDefaultColors(decoration, resetMaskDef);
+        Notify_GraphicChanged();
+    }
+    private void ApplyDefaultColors(DecorationDef decoration, bool resetMaskDef)
+    {
+        var settings = decorations[decoration];
+        settings.Color = decoration.defaultColour ?? (decoration.useParentColourAsDefault ? MultiColor.DrawColor : Color.white);
+        settings.ColorTwo = decoration.defaultColourTwo ?? (decoration.useParentColourAsDefault ? MultiColor.DrawColorTwo : Color.white);
+        settings.ColorThree = decoration.defaultColourThree ?? (decoration.useParentColourAsDefault ? MultiColor.DrawColorThree : Color.white);
         if (resetMaskDef)
         {
-            decorations[decoration].maskDef = decoration.defaultMask;
+            settings.maskDef = decoration.defaultMask;
         }
-        Notify_GraphicChanged();
     }
     public void SetDrawData(DecorationDef decoDef, DecorationDrawData drawData)
     {
@@ -715,67 +739,37 @@ public class CompDecorativeBase : CompGraphicParent
     {
         ApplyGrantsToPawn(pawn, add: false);
 
-        if (pawn != null && CoreUtils != null)
+        if (pawn != null && CoreUtils != null && CoreUtils.cachedDecoratives.TryGetValue(pawn, out var decoratives))
         {
-            if (CoreUtils.cachedDecoratives.TryGetValue(pawn, out var decoratives))
+            decoratives.Remove(this);
+            if (decoratives.IsEmpty)
             {
-                if (parent is Apparel apparel)
-                {
-                    decoratives.apparels.Remove(apparel);
-                }
-                else
-                {
-                    decoratives.weapon = null;
-                }
-                
-                cachedStatOffset = new Dictionary<StatDef, float>();
-                cachedStatFactor = new Dictionary<StatDef, float>();
+                CoreUtils.cachedDecoratives.Remove(pawn);
             }
+
+            cachedStatOffset = new Dictionary<StatDef, float>();
+            cachedStatFactor = new Dictionary<StatDef, float>();
         }
         
         base.Notify_Unequipped(pawn);
     }
     private void TryAddCachedStat(Pawn pawn)
     {
-        if (pawn != null && CoreUtils != null)
+        if (pawn == null || CoreUtils == null)
         {
-            cachedStatOffset = new Dictionary<StatDef, float>();
-            cachedStatFactor = new Dictionary<StatDef, float>();
-            
-            if (CoreUtils.cachedDecoratives.TryGetValue(pawn, out var decoratives))
-            {
-                if (parent is Apparel apparel)
-                {
-                    decoratives.apparels.Add(apparel);
-                }
-                else
-                {
-                    decoratives.weapon = parent;
-                }
-                
-            }
-            else
-            {
-                GameComponent_CoreUtils.CachedDecoratives cachedDecoratives;
-                if (parent is Apparel apparel)
-                {
-                    cachedDecoratives = new GameComponent_CoreUtils.CachedDecoratives
-                    {
-                        apparels = [apparel],
-                    };
-                }
-                else
-                {
-                    cachedDecoratives = new GameComponent_CoreUtils.CachedDecoratives
-                    {
-                        apparels = [],
-                        weapon = parent,
-                    };
-                }
-
-                CoreUtils.cachedDecoratives.Add(pawn, cachedDecoratives);
-            }
+            return;
         }
+
+        cachedStatOffset = new Dictionary<StatDef, float>();
+        cachedStatFactor = new Dictionary<StatDef, float>();
+
+        if (!CoreUtils.cachedDecoratives.TryGetValue(pawn, out var decoratives))
+        {
+            decoratives = new GameComponent_CoreUtils.CachedDecoratives();
+            CoreUtils.cachedDecoratives.Add(pawn, decoratives);
+        }
+
+        decoratives.Add(this);
     }
     
     //Stat Related

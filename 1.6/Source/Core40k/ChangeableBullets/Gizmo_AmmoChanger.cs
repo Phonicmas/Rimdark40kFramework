@@ -11,10 +11,24 @@ public class Gizmo_AmmoChanger : Command
     private float Width => 75f;
 
     private Comp_AmmoChanger compAmmoChanger;
+
+    private ThingDef tooltipFor;
+    private string tooltip;
     
     public Gizmo_AmmoChanger(Comp_AmmoChanger compAmmoChanger)
     {
         this.compAmmoChanger = compAmmoChanger;
+    }
+
+    private string TooltipFor(ThingDef projectile)
+    {
+        if (tooltipFor != projectile)
+        {
+            tooltipFor = projectile;
+            tooltip = "BEWH.Framework.AmmoChanger.GizmoInfo".Translate(projectile.LabelCap, AmmoDescription(projectile));
+        }
+
+        return tooltip;
     }
     
     public override GizmoResult GizmoOnGUI(Vector2 topLeft, float maxWidth, GizmoRenderParms parms)
@@ -27,7 +41,7 @@ public class Gizmo_AmmoChanger : Command
             return new GizmoResult(GizmoState.Clear, null);
         }
 
-        TooltipHandler.TipRegion(rect, "BEWH.Framework.AmmoChanger.GizmoInfo".Translate(selectedProjectile.LabelCap, AmmoDescription(selectedProjectile)));
+        TooltipHandler.TipRegion(rect, TooltipFor(selectedProjectile));
         Widgets.DrawWindowBackground(rect);
         
         var color = Color.white;

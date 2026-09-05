@@ -285,7 +285,7 @@ namespace ColourPicker
         //(built from the RGB channels only) as well - neither of which alpha can change.
         public void NotifyAlphaUpdated()
         {
-            CreateColourPickerBG();
+            //The SV plane is baked opaque and drawn through GUI.color, so alpha never touches it.
             CreatePreviewBG( ref _tempPreviewBG, tempColour );
             SetPickerPositions();
 
@@ -441,6 +441,9 @@ namespace ColourPicker
             DestroyTexture( ref _previewAlphaBG );
 
             _pickerPixelBuffer = null;
+            _alphaPixelBuffer = null;
+
+            RecentColours.Flush();
         }
 
         private static void DestroyTexture( ref Texture2D tex )
@@ -464,13 +467,13 @@ namespace ColourPicker
             float wu = UnitsPerPixel;
             float hu = UnitsPerPixel;
 
-            Texture2D tex = new Texture2D( w, h );
-
-            //One SetPixels upload off a reused buffer. This is 90,000 pixels and it used to be
-            //90,000 individual SetPixel calls, re-run on every frame the player dragged a slider.
+            //One texture for the life of the dialog, no mip chain (it is drawn at its own size),
+            //one SetPixels upload off a reused buffer.
+            _colourPickerBG ??= new Texture2D( w, h, TextureFormat.RGBA32, false );
             _pickerPixelBuffer ??= new Color[w * h];
 
-            // HSV colours, H in slider, S horizontal, V vertical.
+            // HSV colours, H in slider, S horizontal, V vertical. Alpha is applied at draw time.
+            var hue = H;
             for ( int y = 0; y < h; y++ )
             {
                 V = y * hu;
@@ -478,14 +481,12 @@ namespace ColourPicker
                 for ( int x = 0; x < w; x++ )
                 {
                     S = x * wu;
-                    _pickerPixelBuffer[rowStart + x] = HSVAToRGB( H, S, V, A );
+                    _pickerPixelBuffer[rowStart + x] = Color.HSVToRGB( hue, S, V );
                 }
             }
 
-            tex.SetPixels( _pickerPixelBuffer );
-            tex.Apply();
-
-            SwapTexture( ref _colourPickerBG, tex );
+            _colourPickerBG.SetPixels( _pickerPixelBuffer );
+            _colourPickerBG.Apply( false );
         }
 
         private void CreateHuePickerBG()
@@ -496,7 +497,7 @@ namespace ColourPicker
                 return;
             }
 
-            Texture2D tex = new Texture2D( 1, _pickerSize );
+            Texture2D tex = new Texture2D( 1, _pickerSize, TextureFormat.RGBA32, false );
 
             var h = _pickerSize;
             var hu = 1f / h;
@@ -511,21 +512,25 @@ namespace ColourPicker
             SwapTexture( ref _huePickerBG, tex );
         }
 
+        private Color[] _alphaPixelBuffer;
+
         private void CreateAlphaPickerBG()
         {
-            Texture2D tex = new Texture2D( 1, _pickerSize );
-
             var h = _pickerSize;
             var hu = 1f / h;
 
+            _alphaPickerBG ??= new Texture2D( 1, h, TextureFormat.RGBA32, false );
+            _alphaPixelBuffer ??= new Color[h];
+
             // RGB color from cache, alternate a
+            var colour = tempColour;
             for ( int y = 0; y < h; y++ )
             {
-                tex.SetPixel( 0, y, new Color( tempColour.r, tempColour.g, tempColour.b, y * hu ) );
+                _alphaPixelBuffer[y] = new Color( colour.r, colour.g, colour.b, y * hu );
             }
-            tex.Apply();
 
-            SwapTexture( ref _alphaPickerBG, tex );
+            _alphaPickerBG.SetPixels( _alphaPixelBuffer );
+            _alphaPickerBG.Apply( false );
         }
 
         private void CreateAlphaBG( ref Texture2D bg, int width, int height )
@@ -558,14 +563,25 @@ namespace ColourPicker
 
         public void CreatePreviewBG( ref Texture2D bg, Color col )
         {
-            SwapTexture( ref bg, SolidColorMaterials.NewSolidColorTexture( col ) );
+            bg ??= new Texture2D( 1, 1, TextureFormat.RGBA32, false );
+            bg.SetPixel( 0, 0, col );
+            bg.Apply( false );
         }
 
+        //The three actions run on every GUI event while the mouse button is held, so they return
+        //before any texture work when the value they would set is the one already held.
         public void PickerAction( Vector2 pos )
         {
+            var s = UnitsPerPixel * pos.x;
+            var v = 1 - UnitsPerPixel * pos.y;
+            if ( Mathf.Approximately( s, _s ) && Mathf.Approximately( v, _v ) )
+            {
+                return;
+            }
+
             // if we set S, V via properties these will be called twice. 
-            _s = UnitsPerPixel * pos.x;
-            _v = 1 - UnitsPerPixel * pos.y;
+            _s = s;
+            _v = v;
 
             CreateAlphaPickerBG();
             NotifyHSVUpdated();
@@ -574,15 +590,27 @@ namespace ColourPicker
 
         public void HueAction( float pos )
         {
+            var h = Mathf.Clamp( 1 - UnitsPerPixel * pos, 0f, 1f );
+            if ( Mathf.Approximately( h, _h ) )
+            {
+                return;
+            }
+
             // only changing one value, property should work fine
-            H = 1 - UnitsPerPixel * pos;
+            H = h;
             _huePosition = pos;
         }
 
         public void AlphaAction( float pos )
         {
+            var a = Mathf.Clamp( 1 - UnitsPerPixel * pos, 0f, 1f );
+            if ( Mathf.Approximately( a, tempColour.a ) )
+            {
+                return;
+            }
+
             // only changing one value, property should work fine
-            A = 1 - UnitsPerPixel * pos;
+            A = a;
             _alphaPosition = pos;
         }
 
@@ -636,7 +664,9 @@ namespace ColourPicker
             GUI.DrawTexture( previewOldRect, PreviewAlphaBG );
 
             // draw picker foregrounds
+            GUI.color = new Color( 1f, 1f, 1f, A );
             GUI.DrawTexture( pickerRect, ColourPickerBG );
+            GUI.color = Color.white;
             GUI.DrawTexture( hueRect, HuePickerBG );
             GUI.DrawTexture( alphaRect, AlphaPickerBG );
             GUI.DrawTexture( previewRect, TempPreviewBG );

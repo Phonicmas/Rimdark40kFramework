@@ -152,22 +152,16 @@ public class CompAlternateTexture : CompGraphicParent
     
     public override void Notify_Unequipped(Pawn pawn)
     {
-        if (pawn != null && CoreUtils != null)
+        if (pawn != null && CoreUtils != null && CoreUtils.cachedAlternateTexture.TryGetValue(pawn, out var alternateTexture))
         {
-            if (CoreUtils.cachedAlternateTexture.TryGetValue(pawn, out var alternateTexture))
+            alternateTexture.Remove(this);
+            if (alternateTexture.IsEmpty)
             {
-                if (parent is Apparel apparel)
-                {
-                    alternateTexture.apparels.Remove(apparel);
-                }
-                else
-                {
-                    alternateTexture.weapon = null;
-                }
-                
-                cachedStatOffset = new Dictionary<StatDef, float>();
-                cachedStatFactor = new Dictionary<StatDef, float>();
+                CoreUtils.cachedAlternateTexture.Remove(pawn);
             }
+
+            cachedStatOffset = new Dictionary<StatDef, float>();
+            cachedStatFactor = new Dictionary<StatDef, float>();
         }
         
         base.Notify_Unequipped(pawn);
@@ -175,45 +169,21 @@ public class CompAlternateTexture : CompGraphicParent
 
     private void TryAddCachedStat(Pawn pawn)
     {
-        if (pawn != null && CoreUtils != null)
+        if (pawn == null || CoreUtils == null)
         {
-            cachedStatOffset = new Dictionary<StatDef, float>();
-            cachedStatFactor = new Dictionary<StatDef, float>();
-
-            if (CoreUtils.cachedAlternateTexture.TryGetValue(pawn, out var alternateTexture))
-            {
-                if (parent is Apparel apparel)
-                {
-                    alternateTexture.apparels.Add(apparel);
-                }
-                else
-                {
-                    alternateTexture.weapon = parent;
-                }
-
-            }
-            else
-            {
-                GameComponent_CoreUtils.CachedDecoratives cachedAlternateTexture;
-                if (parent is Apparel apparel)
-                {
-                    cachedAlternateTexture = new GameComponent_CoreUtils.CachedDecoratives
-                    {
-                        apparels = [apparel],
-                    };
-                }
-                else
-                {
-                    cachedAlternateTexture = new GameComponent_CoreUtils.CachedDecoratives
-                    {
-                        apparels = [],
-                        weapon = parent,
-                    };
-                }
-
-                CoreUtils.cachedAlternateTexture.Add(pawn, cachedAlternateTexture);
-            }
+            return;
         }
+
+        cachedStatOffset = new Dictionary<StatDef, float>();
+        cachedStatFactor = new Dictionary<StatDef, float>();
+
+        if (!CoreUtils.cachedAlternateTexture.TryGetValue(pawn, out var alternateTexture))
+        {
+            alternateTexture = new GameComponent_CoreUtils.CachedDecoratives();
+            CoreUtils.cachedAlternateTexture.Add(pawn, alternateTexture);
+        }
+
+        alternateTexture.Add(this);
     }
     
     public override void SetOriginals()

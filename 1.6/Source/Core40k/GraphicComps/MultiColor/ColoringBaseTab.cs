@@ -20,6 +20,49 @@ public class ColoringBaseTab : CustomizerTabDrawer
     private Dictionary<ThingDef, List<MaskDef>> masks = new ();
     private Dictionary<ThingDef, int> apparelColorMaskPageNumber = new Dictionary<ThingDef, int>();
     private Dictionary<(ThingDef, MaskDef), Material> cachedMaterials = new ();
+    private readonly Dictionary<CompMultiColor, CompAlternateTexture> alternateTextureComps = new();
+    private readonly Dictionary<(ThingDef, AlternateBaseFormDef), List<MaskDef>> filteredMasks = new();
+    private readonly List<MaskDef> curPageMaskBuffer = [];
+
+    private CompAlternateTexture AlternateTextureOf(CompMultiColor multiColor)
+    {
+        if (!alternateTextureComps.TryGetValue(multiColor, out var alternateTexture))
+        {
+            alternateTexture = multiColor.parent.GetComp<CompAlternateTexture>();
+            alternateTextureComps.Add(multiColor, alternateTexture);
+        }
+
+        return alternateTexture;
+    }
+
+    /// <summary>
+    /// The masks for an item, minus those the current alternate form forbids. Filtered once per
+    /// (item, form) pair rather than on every frame.
+    /// </summary>
+    private List<MaskDef> MasksFor(ThingDef def, List<MaskDef> allMasks, AlternateBaseFormDef alternateBaseForm)
+    {
+        if (alternateBaseForm == null)
+        {
+            return allMasks;
+        }
+
+        var key = (def, alternateBaseForm);
+        if (filteredMasks.TryGetValue(key, out var filtered))
+        {
+            return filtered;
+        }
+
+        filtered = [];
+        foreach (var maskDef in allMasks)
+        {
+            if (!alternateBaseForm.incompatibleMaskDefs.Contains(maskDef))
+            {
+                filtered.Add(maskDef);
+            }
+        }
+        filteredMasks.Add(key, filtered);
+        return filtered;
+    }
     private List<ColourPresetDef> presets;
 
     private Dictionary<ThingDef, (Color col1, Color col2, Color col3)> defaultColors = new();
@@ -30,6 +73,8 @@ public class ColoringBaseTab : CustomizerTabDrawer
     public override void Setup(Pawn pawn)
     {
         SetupHook(pawn);
+        alternateTextureComps.Clear();
+        filteredMasks.Clear();
         
         var masksTemp = DefDatabase<MaskDef>.AllDefs.Where(def => def.appliesToKind is AppliesToKind.Thing or AppliesToKind.All).ToList();
         
@@ -177,7 +222,7 @@ public class ColoringBaseTab : CustomizerTabDrawer
             };
             Rect colorTwoRect;
 
-            var alternateTexture = multiColor.parent.GetComp<CompAlternateTexture>();
+            var alternateTexture = AlternateTextureOf(multiColor);
             
             var colAmount = multiColor.Props.colorMaskAmount;
             if (alternateTexture?.CurrentAlternateBaseForm != null)
@@ -234,14 +279,14 @@ public class ColoringBaseTab : CustomizerTabDrawer
             }
             
             //Mask Stuff
-            if (masks.ContainsKey(item.def) && masks[item.def].Count > 1)
+            if (masks.TryGetValue(item.def, out var allMasks) && allMasks.Count > 1)
             {
                 var maskRect = new Rect(itemRect)
                 {
                     y = colorOneRect.yMax + 3f,
                 };
                 maskRect.height = maskRect.width/4;
-                var arrowsEnabled = masks[item.def].Count > 4;
+                var arrowsEnabled = allMasks.Count > 4;
                 if (arrowsEnabled)
                 {
                     maskRect.height += maskRect.height / 5;
@@ -253,16 +298,7 @@ public class ColoringBaseTab : CustomizerTabDrawer
                 posRect.width /= 4;
                 posRect.height = posRect.width;
                 
-                var maskDefs = new List<MaskDef>();
-
-                if (alternateTexture?.CurrentAlternateBaseForm != null)
-                {
-                    maskDefs.AddRange(masks[item.def].Where(maskDef => !alternateTexture.CurrentAlternateBaseForm.incompatibleMaskDefs.Contains(maskDef)));
-                }
-                else
-                {
-                    maskDefs = masks[item.def];
-                }
+                var maskDefs = MasksFor(item.def, allMasks, alternateTexture?.CurrentAlternateBaseForm);
 
                 var maxPage = Math.Max(0, (int)Math.Ceiling((float)maskDefs.Count / 4) - 1);
                 if (apparelColorMaskPageNumber[item.def] > maxPage)
@@ -273,7 +309,12 @@ public class ColoringBaseTab : CustomizerTabDrawer
                 var pageStart = apparelColorMaskPageNumber[item.def] * 4;
                 var num = Math.Max(0, Math.Min(4, maskDefs.Count - pageStart));
 
-                var curPageMasks = num > 0 ? maskDefs.GetRange(pageStart, num) : new List<MaskDef>();
+                var curPageMasks = curPageMaskBuffer;
+                curPageMasks.Clear();
+                for (var m = 0; m < num; m++)
+                {
+                    curPageMasks.Add(maskDefs[pageStart + m]);
+                }
                 
                 for (var i = 0; i < curPageMasks.Count; i++)
                 {

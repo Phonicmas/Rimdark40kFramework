@@ -156,6 +156,81 @@ public class DecorationDef : Def
         return stringbuilder.ToString();
     }
     
+    /// <summary>
+    /// The same checks as HasRequirements without building the reason text. Use this wherever the
+    /// reason is discarded, such as validating fitted decorations on equip.
+    /// </summary>
+    public virtual bool MeetsRequirements(Pawn pawn)
+    {
+        if (pawn == null)
+        {
+            return mustHaveRank == null && mustHaveGene == null && mustHaveTrait == null && mustHaveHediff == null;
+        }
+
+        if (mustHaveRank != null)
+        {
+            var comp = pawn.GetComp<CompRankInfo>();
+            if (comp == null)
+            {
+                return false;
+            }
+            foreach (var rank in mustHaveRank)
+            {
+                if (!comp.HasRank(rank))
+                {
+                    return false;
+                }
+            }
+        }
+
+        if (mustHaveGene != null)
+        {
+            if (pawn.genes == null)
+            {
+                return false;
+            }
+            foreach (var gene in mustHaveGene)
+            {
+                if (!pawn.genes.HasActiveGene(gene))
+                {
+                    return false;
+                }
+            }
+        }
+
+        if (mustHaveTrait != null)
+        {
+            if (pawn.story?.traits == null)
+            {
+                return false;
+            }
+            foreach (var trait in mustHaveTrait)
+            {
+                if (!pawn.story.traits.HasTrait(trait.traitDef, trait.degree))
+                {
+                    return false;
+                }
+            }
+        }
+
+        if (mustHaveHediff != null)
+        {
+            if (pawn.health?.hediffSet == null)
+            {
+                return false;
+            }
+            foreach (var hediff in mustHaveHediff)
+            {
+                if (!pawn.health.hediffSet.HasHediff(hediff))
+                {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
     public virtual bool HasRequirements(Pawn pawn, out string lockedReason)
     {
         var reason = new StringBuilder();

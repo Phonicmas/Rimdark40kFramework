@@ -18,13 +18,16 @@ public class AddedWorldCarryCapacity
         {
             return;
         }
-        var genes = p.genes.GenesListForReading.Where(x => x.def.HasModExtension<DefModExtension_GeneExtension>());
-        if (genes.EnumerableNullOrEmpty())
+        var genes = p.genes.GenesListForReading;
+        var num = 0f;
+        for (var i = 0; i < genes.Count; i++)
         {
-            return;
+            var extension = genes[i].def.GetModExtension<DefModExtension_GeneExtension>();
+            if (extension != null)
+            {
+                num += extension.addedWorldCarryCapacity;
+            }
         }
-            
-        var num = genes.Sum(gene => gene.def.GetModExtension<DefModExtension_GeneExtension>().addedWorldCarryCapacity);
 
         __result += num;
     }

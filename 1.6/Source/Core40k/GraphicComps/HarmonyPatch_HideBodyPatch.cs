@@ -1,4 +1,4 @@
-﻿using System.Linq;
+﻿using System.Collections.Concurrent;
 using HarmonyLib;
 using Verse;
 
@@ -8,6 +8,13 @@ namespace Core40k;
 [HarmonyPriority(Priority.LowerThanNormal)]
 public static class HideBodyPatch
 {
+    private static readonly ConcurrentDictionary<ThingDef, bool> hidesBodyCache = new();
+
+    private static bool HidesBody(ThingDef def)
+    {
+        return hidesBodyCache.GetOrAdd(def, static thingDef => thingDef.GetModExtension<DefModExtension_ForcesBodyType>()?.hideBodyGraphic ?? false);
+    }
+
     public static void Postfix(PawnRenderNode node, PawnDrawParms parms, ref Graphic __result, PawnRenderNodeWorker __instance)
     {
         if ((parms.flags & PawnRenderFlags.Clothes) != PawnRenderFlags.Clothes)
@@ -22,7 +29,7 @@ public static class HideBodyPatch
             return;
         }
         
-        if (__instance.GetType().IsSubclassOf(typeof(PawnRenderNodeWorker_Body)))
+        if (__instance.GetType() != typeof(PawnRenderNodeWorker_Body))
         {
             //Apparel for instance is a subclass of body and should not be targeted
             return;
@@ -36,9 +43,14 @@ public static class HideBodyPatch
             return;
         }
         
-        if (Enumerable.Any(parms.pawn.apparel.WornApparel, apparel => apparel.def.HasModExtension<DefModExtension_ForcesBodyType>() && apparel.def.GetModExtension<DefModExtension_ForcesBodyType>().hideBodyGraphic))
+        var wornApparel = parms.pawn.apparel.WornApparel;
+        for (var i = 0; i < wornApparel.Count; i++)
         {
-            __result = Core40kUtils.EmptyMultiGraphic;
+            if (HidesBody(wornApparel[i].def))
+            {
+                __result = Core40kUtils.EmptyMultiGraphic;
+                return;
+            }
         }
     }
 }

@@ -34,19 +34,7 @@ public class CompRankInfo : ThingComp
         announcedEligibleRanks.Add(rankDef);
     }
 
-    public List<RankDef> UnlockedRanks
-    {
-        get
-        {
-            unlockedRanks ??= [];
-            if (unlockedRanks.Contains(null))
-            {
-                unlockedRanks.RemoveAll(def => def == null);
-            }
-            
-            return unlockedRanks;
-        }
-    }
+    public List<RankDef> UnlockedRanks => unlockedRanks ??= [];
 
     private RankCategoryDef lastOpenedRankCategory = null;
         
@@ -369,6 +357,10 @@ public class CompRankInfo : ThingComp
             return;
         }
             
+        //A removed content mod leaves null entries behind; they are dropped here once rather
+        //than checked on every read.
+        unlockedRanks ??= [];
+        unlockedRanks.RemoveAll(def => def == null);
         daysAsRank ??= new Dictionary<RankDef, int>();
         originalPassions ??= new Dictionary<SkillDef, Passion>();
         limitCountedRanks ??= [];

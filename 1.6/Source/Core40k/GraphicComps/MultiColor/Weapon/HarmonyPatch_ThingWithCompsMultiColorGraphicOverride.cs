@@ -13,14 +13,21 @@ public class ThingWithCompsMultiColorGraphicOverride
         {
             return;
         }
-        
-        if (!__instance.HasComp<CompMultiColor>() && !__instance.HasComp<CompAlternateTexture>())
+
+        var def = weapon.def;
+        var mayHaveMultiColor = Core40kUtils.DefHasComp<CompMultiColor>(def);
+        var mayHaveAlternateTexture = Core40kUtils.DefHasComp<CompAlternateTexture>(def);
+        if (!mayHaveMultiColor && !mayHaveAlternateTexture)
         {
             return;
         }
         
-        var multiColor = weapon.GetComp<CompMultiColor>();
-        var alternateTexture = weapon.GetComp<CompAlternateTexture>();
+        var multiColor = mayHaveMultiColor ? weapon.GetComp<CompMultiColor>() : null;
+        var alternateTexture = mayHaveAlternateTexture ? weapon.GetComp<CompAlternateTexture>() : null;
+        if (multiColor == null && alternateTexture == null)
+        {
+            return;
+        }
 
         if ((multiColor != null && multiColor.RecacheSingleGraphics) || (alternateTexture != null && alternateTexture.RecacheSingleGraphics))
         {

@@ -31,6 +31,9 @@ public class Dialog_CustomizeApparel : Window, ICustomizationDialog
     private List<TabRecord> tabRecordsToRead => cachedTabRecordsToRead ??= tabRecords.Values.ToList();
 
     private CustomizationTabDef curTab;
+
+    private string cachedTitle;
+    private string Title => cachedTitle ??= "StylePawn".Translate().CapitalizeFirst() + ": " + Find.ActiveLanguageWorker.WithDefiniteArticle(pawn.Name.ToStringShort, pawn.gender, plural: false, name: true).ApplyTag(TagType.Name);
     
     public Dialog_CustomizeApparel()
     {
@@ -85,7 +88,7 @@ public class Dialog_CustomizeApparel : Window, ICustomizationDialog
         {
             height = Text.LineHeight * 2f
         };
-        Widgets.Label(rect, "StylePawn".Translate().CapitalizeFirst() + ": " + Find.ActiveLanguageWorker.WithDefiniteArticle(pawn.Name.ToStringShort, pawn.gender, plural: false, name: true).ApplyTag(TagType.Name));
+        Widgets.Label(rect, Title);
         Text.Font = GameFont.Small;
         inRect.yMin = rect.yMax + 4f;
         var rect2 = inRect;

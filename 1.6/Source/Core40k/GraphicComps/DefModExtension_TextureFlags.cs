@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Linq;
 using Verse;
 
 namespace Core40k;
@@ -10,9 +9,74 @@ public class DefModExtension_TextureFlags : DefModExtension
     
     public List<MaskExpansion> maskExpansions = [];
 
+    [Unsaved]
+    private List<TextureFlag> swapFlagsByOrder;
+
+    /// <summary>
+    /// The flags that swap the texture path, in order. Built once; the def is immutable after load.
+    /// </summary>
+    public List<TextureFlag> SwapFlagsByOrder
+    {
+        get
+        {
+            if (swapFlagsByOrder != null)
+            {
+                return swapFlagsByOrder;
+            }
+
+            var flags = new List<TextureFlag>();
+            foreach (var textureFlag in textureFlags)
+            {
+                if (!textureFlag.shouldAddInsteadOfSwap)
+                {
+                    flags.Add(textureFlag);
+                }
+            }
+            flags.SortStable((first, second) => first.order.CompareTo(second.order));
+            swapFlagsByOrder = flags;
+            return flags;
+        }
+    }
+
+    [Unsaved]
+    private List<TextureFlag> gizmoFlags;
+
+    /// <summary>
+    /// The flags toggled from a gizmo. Built once; the def is immutable after load.
+    /// </summary>
+    public List<TextureFlag> GizmoFlags
+    {
+        get
+        {
+            if (gizmoFlags != null)
+            {
+                return gizmoFlags;
+            }
+
+            var flags = new List<TextureFlag>();
+            foreach (var textureFlag in textureFlags)
+            {
+                if (textureFlag.gizmoActivated)
+                {
+                    flags.Add(textureFlag);
+                }
+            }
+            gizmoFlags = flags;
+            return flags;
+        }
+    }
+
     public bool ShouldExpandMaskPath(MaskDef maskDef, int identifier)
     {
-        return Enumerable.Any(maskExpansions, maskExpansion => maskExpansion.identifier == identifier && maskExpansion.maskDefsWithExpansion.Contains(maskDef));
+        foreach (var maskExpansion in maskExpansions)
+        {
+            if (maskExpansion.identifier == identifier && maskExpansion.maskDefsWithExpansion.Contains(maskDef))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public bool ShouldExpandBasePath(int identifier)

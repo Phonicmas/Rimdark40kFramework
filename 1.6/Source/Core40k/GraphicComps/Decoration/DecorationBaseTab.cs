@@ -342,15 +342,11 @@ public class DecorationBaseTab : CustomizerTabDrawer
 
     private void DrawPrecisionMode(Rect rect)
     {
-        var drawData = new DecorationDrawData();
         selectedPrecisionComp.drawDatas ??= new Dictionary<DecorationDef, DecorationDrawData>();
-        if (!selectedPrecisionComp.drawDatas.TryGetValue(selectedPrecisionDef, out var value))
+        if (!selectedPrecisionComp.drawDatas.TryGetValue(selectedPrecisionDef, out var drawData))
         {
+            drawData = new DecorationDrawData();
             selectedPrecisionComp.drawDatas.Add(selectedPrecisionDef, drawData);
-        }
-        else
-        {
-            drawData = value;
         }
         
         var precisionRect = new Rect(rect);
@@ -362,19 +358,7 @@ public class DecorationBaseTab : CustomizerTabDrawer
         var acceptButton = goBackButton.TakeRightPart(goBackButton.width / widthTake);
         
         Widgets.DrawMenuSection(precisionRect);
-        var rotsToDraw = new List<Rot4>();
-
-        if (selectedPrecisionComp.parent is Apparel)
-        {
-            rotsToDraw.Add(Rot4.West);
-            rotsToDraw.Add(Rot4.South);
-            rotsToDraw.Add(Rot4.East);
-            rotsToDraw.Add(Rot4.North);
-        }
-        else
-        {
-            rotsToDraw.Add(Rot4.Invalid);
-        }
+        var rotsToDraw = selectedPrecisionComp.parent is Apparel ? ApparelPrecisionRots : WeaponPrecisionRots;
         
         var takeSize = precisionRect.height / rotsToDraw.Count;
         
@@ -549,7 +533,15 @@ public class DecorationBaseTab : CustomizerTabDrawer
 
     private void DrawDecorationsForType(Rect viewRect, CompDecorativeBase decorativeComp, DecorationTypeDef decorationTypeDef, List<DecorationDef> decorationDefs, Rect mainRect)
     {
-        var internalGroup = decorationDefs.Any(def => def.isInternal);
+        var internalGroup = false;
+        for (var i = 0; i < decorationDefs.Count && !internalGroup; i++)
+        {
+            internalGroup = decorationDefs[i].isInternal;
+        }
+
+        //Both walk the decoration dictionary; once per group per frame, not once per icon.
+        var usedInternalSlots = internalGroup ? decorativeComp.UsedInternalSlots : 0;
+        var totalInternalSlots = internalGroup ? decorativeComp.TotalInternalSlots : 0;
 
         var headerRect = new Rect(viewRect)
         {
@@ -563,7 +555,7 @@ public class DecorationBaseTab : CustomizerTabDrawer
         Text.Anchor = TextAnchor.MiddleCenter;
         TaggedString headerLabel = internalGroup
             ? decorationTypeDef.label + "  " + "BEWH.Framework.Customization.SlotsUsed".Translate(
-                decorativeComp.UsedInternalSlots, decorativeComp.TotalInternalSlots)
+                usedInternalSlots, totalInternalSlots)
             : decorationTypeDef.label;
         Widgets.Label(headerRect, headerLabel);
         Text.Anchor = TextAnchor.UpperLeft;
@@ -592,36 +584,16 @@ public class DecorationBaseTab : CustomizerTabDrawer
             var noRoom = decoDef.isInternal && !hasDeco && !decorativeComp.HasRoomFor(decoDef);
 
             var color = Color.white;
-            var tipTooltip = TooltipCached(decoDef);
             if (Mouse.IsOver(iconRect))
             {
                 color = GenUI.MouseoverColor;
             }
             if (!unlocked)
             {
-                tipTooltip += "\n" + (affordable
-                    ? "BEWH.Framework.Customization.Locked".Translate()
-                    : "BEWH.Framework.Customization.NotEnoughResources".Translate());
                 color = affordable ? Core40kUtils.LockedColour : Color.gray;
             }
-            else if (decoDef.HasCost && DecorationWorkUtility.CostEnabled)
+            if (!hasReq || incompatibleDeco || noRoom)
             {
-                tipTooltip += "\n" + "BEWH.Framework.Customization.Unlocked".Translate();
-            }
-            if (!hasReq)
-            {
-                tipTooltip += "\n" + "BEWH.Framework.Customization.RequirementNotMet".Translate() + reason;
-                color = Color.gray;
-            }
-            if (incompatibleDeco)
-            {
-                tipTooltip += "\n" + incompatibleReason;
-                color = Color.gray;
-            }
-            if (noRoom)
-            {
-                tipTooltip += "\n" + "BEWH.Framework.Customization.NoInternalSlots".Translate(
-                    decorativeComp.UsedInternalSlots, decorativeComp.TotalInternalSlots);
                 color = Color.gray;
             }
             
@@ -629,7 +601,11 @@ public class DecorationBaseTab : CustomizerTabDrawer
             GUI.DrawTexture(iconRect, Command.BGTexShrunk);
             GUI.color = Color.white;
             GUI.DrawTexture(iconRect, decoDef.Icon);
-            TooltipHandler.TipRegion(iconRect, tipTooltip);
+            if (Mouse.IsOver(iconRect))
+            {
+                //The tooltip text is only assembled for the icon under the cursor.
+                TooltipHandler.TipRegion(iconRect, () => IconTooltip(decoDef, unlocked, affordable, hasReq, reason, incompatibleReason, noRoom, usedInternalSlots, totalInternalSlots), decoDef.GetHashCode());
+            }
             
             if (hasDeco)    
             {
@@ -713,11 +689,56 @@ public class DecorationBaseTab : CustomizerTabDrawer
 
     private readonly Dictionary<DecorationDef, (bool met, string reason)> requirementCache = new();
     private readonly Dictionary<DecorationDef, string> tooltipCache = new();
+    private readonly Dictionary<CompDecorativeBase, CompAlternateTexture> alternateTextureComps = new();
+
+    private static readonly List<Rot4> ApparelPrecisionRots = [Rot4.West, Rot4.South, Rot4.East, Rot4.North];
+    private static readonly List<Rot4> WeaponPrecisionRots = [Rot4.Invalid];
+
+    private CompAlternateTexture AlternateTextureOf(CompDecorativeBase decorativeComp)
+    {
+        if (!alternateTextureComps.TryGetValue(decorativeComp, out var alternateTexture))
+        {
+            alternateTexture = decorativeComp.parent.TryGetComp<CompAlternateTexture>();
+            alternateTextureComps.Add(decorativeComp, alternateTexture);
+        }
+
+        return alternateTexture;
+    }
 
     private void ClearRequirementCaches()
     {
         requirementCache.Clear();
         tooltipCache.Clear();
+        alternateTextureComps.Clear();
+    }
+
+    private string IconTooltip(DecorationDef decoDef, bool unlocked, bool affordable, bool hasReq, string reason, string incompatibleReason, bool noRoom, int usedInternalSlots, int totalInternalSlots)
+    {
+        var tipTooltip = TooltipCached(decoDef);
+        if (!unlocked)
+        {
+            tipTooltip += "\n" + (affordable
+                ? "BEWH.Framework.Customization.Locked".Translate()
+                : "BEWH.Framework.Customization.NotEnoughResources".Translate());
+        }
+        else if (decoDef.HasCost && DecorationWorkUtility.CostEnabled)
+        {
+            tipTooltip += "\n" + "BEWH.Framework.Customization.Unlocked".Translate();
+        }
+        if (!hasReq)
+        {
+            tipTooltip += "\n" + "BEWH.Framework.Customization.RequirementNotMet".Translate() + reason;
+        }
+        if (incompatibleReason != null)
+        {
+            tipTooltip += "\n" + incompatibleReason;
+        }
+        if (noRoom)
+        {
+            tipTooltip += "\n" + "BEWH.Framework.Customization.NoInternalSlots".Translate(usedInternalSlots, totalInternalSlots);
+        }
+
+        return tipTooltip;
     }
 
     private bool HasRequirementsCached(DecorationDef decoDef, out string reason)
@@ -763,7 +784,7 @@ public class DecorationBaseTab : CustomizerTabDrawer
             return false;
         }
 
-        var alternateBaseForm = decorativeComp.parent.TryGetComp<CompAlternateTexture>()?.CurrentAlternateBaseForm;
+        var alternateBaseForm = AlternateTextureOf(decorativeComp)?.CurrentAlternateBaseForm;
 
         //Alternate base form incompatible
         if (alternateBaseForm != null && alternateBaseForm.incompatibleDecorations.Contains(decoDef))
@@ -1020,9 +1041,7 @@ public class DecorationBaseTab : CustomizerTabDrawer
             var menuOption = new FloatMenuOption(preset.label, delegate
             {
                 recache = true;
-                decorativeComp.SetDecorationColourOne(decoDef, preset.colour);
-                decorativeComp.SetDecorationColourTwo(decoDef, preset.colourTwo ?? Color.white);
-                decorativeComp.SetDecorationColourThree(decoDef, preset.colourThree ?? Color.white);
+                decorativeComp.SetDecorationColours(decoDef, preset.colour, preset.colourTwo ?? Color.white, preset.colourThree ?? Color.white);
             }, Core40kUtils.ThreeColourPreview(preset.colour, preset.colourTwo, preset.colourThree, colorAmount), Color.white);
             list.Add(menuOption);
         }

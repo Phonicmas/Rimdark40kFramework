@@ -251,15 +251,14 @@ public class RankDef : Def
 
         //Ranks
         var rankRequirementData = currentlySelectedRankCategory.rankDict[this];
-        var rankLearningFactor = 1f;
-        if (!rankRequirementData.rankRequirements.NullOrEmpty() || !rankRequirementData.rankRequirementsOneAmong.NullOrEmpty())
-        {
-            rankLearningFactor = pawn.GetStatValue(Core40kDefOf.BEWH_RankLearningFactor);
-        }
+
+        //A full stat evaluation, so it is only computed once a held rank actually needs it.
+        float? rankLearningFactor = null;
+        float LearningFactor() => rankLearningFactor ??= pawn.GetStatValue(Core40kDefOf.BEWH_RankLearningFactor);
 
         //All
         var rankAllRequirementsMet = true;
-        if (!currentlySelectedRankCategory.rankDict[this].rankRequirements.NullOrEmpty())
+        if (!rankRequirementData.rankRequirements.NullOrEmpty())
         {
             if (buildText)
             {
@@ -267,11 +266,11 @@ public class RankDef : Def
                 stringBuilder.AppendLine("BEWH.Framework.RankSystem.RequirementsRanks".Translate());
             }
 
-            foreach (var rank in currentlySelectedRankCategory.rankDict[this].rankRequirements)
+            foreach (var rank in rankRequirementData.rankRequirements)
             {
-                var requiredDaysAsRank = Math.Round(rank.daysAs / rankLearningFactor);
-                var rankRequirementMet = rankComp.HasRank(rank.rankDef) &&
-                                         rankComp.GetDaysAsRank(rank.rankDef) >= requiredDaysAsRank;
+                var hasRank = rankComp.HasRank(rank.rankDef);
+                var requiredDaysAsRank = rank.daysAs > 0 && (hasRank || buildText) ? Math.Round(rank.daysAs / LearningFactor()) : 0d;
+                var rankRequirementMet = hasRank && rankComp.GetDaysAsRank(rank.rankDef) >= requiredDaysAsRank;
 
                 if (!rankRequirementMet)
                 {
@@ -302,7 +301,7 @@ public class RankDef : Def
             }
         }
         //One Among
-        var rankAtLeastOneRequirementsMet = currentlySelectedRankCategory.rankDict[this].rankRequirementsOneAmong.NullOrEmpty();
+        var rankAtLeastOneRequirementsMet = rankRequirementData.rankRequirementsOneAmong.NullOrEmpty();
         if (!rankAtLeastOneRequirementsMet)
         {
             if (buildText)
@@ -311,11 +310,11 @@ public class RankDef : Def
                 stringBuilder.AppendLine("BEWH.Framework.RankSystem.RequirementsRanksAtLeastOne".Translate());
             }
 
-            foreach (var rank in currentlySelectedRankCategory.rankDict[this].rankRequirementsOneAmong)
+            foreach (var rank in rankRequirementData.rankRequirementsOneAmong)
             {
-                var requiredDaysAsRank = Math.Round(rank.daysAs / rankLearningFactor);
-                var rankRequirementMet = rankComp.HasRank(rank.rankDef) &&
-                                         rankComp.GetDaysAsRank(rank.rankDef) >= requiredDaysAsRank;
+                var hasRank = rankComp.HasRank(rank.rankDef);
+                var requiredDaysAsRank = rank.daysAs > 0 && (hasRank || buildText) ? Math.Round(rank.daysAs / LearningFactor()) : 0d;
+                var rankRequirementMet = hasRank && rankComp.GetDaysAsRank(rank.rankDef) >= requiredDaysAsRank;
 
                 if (rankRequirementMet)
                 {

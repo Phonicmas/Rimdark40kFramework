@@ -45,6 +45,37 @@ public class ExtraDecorationDef : DecorationDef
     
     public List<BodyTypeDef> appliesToBodyTypes = [];
 
+    public override bool MeetsRequirements(Pawn pawn)
+    {
+        if (!base.MeetsRequirements(pawn))
+        {
+            return false;
+        }
+        if (appliesToBodyTypes.NullOrEmpty() || pawn?.apparel == null)
+        {
+            return true;
+        }
+
+        Apparel bodyApparel = null;
+        var wornApparel = pawn.apparel.WornApparel;
+        for (var i = 0; i < wornApparel.Count; i++)
+        {
+            if (wornApparel[i].HasComp<CompDecorative>())
+            {
+                bodyApparel = wornApparel[i];
+                break;
+            }
+        }
+        if (bodyApparel == null)
+        {
+            return true;
+        }
+
+        var pawnBodyType = BodyTypeUtils.SafeBodyType(
+            pawn, bodyApparel.def?.GetModExtension<DefModExtension_ForcesBodyType>()?.forcedBodyType);
+        return BodyTypeUtils.MatchesAny(pawnBodyType, appliesToBodyTypes, out _);
+    }
+
     public override bool HasRequirements(Pawn pawn, out string lockedReason)
     {
         var requirementFulfilled = base.HasRequirements(pawn, out lockedReason);

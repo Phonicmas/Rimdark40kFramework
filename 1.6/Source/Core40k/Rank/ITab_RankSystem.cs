@@ -24,6 +24,9 @@ public class ITab_RankSystem : ITab
     private CompRankInfo compRankInfo;
 
     private bool redoRankInfo = false;
+
+    private TaggedString? noCategorySelectedText;
+    private string noneText;
     
     Dictionary<RankDef, Vector2> rankPos = new Dictionary<RankDef, Vector2>();
 
@@ -37,6 +40,13 @@ public class ITab_RankSystem : ITab
     const float rankPlacementMult = rankIconGapSize + rankIconRectSize;
     const float rankIconMargin = 20f;
 
+    //IsVisible runs on every GUI event while a pawn is selected, and the category walk behind it is
+    //not cheap, so the answer is held for a short window per selected pawn.
+    private const int VisibilityCacheFrames = 30;
+    private Pawn visibilityCachedFor;
+    private int visibilityCachedFrame = -1;
+    private bool visibilityCached;
+
     public override bool IsVisible
     {
         get
@@ -45,23 +55,42 @@ public class ITab_RankSystem : ITab
             {
                 return false;
             }
-            
-            var defaultRes = ModSettings?.alwaysShowRankTab ?? false;
-            if (Find.Selector?.SingleSelectedThing is not Pawn p || !p.HasComp<CompRankInfo>() || p.Faction == null || !p.Faction.IsPlayer || p.IsSlaveOfColony || p.IsPrisonerOfColony || availableCategories.NullOrEmpty())
+
+            if (Find.Selector?.SingleSelectedThing is not Pawn p)
             {
-                return defaultRes;
+                return ModSettings?.alwaysShowRankTab ?? false;
             }
 
-            foreach (var rankCategoryDef in availableCategories)
+            var frame = Time.frameCount;
+            if (p == visibilityCachedFor && frame - visibilityCachedFrame < VisibilityCacheFrames && frame >= visibilityCachedFrame)
             {
-                if (rankCategoryDef.RankCategoryUnlockedFor(SelPawn))
-                {
-                    return true;
-                }
+                return visibilityCached;
             }
 
+            visibilityCachedFor = p;
+            visibilityCachedFrame = frame;
+            visibilityCached = ComputeVisible(p);
+            return visibilityCached;
+        }
+    }
+
+    private bool ComputeVisible(Pawn p)
+    {
+        var defaultRes = ModSettings?.alwaysShowRankTab ?? false;
+        if (!p.HasComp<CompRankInfo>() || p.Faction == null || !p.Faction.IsPlayer || p.IsSlaveOfColony || p.IsPrisonerOfColony || availableCategories.NullOrEmpty())
+        {
             return defaultRes;
         }
+
+        foreach (var rankCategoryDef in availableCategories)
+        {
+            if (rankCategoryDef.RankCategoryUnlockedFor(p))
+            {
+                return true;
+            }
+        }
+
+        return defaultRes;
     }
 
     public ITab_RankSystem()
@@ -126,11 +155,9 @@ public class ITab_RankSystem : ITab
         Text.Anchor = TextAnchor.MiddleCenter;
             
         //Button to switch between rank categories
-        var categoryText = "BEWH.Framework.RankSystem.NoCategorySelected".Translate();
-        if (currentlySelectedRankCategory != null)
-        {
-            categoryText = currentlySelectedRankCategory.label.CapitalizeFirst();
-        }
+        var categoryText = currentlySelectedRankCategory != null
+            ? currentlySelectedRankCategory.LabelCap
+            : (noCategorySelectedText ??= "BEWH.Framework.RankSystem.NoCategorySelected".Translate());
             
         var categoryTextRect = new Rect(rect2)
         {
@@ -211,7 +238,7 @@ public class ITab_RankSystem : ITab
             Find.WindowStack.Add(new FloatMenu(list));
         }
             
-        var toolTip = currentlySelectedRankCategory != null ? currentlySelectedRankCategory.label.CapitalizeFirst() : "BEWH.Framework.CommonKeyword.None".Translate().ToString();
+        var toolTip = currentlySelectedRankCategory != null ? currentlySelectedRankCategory.LabelCap.ToString() : (noneText ??= "BEWH.Framework.CommonKeyword.None".Translate().ToString());
         TooltipHandler.TipRegion(categoryTextRect, toolTip);
 
         curY += 12f;
@@ -342,47 +369,21 @@ public class ITab_RankSystem : ITab
         //Draws requirement lines
         foreach (var rank in availableRanksForCategory)
         {
-            if (currentlySelectedRankCategory.rankDict[rank.rankDef].rankRequirements == null && currentlySelectedRankCategory.rankDict[rank.rankDef].rankRequirementsOneAmong == null)
-            {
-                continue;
-            }
-
-            var rankData = new List<RankData>();
-            rankData.AddRange(currentlySelectedRankCategory.rankDict[rank.rankDef].rankRequirements ?? []);
-            rankData.AddRange(currentlySelectedRankCategory.rankDict[rank.rankDef].rankRequirementsOneAmong ?? []);
-            
-            foreach (var rankReq in rankData)
-            {
-                if (!rankPos.ContainsKey(rankReq.rankDef) || !rankPos.ContainsKey(rank.rankDef))
-                {
-                    continue;
-                }
-                var startPos = new Vector2(rankPos[rank.rankDef].x + rankIconRectSize/2, rankPos[rank.rankDef].y + rankIconRectSize/2);
-                var endPos = new Vector2(rankPos[rankReq.rankDef].x + rankIconRectSize/2, rankPos[rankReq.rankDef].y + rankIconRectSize/2);
-                    
-                var rankUnlocked = compRankInfo.HasRank(rankReq.rankDef) ? Color.white : Color.grey;
-
-                if (currentlySelectedRank != null)
-                {
-                    if (currentlySelectedRank.rankDef == rankReq.rankDef)
-                    {
-                        rankUnlocked = new Color(0.0f, 0.5f, 1f, 0.9f);
-                    }
-                }
-                    
-                Widgets.DrawLine(startPos, endPos, rankUnlocked, 2f);
-            }
+            var requirementData = currentlySelectedRankCategory.rankDict[rank.rankDef];
+            DrawRequirementLines(rank.rankDef, requirementData.rankRequirements);
+            DrawRequirementLines(rank.rankDef, requirementData.rankRequirementsOneAmong);
         }
             
         //Draws icons
         foreach (var rank in availableRanksForCategory)
         {
+            var displayPosition = currentlySelectedRankCategory.rankDict[rank.rankDef].displayPosition;
             var rankRect = new Rect
             {
                 width = rankIconRectSize,
                 height = rankIconRectSize,
-                x = xStart + currentlySelectedRankCategory.rankDict[rank.rankDef].displayPosition.x * rankPlacementMult,
-                y = yStart + currentlySelectedRankCategory.rankDict[rank.rankDef].displayPosition.y * rankPlacementMult,
+                x = xStart + displayPosition.x * rankPlacementMult,
+                y = yStart + displayPosition.y * rankPlacementMult,
             };
 
             if (rank == currentlySelectedRank)
@@ -398,12 +399,9 @@ public class ITab_RankSystem : ITab
                 Widgets.DrawRectFast(rankRect, colour);
             }
                 
-            if (rank.rankDef.incompatibleRanks != null)
+            if (HasAnyIncompatibleRank(rank.rankDef))
             {
-                if (Enumerable.Any(rank.rankDef.incompatibleRanks, rankDef => compRankInfo.HasRank(rankDef)))
-                {
-                    DrawIcon(rankRect, LockedIcon.Texture, false);
-                }
+                DrawIcon(rankRect, LockedIcon.Texture, false);
             }
                 
             if (Widgets.ButtonInvisible(rankRect))
@@ -411,12 +409,58 @@ public class ITab_RankSystem : ITab
                 currentlySelectedRank = rank;
             }
 
-            TooltipHandler.TipRegion(rankRect, rank.rankDef.label.CapitalizeFirst());
+            TooltipHandler.TipRegion(rankRect, rank.rankDef.LabelCap);
         }
             
         Widgets.EndScrollView();
     }
         
+    private bool HasAnyIncompatibleRank(RankDef rankDef)
+    {
+        var incompatibleRanks = rankDef.incompatibleRanks;
+        if (incompatibleRanks == null)
+        {
+            return false;
+        }
+
+        for (var i = 0; i < incompatibleRanks.Count; i++)
+        {
+            if (compRankInfo.HasRank(incompatibleRanks[i]))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private void DrawRequirementLines(RankDef rankDef, List<RankData> requirements)
+    {
+        if (requirements == null || !rankPos.TryGetValue(rankDef, out var rankPosition))
+        {
+            return;
+        }
+
+        var startPos = new Vector2(rankPosition.x + rankIconRectSize/2, rankPosition.y + rankIconRectSize/2);
+        foreach (var rankReq in requirements)
+        {
+            if (!rankPos.TryGetValue(rankReq.rankDef, out var reqPosition))
+            {
+                continue;
+            }
+            var endPos = new Vector2(reqPosition.x + rankIconRectSize/2, reqPosition.y + rankIconRectSize/2);
+                
+            var rankUnlocked = compRankInfo.HasRank(rankReq.rankDef) ? Color.white : Color.grey;
+
+            if (currentlySelectedRank != null && currentlySelectedRank.rankDef == rankReq.rankDef)
+            {
+                rankUnlocked = new Color(0.0f, 0.5f, 1f, 0.9f);
+            }
+                
+            Widgets.DrawLine(startPos, endPos, rankUnlocked, 2f);
+        }
+    }
+
     private Vector2 scrollPosRankInfo;
     private float scrollViewHeightRankInfo = 0f;
     private void FillRankInfo(Rect rect)

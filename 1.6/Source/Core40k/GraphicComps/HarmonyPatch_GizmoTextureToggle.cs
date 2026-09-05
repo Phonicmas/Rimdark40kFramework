@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Linq;
 using HarmonyLib;
 using RimWorld;
 using Verse;
@@ -9,25 +8,42 @@ namespace Core40k;
 [HarmonyPatch(typeof(Thing), "GetGizmos")]
 public class GizmoTextureTogglePatch
 {
-    private static GameComponent_CoreUtils CoreUtils => Current.Game?.GetComponent<GameComponent_CoreUtils>();
+    private static Game cachedGameForCoreUtils;
+    private static GameComponent_CoreUtils coreUtils;
+
+    private static GameComponent_CoreUtils CoreUtils
+    {
+        get
+        {
+            if (coreUtils != null && cachedGameForCoreUtils == Current.Game)
+            {
+                return coreUtils;
+            }
+
+            cachedGameForCoreUtils = Current.Game;
+            coreUtils = cachedGameForCoreUtils?.GetComponent<GameComponent_CoreUtils>();
+            return coreUtils;
+        }
+    }
     
+    //Runs for every selected thing every frame, so anything without a toggle flag is handed the
+    //original enumerable back untouched instead of being wrapped in an iterator.
     public static IEnumerable<Gizmo> Postfix(IEnumerable<Gizmo> __result, Thing __instance)
     {
-        foreach (var floatMenu in __result)
-        {
-            yield return floatMenu;
-        }
-        
         var defMod = __instance?.def?.GetModExtension<DefModExtension_TextureFlags>();
-        if (defMod == null)
+        if (defMod == null || defMod.GizmoFlags.Count == 0)
         {
-            yield break;
+            return __result;
         }
 
-        var toggleFlags = defMod.textureFlags.Where(flag => flag.gizmoActivated).ToList();
-        if (toggleFlags.NullOrEmpty())
+        return WithToggles(__result, __instance, defMod.GizmoFlags);
+    }
+
+    private static IEnumerable<Gizmo> WithToggles(IEnumerable<Gizmo> original, Thing __instance, List<TextureFlag> toggleFlags)
+    {
+        foreach (var gizmo in original)
         {
-            yield break;
+            yield return gizmo;
         }
         
         var wearer = __instance.ParentHolder is not Pawn_ApparelTracker pawn_ApparelTracker ? null : pawn_ApparelTracker.pawn;

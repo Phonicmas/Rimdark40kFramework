@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Reflection;
 using HarmonyLib;
 using UnityEngine;
 using Verse;
@@ -8,6 +10,14 @@ namespace Core40k;
 public static class MultiColorUtils
 {
     private static readonly HashSet<Graphic> ownGraphics = [];
+
+    private static readonly FieldInfo ShaderParameterName = AccessTools.Field(typeof(ShaderParameter), "name");
+    private static readonly FieldInfo ShaderParameterType = AccessTools.Field(typeof(ShaderParameter), "type");
+    private static readonly FieldInfo ShaderParameterValue = AccessTools.Field(typeof(ShaderParameter), "value");
+
+    //GraphicRequest and MaterialRequest compare shaderParameters by reference, so the same colour
+    //triple has to hand GraphicDatabase the same list instance or every call builds a new graphic.
+    private static readonly Dictionary<(Color, Color, Color), List<ShaderParameter>> shaderParametersByColour = new();
 
     /// <summary>
     /// True if this graphic was built here and therefore already carries the
@@ -22,30 +32,7 @@ public static class MultiColorUtils
 
     public static T GetGraphic<T>(string path, Shader shader, Vector2 drawSize, Color colorOne, Color colorTwo, Color colorThree, GraphicData data, string maskPath = null) where T : Graphic
     {
-        var shaderParameter1 = new ShaderParameter();
-        var traverse = Traverse.Create(shaderParameter1);
-        traverse.Field("name").SetValue("_DrawColor");
-        traverse.Field("type").SetValue(1);
-        traverse.Field("value").SetValue(new Vector4(colorOne.r, colorOne.g, colorOne.b, colorOne.a));
-        
-        var shaderParameter2 = new ShaderParameter();
-        traverse = Traverse.Create(shaderParameter2);
-        traverse.Field("name").SetValue("_DrawColorTwo");
-        traverse.Field("type").SetValue(1);
-        traverse.Field("value").SetValue(new Vector4(colorTwo.r, colorTwo.g, colorTwo.b, colorTwo.a));
-        
-        var shaderParameter3 = new ShaderParameter();
-        traverse = Traverse.Create(shaderParameter3);
-        traverse.Field("name").SetValue("_DrawColorThree");
-        traverse.Field("type").SetValue(1);
-        traverse.Field("value").SetValue(new Vector4(colorThree.r, colorThree.g, colorThree.b, colorThree.a));
-        
-        var shaderParameters = new List<ShaderParameter>
-        {
-            shaderParameter1,
-            shaderParameter2,
-            shaderParameter3
-        };
+        var shaderParameters = ShaderParametersFor(colorOne, colorTwo, colorThree);
         
         var graphic = GraphicDatabase.Get(typeof(T), path, shader, drawSize, colorOne, colorTwo, data, shaderParameters, maskPath) as T;
 
@@ -61,5 +48,37 @@ public static class MultiColorUtils
 
         return GraphicDatabase.Get(typeof(T), path, shader, drawSize, colorOne, colorTwo, data, null, maskPath) as T
                ?? GraphicDatabase.Get(typeof(T), BaseContent.BadTexPath, ShaderDatabase.Cutout, drawSize, colorOne, colorTwo, null, null) as T;
+    }
+
+    /// <summary>
+    /// Returns the shared _DrawColor/_DrawColorTwo/_DrawColorThree parameter list for a colour triple,
+    /// building it on first use.
+    /// </summary>
+    private static List<ShaderParameter> ShaderParametersFor(Color colorOne, Color colorTwo, Color colorThree)
+    {
+        var key = (colorOne, colorTwo, colorThree);
+        if (shaderParametersByColour.TryGetValue(key, out var shaderParameters))
+        {
+            return shaderParameters;
+        }
+
+        shaderParameters =
+        [
+            MakeVectorParameter("_DrawColor", colorOne),
+            MakeVectorParameter("_DrawColorTwo", colorTwo),
+            MakeVectorParameter("_DrawColorThree", colorThree)
+        ];
+        shaderParametersByColour.Add(key, shaderParameters);
+
+        return shaderParameters;
+    }
+
+    private static ShaderParameter MakeVectorParameter(string name, Color color)
+    {
+        var shaderParameter = new ShaderParameter();
+        ShaderParameterName.SetValue(shaderParameter, name);
+        ShaderParameterType.SetValue(shaderParameter, Enum.ToObject(ShaderParameterType.FieldType, 1));
+        ShaderParameterValue.SetValue(shaderParameter, new Vector4(color.r, color.g, color.b, color.a));
+        return shaderParameter;
     }
 }

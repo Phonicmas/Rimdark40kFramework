@@ -76,6 +76,7 @@
     <Compile Include="ChangeableBullets\HarmonyPatch_IncreaseShotBurstCountFromVarious.cs" />
     <Compile Include="ChangeableBullets\HarmonyPatch_IncreaseRangeFromVarious.cs" />
     <Compile Include="ChangeableBullets\HarmonyPatch_IncreaseWarmupTimeFromVarious.cs" />
+    <Compile Include="ChangeableBullets\WeaponVerbCompCache.cs" />
     <Compile Include="ChangeableBullets\Verb_ShootChangeableBullets.cs" />
     <Compile Include="ChangeableBullets\JobDriver_ChangeAmmo.cs" />
     <Compile Include="ColourPicker\Dialog_ColourPicker.cs" />

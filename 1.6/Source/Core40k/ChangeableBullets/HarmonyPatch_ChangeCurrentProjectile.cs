@@ -8,8 +8,7 @@ public static class ChangeCurrentProjectile
 {
     public static void Postfix(Verb_LaunchProjectile __instance, ref ThingDef __result)
     {
-        var ammoChangerComp = __instance?.EquipmentSource?.GetComp<Comp_AmmoChanger>();
-        if (ammoChangerComp != null)
+        if (WeaponVerbCompCache.TryGet(__instance?.EquipmentSource, out var ammoChangerComp, out _) && ammoChangerComp != null)
         {
             __result = ammoChangerComp.CurrentlySelectedProjectile;
         }

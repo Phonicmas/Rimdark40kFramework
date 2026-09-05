@@ -17,6 +17,10 @@ public static class RankEligibilityNotifier
 
     private static int sweepIndex;
 
+    //Snapshot of the colonist list for one sweep, so the all-maps pawn walk runs once per sweep
+    //rather than once per step.
+    private static readonly List<Pawn> sweepPawns = [];
+
     public static void Tick()
     {
         if (!Core40kUtils.ModSettings.notifyOnRankEligibility)
@@ -29,24 +33,28 @@ public static class RankEligibilityNotifier
             return;
         }
 
-        var colonists = PawnsFinder.AllMapsCaravansAndTravellingTransporters_Alive_FreeColonists_NoCryptosleep;
-        if (colonists.NullOrEmpty())
+        if (sweepIndex <= 0 || sweepIndex >= sweepPawns.Count)
         {
+            sweepPawns.Clear();
+            sweepPawns.AddRange(PawnsFinder.AllMapsCaravansAndTravellingTransporters_Alive_FreeColonists_NoCryptosleep);
             sweepIndex = 0;
-            return;
+            if (sweepPawns.Count == 0)
+            {
+                return;
+            }
         }
 
-        var pawnsThisStep = (colonists.Count + SweepSteps - 1) / SweepSteps;
+        var pawnsThisStep = (sweepPawns.Count + SweepSteps - 1) / SweepSteps;
 
-        for (var i = 0; i < pawnsThisStep; i++)
+        for (var i = 0; i < pawnsThisStep && sweepIndex < sweepPawns.Count; i++)
         {
-            if (sweepIndex >= colonists.Count)
+            var pawn = sweepPawns[sweepIndex++];
+            if (pawn == null || pawn.Dead || pawn.Destroyed)
             {
-                sweepIndex = 0;
+                continue;
             }
 
-            CheckPawn(colonists[sweepIndex], true);
-            sweepIndex++;
+            CheckPawn(pawn, true);
         }
     }
     

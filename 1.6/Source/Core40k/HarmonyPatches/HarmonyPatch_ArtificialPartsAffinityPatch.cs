@@ -17,29 +17,36 @@ public class ArtificialPartsAffinity
             return;
         }
 
+        //The part checks are cheap and almost always false; the stat evaluation is not, so it only
+        //runs once a part is known to be artificial.
+        var directlyAdded = diffSet.HasDirectlyAddedPartFor(part);
+        if (!directlyAdded && !diffSet.IsBionicOrImplant(part.def))
+        {
+            return;
+        }
+
         var factor = diffSet.pawn.GetStatValue(Core40kDefOf.BEWH_ArtificialPartsAffinityFactor);
         if (Mathf.Approximately(factor, 1f))
         {
             return;
         }
 
-        if (diffSet.HasDirectlyAddedPartFor(part))
+        if (directlyAdded)
         {
             var firstHediffMatchingPart = diffSet.GetFirstHediffMatchingPart<Hediff_AddedPart>(part);
             impactors?.Add(new PawnCapacityUtility.CapacityImpactorHediff
             {
                 hediff = firstHediffMatchingPart
             });
-            __result *= factor;
         }
-        else if (diffSet.IsBionicOrImplant(part.def))
+        else
         {
             var firstBionicOrImplant = Enumerable.FirstOrDefault(diffSet.hediffs, hediff => hediff.Part == part && hediff.def.countsAsAddedPartOrImplant);
             impactors?.Add(new PawnCapacityUtility.CapacityImpactorHediff
             {
                 hediff = firstBionicOrImplant
             });
-            __result *= factor;
         }
+        __result *= factor;
     }
 }

@@ -1,12 +1,28 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
+using RimWorld;
 using Verse;
 
 namespace Core40k;
 
 public class PawnRenderNode_FlagEdit : PawnRenderNode_Apparel
 {
-    private static GameComponent_CoreUtils CoreUtils => Current.Game?.GetComponent<GameComponent_CoreUtils>();
+    private static Game cachedGameForCoreUtils;
+    private static GameComponent_CoreUtils coreUtils;
+
+    private static GameComponent_CoreUtils CoreUtils
+    {
+        get
+        {
+            if (coreUtils != null && cachedGameForCoreUtils == Current.Game)
+            {
+                return coreUtils;
+            }
+
+            cachedGameForCoreUtils = Current.Game;
+            coreUtils = cachedGameForCoreUtils?.GetComponent<GameComponent_CoreUtils>();
+            return coreUtils;
+        }
+    }
     
     public PawnRenderNode_FlagEdit(Pawn pawn, PawnRenderNodeProperties props, PawnRenderTree tree) : base(pawn, props, tree)
     {
@@ -36,20 +52,20 @@ public class PawnRenderNode_FlagEdit : PawnRenderNode_Apparel
         }
 
         if (flag.thingActivator != null && pawn?.apparel?.WornApparel != null
-            && !pawn.apparel.WornApparel.Select(apparel1 => apparel1.def).Contains(flag.thingActivator)
+            && !WearsDef(pawn.apparel.WornApparel, flag.thingActivator)
             && pawn.equipment?.Primary?.def != flag.thingActivator)
         {
             return string.Empty;
         }
 
-        if (flag.hediffActivator != null && pawn?.health?.hediffSet?.hediffs != null
-            && !pawn.health.hediffSet.hediffs.Select(hediff1 => hediff1.def).Contains(flag.hediffActivator))
+        if (flag.hediffActivator != null && pawn?.health?.hediffSet != null
+            && !pawn.health.hediffSet.HasHediff(flag.hediffActivator))
         {
             return string.Empty;
         }
 
-        if (flag.geneActivator != null && pawn?.genes?.GenesListForReading != null
-            && !pawn.genes.GenesListForReading.Where(gene1 => gene1.Active).Select(gene1 => gene1.def).Contains(flag.geneActivator))
+        if (flag.geneActivator != null && pawn?.genes != null
+            && !pawn.genes.HasActiveGene(flag.geneActivator))
         {
             return string.Empty;
         }
@@ -60,6 +76,19 @@ public class PawnRenderNode_FlagEdit : PawnRenderNode_Apparel
         }
 
         return flag.pathExpansion;
+    }
+
+    private static bool WearsDef(List<Apparel> wornApparel, ThingDef def)
+    {
+        for (var i = 0; i < wornApparel.Count; i++)
+        {
+            if (wornApparel[i].def == def)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private bool GizmoToggledOn(Pawn pawn)
@@ -81,9 +110,7 @@ public class PawnRenderNode_FlagEdit : PawnRenderNode_Apparel
             return base.GraphicFor(pawn);
         }
         
-        var flags = defMod.textureFlags.Where(t=> !t.shouldAddInsteadOfSwap).OrderBy(t => t.order).ToList();
-        
-        var modifiedPath = ModifyPathByFlags(flags, pawn);
+        var modifiedPath = ModifyPathByFlags(defMod.SwapFlagsByOrder, pawn);
         
         var path = Props.texPath;
         

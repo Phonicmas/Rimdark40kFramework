@@ -11,6 +11,7 @@ public class CompAbilityEffect_WaveAttack : CompAbilityEffect_WithDuration
     private new CompProperties_AbilityWaveAttack Props => (CompProperties_AbilityWaveAttack)props;
         
     private List<IntVec3> tmpCells = [];
+    private readonly HashSet<IntVec3> tmpCellSet = [];
 
     private Pawn Pawn => parent.pawn;
 
@@ -104,6 +105,7 @@ public class CompAbilityEffect_WaveAttack : CompAbilityEffect_WithDuration
     private List<IntVec3> AffectedCells(LocalTargetInfo target)
     {
         tmpCells.Clear();
+        tmpCellSet.Clear();
         var vector = Pawn.Position.ToVector3Shifted().Yto0();
         var intVec = target.Cell.ClampInsideMap(Pawn.Map);
         if (Pawn.Position == intVec)
@@ -126,12 +128,17 @@ public class CompAbilityEffect_WaveAttack : CompAbilityEffect_WithDuration
             if (CanUseCell(intVec2) && Mathf.Abs(Mathf.DeltaAngle(Vector3.SignedAngle(intVec2.ToVector3Shifted().Yto0() - vector, Vector3.right, Vector3.up), target2)) <= num5)
             {
                 tmpCells.Add(intVec2);
+                tmpCellSet.Add(intVec2);
             }
         }
         var list = GenSight.BresenhamCellsBetween(Pawn.Position, intVec);
-        foreach (var intVec3 in list.Where(intVec3 => !tmpCells.Contains(intVec3) && CanUseCell(intVec3)))
+        foreach (var intVec3 in list)
         {
-            tmpCells.Add(intVec3);
+            if (!tmpCellSet.Contains(intVec3) && CanUseCell(intVec3))
+            {
+                tmpCells.Add(intVec3);
+                tmpCellSet.Add(intVec3);
+            }
         }
         return tmpCells;
         bool CanUseCell(IntVec3 c)

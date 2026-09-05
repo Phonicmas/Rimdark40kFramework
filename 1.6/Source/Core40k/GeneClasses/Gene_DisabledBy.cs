@@ -9,6 +9,11 @@ public class Gene_DisabledBy : Gene
 
     private bool evaluating;
 
+    //Active is read on every stat evaluation and every HasActiveGene walk, so the answer is held
+    //for the rest of the tick it was computed in.
+    private int cachedTick = -1;
+    private bool cachedActive;
+
     public override bool Active
     {
         get
@@ -16,6 +21,12 @@ public class Gene_DisabledBy : Gene
             if (pawn?.genes == null)
             {
                 return base.Active;
+            }
+
+            var tick = Current.Game?.tickManager?.TicksGame ?? -1;
+            if (tick >= 0 && tick == cachedTick)
+            {
+                return cachedActive;
             }
 
             if (!extensionResolved)
@@ -36,6 +47,7 @@ public class Gene_DisabledBy : Gene
             }
 
             evaluating = true;
+            var active = true;
             try
             {
                 foreach (var geneDef in disabledByGenes)
@@ -46,17 +58,24 @@ public class Gene_DisabledBy : Gene
                     }
 
                     overriddenByGene = pawn.genes.GetGene(geneDef);
-                    return false;
+                    active = false;
+                    break;
                 }
 
-                overriddenByGene = null;
+                if (active)
+                {
+                    overriddenByGene = null;
+                    active = base.Active;
+                }
             }
             finally
             {
                 evaluating = false;
             }
 
-            return base.Active;
+            cachedTick = tick;
+            cachedActive = active;
+            return active;
         }
     }
 }
